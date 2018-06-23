@@ -11,11 +11,11 @@ source_code(){
 }
 
 void cpp_container::add_header_include(const std::string& file_name){
-    header_includes.push_back(file_name);
+    header_includes.insert(file_name);
 }
 
 void cpp_container::add_source_include(const std::string& file_name){
-    source_includes.push_back(file_name);
+    source_includes.insert(file_name);
 }
 
 void cpp_container::add_header_line(const std::string& line){
@@ -26,9 +26,10 @@ void cpp_container::add_source_line(const std::string& line){
     source_code.push_back(line);
 }
 
-void cpp_container::print_includes(std::vector<std::string> cpp_container::*headers_type, std::ofstream& out)const{
+void cpp_container::print_includes(std::set<std::string> cpp_container::*headers_type, std::ofstream& out)const{
     for(const auto& el: this->*headers_type)
         out<<"#include <"+el+">\n";
+    out<<"\n";
 }
 
 void cpp_container::print_code(std::vector<std::string> cpp_container::*code_type, std::ofstream& out)const{
@@ -67,8 +68,8 @@ void cpp_container::print_source(void)const{
     if(not out.good())
         throw std::invalid_argument("Couldn't open file "+name+".cpp");
     out<<"#include \""+name+".hpp\"\n\n";
-    print_includes(&cpp_container::header_includes, out);
-    print_code(&cpp_container::header_code, out);
+    print_includes(&cpp_container::source_includes, out);
+    print_code(&cpp_container::source_code, out);
 }
 
 void cpp_container::print_files(void)const{

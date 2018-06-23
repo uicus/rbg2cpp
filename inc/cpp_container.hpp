@@ -3,15 +3,16 @@
 
 #include<string>
 #include<vector>
+#include<set>
 #include<fstream>
 
 class cpp_container{
         std::string name;
-        std::vector<std::string> header_includes;
-        std::vector<std::string> source_includes;
+        std::set<std::string> header_includes;
+        std::set<std::string> source_includes;
         std::vector<std::string> header_code;
         std::vector<std::string> source_code;
-        void print_includes(std::vector<std::string> cpp_container::*headers_type, std::ofstream& out)const;
+        void print_includes(std::set<std::string> cpp_container::*headers_type, std::ofstream& out)const;
         void print_code(std::vector<std::string> cpp_container::*code_type, std::ofstream& out)const;
         std::string name_as_macro(void)const;
         void print_header(void)const;

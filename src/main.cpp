@@ -7,6 +7,7 @@
 #include"message.hpp"
 #include"game_items.hpp"
 #include"cpp_container.hpp"
+#include"game_compiler.hpp"
 
 int main(int argc, const char** argv){
     if(argc < 2){
@@ -31,9 +32,8 @@ int main(int argc, const char** argv){
             if(not o.escalating_warnings() or msg.is_empty()){
                 if(not msg.is_empty() and o.showing_warnings())
                     msg.write_as_warnings(std::cout);
-                std::cout<<"Compiling..."<<std::endl;
-                // true code here
-                cpp_container c(o.output_file());
+                game_compiler compiler(pg, o.output_file());
+                const auto& c = compiler.compile();
                 c.print_files();
             }
             else
