@@ -17,15 +17,19 @@ class game_compiler{
         std::string name;
         std::map<rbg_parser::token, uint> pieces_to_id;
         std::map<rbg_parser::token, uint> edges_to_id;
+        std::map<rbg_parser::token, uint> variables_to_id;
         const rbg_parser::parsed_game& input;
         game_compiler(void)=delete;
         void generate_board_cells_decoder(void);
         void generate_pieces_decoder(void);
+        void generate_variables_decoder(void);
         void fill_edges_map(void);
         std::string numbers_to_array(const std::vector<int>& numbers)const;
         void generate_board_structure(void);
         void generate_game_state_class(void);
         void generate_initial_pieces(void);
+        void generate_variables_bounds(void);
+        void generate_initial_variables(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;
