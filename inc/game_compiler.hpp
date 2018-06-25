@@ -24,6 +24,8 @@ class game_compiler{
         void fill_edges_map(void);
         std::string numbers_to_array(const std::vector<int>& numbers)const;
         void generate_board_structure(void);
+        void generate_game_state_class(void);
+        void generate_initial_pieces(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;

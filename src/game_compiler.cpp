@@ -63,7 +63,7 @@ std::string game_compiler::numbers_to_array(const std::vector<int>& numbers)cons
 
 void game_compiler::generate_board_structure(void){
     const auto& g = input.get_board();
-    output.add_source_line("static const int board_neighbors["+std::to_string(g.get_size()+1)+"]["+std::to_string(edges_to_id.size())+"] = {");
+    output.add_source_line("static const int cell_neighbors["+std::to_string(g.get_size()+1)+"]["+std::to_string(edges_to_id.size())+"] = {");
     output.add_source_line(numbers_to_array(std::vector<int>(edges_to_id.size(),0))+",");
     for(uint i=0;i<g.get_size();++i){
         const auto& outgoing_edges = g.get_outgoing_edges(i);
@@ -75,14 +75,29 @@ void game_compiler::generate_board_structure(void){
     output.add_source_line("};");
 }
 
+void game_compiler::generate_initial_pieces(void){
+    const auto& g = input.get_board();
+    output.add_header_line("int pieces["+std::to_string(g.get_size()+1)+"] = {");
+    output.add_header_line("-1,");
+    for(uint i=0;i<g.get_size();++i)
+        output.add_header_line(std::to_string(pieces_to_id[g.get_starting_piece(i)])+",");
+    output.add_header_line("};");
+}
+
+void game_compiler::generate_game_state_class(void){
+    output.add_header_line("class game_state{");
+    output.add_header_line("int current_cell = 1;");
+    generate_initial_pieces();
+    output.add_header_line("};");
+}
+
 const cpp_container& game_compiler::compile(void){
     output.add_header_line("namespace "+name+"{");
     generate_board_cells_decoder();
     generate_pieces_decoder();
     fill_edges_map();
     generate_board_structure();
-    output.add_header_line("class game_state{");
-    output.add_header_line("};");
+    generate_game_state_class();
     output.add_header_line("}");
     return output;
 }
