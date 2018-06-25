@@ -30,6 +30,8 @@ class game_compiler{
         void generate_initial_pieces(void);
         void generate_variables_bounds(void);
         void generate_initial_variables(void);
+        void generate_state_getters(void);
+        void generate_game_parameters(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;

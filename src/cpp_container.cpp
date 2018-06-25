@@ -34,14 +34,24 @@ void cpp_container::print_includes(std::set<std::string> cpp_container::*headers
 
 void cpp_container::print_code(std::vector<std::string> cpp_container::*code_type, std::ofstream& out)const{
     uint indent = 0;
+    std::vector<uint> part_of_case;
     for(const auto& el: this->*code_type){
-        if(not el.empty() and el[0] == '}')
-            --indent;
-        for(uint i=0;i<indent;++i)
-            out<<"    ";
-        out<<el<<"\n";
-        if(not el.empty() and el.back() == '{')
-            ++indent;
+        if(el.empty())
+            out<<"\n";
+        else{
+            if(el[0] == '}' or el.back() == ':')
+                if(not part_of_case.empty() and part_of_case.back() == indent)
+                    part_of_case.pop_back();
+            if(el[0] == '}')
+                --indent;
+            for(uint i=0;i<indent+part_of_case.size();++i)
+                out<<"    ";
+            out<<el<<"\n";
+            if(el.back() == '{')
+                ++indent;
+            if(el.back() == ':' and (part_of_case.empty() or part_of_case.back() != indent))
+                part_of_case.push_back(indent);
+        }
     }
 }
 

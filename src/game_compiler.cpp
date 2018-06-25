@@ -13,8 +13,7 @@ input(input){
 void game_compiler::generate_board_cells_decoder(void){
     output.add_header_include("string");
     const auto& g = input.get_board();
-    output.add_source_line("static const std::string cells_names["+std::to_string(g.get_size()+1)+"] = {");
-    output.add_source_line("\"invalid cell\",");
+    output.add_source_line("static const std::string cells_names["+std::to_string(g.get_size())+"] = {");
     for(uint i=0;i<g.get_size();++i)
         output.add_source_line("\""+g.get_vertex(i).to_string()+"\",");
     output.add_source_line("};");
@@ -96,6 +95,12 @@ void game_compiler::generate_board_structure(void){
         output.add_source_line(numbers_to_array(neighbors)+",");
     }
     output.add_source_line("};");
+    output.add_source_line("");
+    output.add_header_line("int get_neighbor(int cell_id, int edge_id);");
+    output.add_source_line("int get_neighbor(int cell_id, int edge_id){");
+    output.add_source_line("return cell_neighbors[cell_id][edge_id];");
+    output.add_source_line("}");
+    output.add_source_line("");
 }
 
 void game_compiler::generate_variables_bounds(void){
@@ -107,6 +112,12 @@ void game_compiler::generate_variables_bounds(void){
     for(const auto& el: v)
         output.add_source_line(std::to_string(el.second)+",");
     output.add_source_line("};");
+    output.add_source_line("");
+    output.add_header_line("int get_bound(int variable_id);");
+    output.add_source_line("int get_bound(int variable_id){");
+    output.add_source_line("return bounds[variable_id];");
+    output.add_source_line("}");
+    output.add_source_line("");
 }
 
 void game_compiler::generate_initial_pieces(void){
@@ -125,24 +136,76 @@ void game_compiler::generate_initial_variables(void){
     output.add_header_line("};");
 }
 
+void game_compiler::generate_state_getters(void){
+    output.add_header_line("int get_current_cell(void)const;");
+    output.add_source_line("int game_state::get_current_cell(void)const{");
+    output.add_source_line("return current_cell-1;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("int get_piece(int cell_id)const;");
+    output.add_source_line("int game_state::get_piece(int cell_id)const{");
+    output.add_source_line("return pieces[cell_id+1];");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("int get_variable_value(int variable_id)const;");
+    output.add_source_line("int game_state::get_variable_value(int variable_id)const{");
+    output.add_source_line("return variables[variable_id];");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("int get_current_player(void)const;");
+    output.add_source_line("int game_state::get_current_player(void)const{");
+    output.add_source_line("return current_player;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("int get_player_score(int player_id)const;");
+    output.add_source_line("int game_state::get_player_score(int player_id)const{");
+    output.add_source_line("return variables[player_id-1];");
+    output.add_source_line("}");
+    output.add_source_line("");
+}
+
 void game_compiler::generate_game_state_class(void){
     output.add_header_line("class game_state{");
+    output.add_header_line("public:");
+    generate_state_getters();
+    output.add_header_line("private:");
     output.add_header_line("int current_cell = 1;");
+    output.add_header_line("int current_player = 0;");
     generate_initial_pieces();
     generate_initial_variables();
     output.add_header_line("};");
+    output.add_header_line("");
+}
+
+void game_compiler::generate_game_parameters(void){
+    const auto& g = input.get_board();
+    const auto& pl = input.get_declarations().get_legal_players();
+    const auto& pi = input.get_declarations().get_legal_pieces();
+    const auto& v = input.get_declarations().get_legal_variables();
+    const auto& e = input.get_declarations().get_legal_edges();
+    output.add_header_line("constexpr int board_size = "+std::to_string(g.get_size())+";");
+    output.add_header_line("constexpr int number_of_players = "+std::to_string(pl.size()+1)+";");
+    output.add_header_line("constexpr int number_of_pieces = "+std::to_string(pi.size())+";");
+    output.add_header_line("constexpr int number_of_variables = "+std::to_string(pl.size()+v.size())+";");
+    output.add_header_line("constexpr int board_degree = "+std::to_string(e.size())+";");
+    output.add_header_line("");
 }
 
 const cpp_container& game_compiler::compile(void){
     output.add_header_line("namespace "+name+"{");
+    output.add_source_line("namespace "+name+"{");
+    generate_game_parameters();
     generate_board_cells_decoder();
     generate_pieces_decoder();
     generate_variables_decoder();
+    output.add_header_line("");
     fill_edges_map();
     generate_board_structure();
     generate_variables_bounds();
+    output.add_header_line("");
     generate_game_state_class();
     output.add_header_line("}");
+    output.add_source_line("}");
     return output;
 }
 
