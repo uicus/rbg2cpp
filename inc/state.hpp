@@ -5,6 +5,10 @@
 
 #include"types.hpp"
 
+namespace rbg_parser{
+    class game_move;
+}
+
 class edge;
 
 class state{
@@ -21,6 +25,8 @@ class state{
         uint get_id(void)const;
         void inform_about_being_appended(uint shift_value);
         void inform_about_state_deletion(uint deleted_index);
+        void absorb(state&& rhs);
+        void connect_with_state(uint index_in_local_register, const std::vector<const rbg_parser::game_move*>& label_list=std::vector<const rbg_parser::game_move*>());
 };
 
 #endif
