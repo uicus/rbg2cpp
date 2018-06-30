@@ -1,4 +1,5 @@
 #include"game_compiler.hpp"
+#include"automaton_builder.hpp"
 #include"parsed_game.hpp"
 #include"types.hpp"
 #include<algorithm>
@@ -7,6 +8,7 @@ game_compiler::game_compiler(const rbg_parser::parsed_game& input, const std::st
 output(output_name),
 name(output_name),
 pieces_to_id(),
+game_automaton(),
 input(input){
 }
 
@@ -191,7 +193,14 @@ void game_compiler::generate_game_parameters(void){
     output.add_header_line("");
 }
 
+void game_compiler::build_game_automaton(void){
+    automaton_builder b;
+    input.get_moves()->accept(b);
+    game_automaton = b.get_final_result();
+}
+
 const cpp_container& game_compiler::compile(void){
+    build_game_automaton();
     output.add_header_line("namespace "+name+"{");
     output.add_source_line("namespace "+name+"{");
     generate_game_parameters();

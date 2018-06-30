@@ -4,12 +4,11 @@
 #include<vector>
 
 #include"types.hpp"
+#include"state.hpp"
 
 namespace rbg_parser{
     class game_move;
 }
-
-class state;
 
 class automaton{
         std::vector<state> local_register;
@@ -21,15 +20,16 @@ class automaton{
         void concat_automaton(automaton&& concatee);
     public:
         void starify_automaton(void);
-        void repeat_automaton(uint times);
         uint get_start_state(void);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
-        friend automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list);
+        friend automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);
+        friend automaton edge_automaton(const rbg_parser::game_move*, uint index);
 };
 
 automaton sum_of_automatons(std::vector<automaton>&& elements);
 automaton concatenation_of_automatons(std::vector<automaton>&& elements);
-automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list);
+automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);
+automaton edge_automaton(const rbg_parser::game_move* label, uint index);
 
 #endif

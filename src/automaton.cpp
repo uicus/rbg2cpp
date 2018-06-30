@@ -1,7 +1,5 @@
 #include"automaton.hpp"
 
-#include"state.hpp"
-#include"edge.hpp"
 #include<cassert>
 
 uint automaton::get_start_state(void){
@@ -27,7 +25,6 @@ std::pair<uint,uint> automaton::prepare_new_endpoints(void){
     local_register.push_back(state());
     return std::make_pair(new_start_state,new_accept_state);
 }
-
 
 void automaton::set_endpoints(const std::pair<uint,uint>& new_endpoints){
     start_state = new_endpoints.first;
@@ -59,12 +56,6 @@ void automaton::starify_automaton(void){
     set_endpoints(new_endpoints);
 }
 
-void automaton::repeat_automaton(uint times){
-    assert(times>1);
-    for(uint i=0;i<times-1;++i)
-        concat_automaton(automaton(*this));
-}
-
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);
@@ -87,9 +78,16 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
     return result;
 }
 
-automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list){
+automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index){
     automaton result;
     auto result_endpoints = result.prepare_new_endpoints();
-    result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list);
+    result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list, index);
+    result.set_endpoints(result_endpoints);
     return result;
+}
+
+automaton edge_automaton(const rbg_parser::game_move* label, uint index){
+    std::vector<const rbg_parser::game_move*> label_list;
+    label_list.push_back(label);
+    return edge_automaton(label_list, index);
 }

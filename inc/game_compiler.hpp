@@ -6,6 +6,7 @@
 
 #include"cpp_container.hpp"
 #include"types.hpp"
+#include"automaton.hpp"
 
 namespace rbg_parser{
     class token;
@@ -18,6 +19,7 @@ class game_compiler{
         std::map<rbg_parser::token, uint> pieces_to_id;
         std::map<rbg_parser::token, uint> edges_to_id;
         std::map<rbg_parser::token, uint> variables_to_id;
+        automaton game_automaton;
         const rbg_parser::parsed_game& input;
         game_compiler(void)=delete;
         void generate_board_cells_decoder(void);
@@ -32,6 +34,7 @@ class game_compiler{
         void generate_initial_variables(void);
         void generate_state_getters(void);
         void generate_game_parameters(void);
+        void build_game_automaton(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;

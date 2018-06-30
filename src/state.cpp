@@ -1,5 +1,4 @@
 #include"state.hpp"
-#include"edge.hpp"
 
 #include<cassert>
 
@@ -45,9 +44,10 @@ void state::absorb(state&& rhs){
     }
 }
 
-void state::connect_with_state(uint index_in_local_register, const std::vector<const rbg_parser::game_move*>& label_list){
+void state::connect_with_state(uint index_in_local_register, const std::vector<const rbg_parser::game_move*>& label_list, uint index_after_traversing){
     edge result_edge(index_in_local_register);
     for(const auto el: label_list)
         result_edge.add_another_action(el);
+    result_edge.set_index(index_after_traversing);
     next_states.push_back(std::move(result_edge));
 }
