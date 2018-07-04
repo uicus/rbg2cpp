@@ -56,6 +56,11 @@ void automaton::starify_automaton(void){
     set_endpoints(new_endpoints);
 }
 
+void automaton::turn_into_check(bool negated){
+    local_register[start_state].set_as_check_begin(start_state, accept_state, negated);
+    local_register[accept_state].set_as_check_end(start_state, accept_state, negated);
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

@@ -13,17 +13,17 @@ namespace rbg_parser{
 class automaton_builder : public rbg_parser::abstract_dispatcher{
         automaton result;
         static uint current_index;
+        bool should_assign_indices;
     public:
         automaton_builder(void)=default;
-        automaton_builder(std::vector<const rbg_parser::game_move*>& current_block);
         automaton_builder(const automaton_builder&)=delete;
         automaton_builder(automaton_builder&&)=default;
         automaton_builder& operator=(const automaton_builder&)=delete;
         automaton_builder& operator=(automaton_builder&&)=default;
         ~automaton_builder(void)override=default;
+        automaton_builder(bool should_assign_indices);
         void dispatch(const rbg_parser::sum& m)override;
         void dispatch(const rbg_parser::concatenation& m)override;
-        void dispatch(const rbg_parser::power_move& m)override;
         void dispatch(const rbg_parser::star_move& m)override;
         void dispatch(const rbg_parser::shift& m)override;
         void dispatch(const rbg_parser::ons& m)override;

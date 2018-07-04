@@ -20,6 +20,7 @@ class automaton{
         void concat_automaton(automaton&& concatee);
     public:
         void starify_automaton(void);
+        void turn_into_check(bool negated);
         uint get_start_state(void);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
