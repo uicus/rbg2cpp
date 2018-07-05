@@ -170,6 +170,7 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("class game_state{");
     output.add_header_line("public:");
     generate_state_getters();
+    output.add_header_line("friend class next_states_iterator;");
     output.add_header_line("private:");
     output.add_header_line("int current_cell = 1;");
     output.add_header_line("int current_player = 0;");
@@ -199,6 +200,38 @@ void game_compiler::build_game_automaton(void){
     game_automaton = b.get_final_result();
 }
 
+void game_compiler::generate_iterator_helper_structures(void){
+    output.add_header_line("struct backtrace_information{");
+    output.add_header_line("int current_branch;");
+    output.add_header_line("int state_checkpoint;");
+    output.add_header_line("int cell_checkpoint;");
+    output.add_header_line("int board_checkpoint;");
+    output.add_header_line("int variables_checkpoint;");
+    output.add_header_line("};");
+    output.add_header_line("struct board_revert_information{");
+    output.add_header_line("int cell;");
+    output.add_header_line("int previous_piece;");
+    output.add_header_line("};");
+    output.add_header_line("struct variable_revert_information{");
+    output.add_header_line("int variable;");
+    output.add_header_line("int previous_value;");
+    output.add_header_line("};");
+}
+
+void game_compiler::generate_states_iterator(void){
+    output.add_header_include("vector");
+    output.add_header_line("class next_states_iterator{");
+    output.add_header_line("public:");
+    output.add_header_line("void dummy(){}");
+    output.add_header_line("private:");
+    generate_iterator_helper_structures();
+    output.add_header_line("game_state& state_to_change;");
+    output.add_header_line("std::vector<backtrace_information> decision_points;");
+    output.add_header_line("std::vector<board_revert_information> board_change_points;");
+    output.add_header_line("std::vector<variable_revert_information> variables_change_points;");
+    output.add_header_line("};");
+}
+
 const cpp_container& game_compiler::compile(void){
     build_game_automaton();
     output.add_header_line("namespace "+name+"{");
@@ -213,6 +246,7 @@ const cpp_container& game_compiler::compile(void){
     generate_variables_bounds();
     output.add_header_line("");
     generate_game_state_class();
+    generate_states_iterator();
     output.add_header_line("}");
     output.add_source_line("}");
     return output;

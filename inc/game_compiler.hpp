@@ -35,6 +35,8 @@ class game_compiler{
         void generate_state_getters(void);
         void generate_game_parameters(void);
         void build_game_automaton(void);
+        void generate_states_iterator(void);
+        void generate_iterator_helper_structures(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;
