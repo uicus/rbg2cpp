@@ -6,6 +6,10 @@ uint automaton::get_start_state(void){
     return start_state;
 }
 
+uint automaton::get_size(void){
+    return local_register.size();
+}
+
 std::pair<uint,uint> automaton::place_side_by_side(automaton&& rhs){
     for(auto& el: rhs.local_register)
         el.inform_about_being_appended(local_register.size());

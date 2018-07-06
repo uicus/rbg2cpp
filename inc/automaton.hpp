@@ -22,6 +22,7 @@ class automaton{
         void starify_automaton(void);
         void turn_into_check(bool negated);
         uint get_start_state(void);
+        uint get_size(void);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);

@@ -37,6 +37,8 @@ class game_compiler{
         void build_game_automaton(void);
         void generate_states_iterator(void);
         void generate_iterator_helper_structures(void);
+        void generate_resettable_bitarray(void);
+        void generate_resettable_bitarray_stack(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;
