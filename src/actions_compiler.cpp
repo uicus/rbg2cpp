@@ -1,0 +1,8 @@
+#include"actions_compiler.hpp"
+#include"game_move.hpp"
+#include"actions_block.hpp"
+#include"shift.hpp"
+#include"ons.hpp"
+#include"offs.hpp"
+#include"assignments.hpp"
+#include"switch.hpp"

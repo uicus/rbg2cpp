@@ -126,9 +126,17 @@ void game_compiler::generate_initial_pieces(void){
     const auto& g = input.get_board();
     output.add_header_line("int pieces["+std::to_string(g.get_size()+1)+"] = {");
     output.add_header_line("-1,");
-    for(uint i=0;i<g.get_size();++i)
+    std::vector<int> pieces_count(pieces_to_id.size(),0);
+    for(uint i=0;i<g.get_size();++i){
         output.add_header_line(std::to_string(pieces_to_id[g.get_starting_piece(i)])+",");
+        ++pieces_count[pieces_to_id[g.get_starting_piece(i)]];
+    }
     output.add_header_line("};");
+    std::string pieces_count_generated_array = "int pieces_count["+std::to_string(pieces_to_id.size())+"] = {";
+    for(uint i=0;i<pieces_count.size();++i)
+        pieces_count_generated_array += std::to_string(pieces_count[i]) + (i==pieces_count.size()-1?"":",");
+    pieces_count_generated_array += "};";
+    output.add_header_line(pieces_count_generated_array);
 }
 
 void game_compiler::generate_initial_variables(void){
