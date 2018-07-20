@@ -229,6 +229,8 @@ void game_compiler::generate_iterator_revert_methods(void){
     output.add_header_line("void revert_board_changes(unsigned int to_point);");
     output.add_source_line("void next_states_iterator::revert_board_changes(unsigned int to_point){");
     output.add_source_line("for(unsigned int i=board_change_points.size()-1;i>=to_point;--i){");
+    output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[board_change_points[i].cell]];");
+    output.add_source_line("++state_to_change.pieces_count[board_change_points[i].previous_piece];");
     output.add_source_line("state_to_change.pieces[board_change_points[i].cell] = board_change_points[i].previous_piece;");
     output.add_source_line("}");
     output.add_source_line("board_change_points.resize(to_point);");

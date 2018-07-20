@@ -7,11 +7,14 @@
 arithmetics_printer::arithmetics_printer(const std::map<rbg_parser::token, uint>& pieces_to_id, const std::map<rbg_parser::token, uint>& variables_to_id):
 pieces_to_id(pieces_to_id),
 variables_to_id(variables_to_id),
-final_result(){
+final_result(),
+static_content(true),
+value(0){
 }
 
 void arithmetics_printer::dispatch(const rbg_parser::integer_arithmetic& m){
     final_result = std::to_string(m.get_content());
+    value = m.get_content();
 }
 
 void arithmetics_printer::dispatch(const rbg_parser::variable_arithmetic& m){
@@ -24,6 +27,7 @@ void arithmetics_printer::dispatch(const rbg_parser::variable_arithmetic& m){
         assert(it != variables_to_id.end());
         final_result = "state_to_change.variables["+std::to_string(it->second)+"]";
     }
+    static_content = false;
 }
 
 void arithmetics_printer::dispatch(const rbg_parser::arithmetic_operation& m){
@@ -51,9 +55,37 @@ void arithmetics_printer::dispatch(const rbg_parser::arithmetic_operation& m){
         final_result += "("+element_printer.get_final_result()+")";
         if(i!=elements.size()-1)
             final_result += operation_sign;
+        if(static_content){
+            static_content = element_printer.can_be_precomputed();
+            switch(m.get_operation()){
+                case rbg_parser::addition:
+                    value += element_printer.precomputed_value();
+                    break;
+                case rbg_parser::subtraction:
+                    value -= element_printer.precomputed_value();
+                    break;
+                case rbg_parser::multiplication:
+                    value *= element_printer.precomputed_value();
+                    break;
+                case rbg_parser::division:
+                    value /= element_printer.precomputed_value();
+                    break;
+                default:
+                    assert(false);
+            }
+        }
     }
 }
 
 std::string arithmetics_printer::get_final_result(void){
     return std::move(final_result);
+}
+
+bool arithmetics_printer::can_be_precomputed(void){
+    return static_content;
+}
+
+uint arithmetics_printer::precomputed_value(void){
+    assert(static_content);
+    return value;
 }
