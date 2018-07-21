@@ -2,10 +2,15 @@
 #define EDGE
 
 #include<vector>
+#include<map>
 #include"types.hpp"
+#include"token.hpp"
+
+class cpp_container;
 
 namespace rbg_parser{
     class game_move;
+    class declarations;
 }
 
 class edge{
@@ -18,6 +23,13 @@ class edge{
         void set_index(uint index);
         void shift(uint shift_value);
         void inform_abut_state_deletion(uint deleted_index);
+        void print_transition_function(
+            uint from_state,
+            cpp_container& output,
+            const std::map<rbg_parser::token, uint>& pieces_to_id,
+            const std::map<rbg_parser::token, uint>& edges_to_id,
+            const std::map<rbg_parser::token, uint>& variables_to_id,
+            const rbg_parser::declarations& decl)const;
 };
 
 #endif

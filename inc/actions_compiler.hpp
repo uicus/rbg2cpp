@@ -21,6 +21,8 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         const std::map<rbg_parser::token, uint>& edges_to_id;
         const std::map<rbg_parser::token, uint>& variables_to_id;
         const rbg_parser::declarations& decl;
+        bool should_check_cell_correctness;
+        bool has_modifier;
     public:
         actions_compiler(void)=delete;
         actions_compiler(const actions_compiler&)=delete;
@@ -42,13 +44,14 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::off& m)override;
         void dispatch(const rbg_parser::assignment& m)override;
         void dispatch(const rbg_parser::player_switch& m)override;
-        void dispatch(const rbg_parser::keeper_switch& m)override;
-        void dispatch(const rbg_parser::move_check&)override{assert(false);}
+        void dispatch(const rbg_parser::keeper_switch&)override;
+        void dispatch(const rbg_parser::move_check& m)override;
         void dispatch(const rbg_parser::actions_block&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_comparison& m)override;
         void dispatch(const rbg_parser::integer_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);}
+        void finallize(void);
 };
 
 #endif

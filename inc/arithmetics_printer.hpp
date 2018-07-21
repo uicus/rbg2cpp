@@ -16,7 +16,7 @@ class arithmetics_printer : public rbg_parser::abstract_dispatcher{
         const std::map<rbg_parser::token, uint>& variables_to_id;
         std::string final_result;
         bool static_content;
-        uint value;
+        int value;
     public:
         arithmetics_printer(void)=delete;
         arithmetics_printer(const arithmetics_printer&)=delete;
@@ -42,7 +42,7 @@ class arithmetics_printer : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::arithmetic_operation& m)override;
         std::string get_final_result(void);
         bool can_be_precomputed(void);
-        uint precomputed_value(void);
+        int precomputed_value(void);
 };
 
 #endif

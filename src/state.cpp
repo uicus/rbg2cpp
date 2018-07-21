@@ -91,3 +91,14 @@ void state::set_as_check_begin(uint check_start, uint check_end, bool negated){
 void state::set_as_check_end(uint check_start, uint check_end, bool negated){
     ended_checks.insert({check_start, check_end, negated});
 }
+
+void state::print_transition_functions(
+    uint from_state,
+    cpp_container& output,
+    const std::map<rbg_parser::token, uint>& pieces_to_id,
+    const std::map<rbg_parser::token, uint>& edges_to_id,
+    const std::map<rbg_parser::token, uint>& variables_to_id,
+    const rbg_parser::declarations& decl)const{
+    for(const auto& el: next_states)
+        el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl);
+}

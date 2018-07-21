@@ -65,6 +65,16 @@ void automaton::turn_into_check(bool negated){
     local_register[accept_state].set_as_check_end(start_state, accept_state, negated);
 }
 
+void automaton::print_transition_functions(
+    cpp_container& output,
+    const std::map<rbg_parser::token, uint>& pieces_to_id,
+    const std::map<rbg_parser::token, uint>& edges_to_id,
+    const std::map<rbg_parser::token, uint>& variables_to_id,
+    const rbg_parser::declarations& decl)const{
+    for(uint i=0;i<local_register.size();++i)
+        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl);
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

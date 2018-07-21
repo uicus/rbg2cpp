@@ -40,6 +40,7 @@ class game_compiler{
         void generate_iterator_revert_methods(void);
         void generate_resettable_bitarray(void);
         void generate_resettable_bitarray_stack(void);
+        void generate_transition_functions(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;

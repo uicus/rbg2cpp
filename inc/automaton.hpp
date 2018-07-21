@@ -23,6 +23,12 @@ class automaton{
         void turn_into_check(bool negated);
         uint get_start_state(void);
         uint get_size(void);
+        void print_transition_functions(
+            cpp_container& output,
+            const std::map<rbg_parser::token, uint>& pieces_to_id,
+            const std::map<rbg_parser::token, uint>& edges_to_id,
+            const std::map<rbg_parser::token, uint>& variables_to_id,
+            const rbg_parser::declarations& decl)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);

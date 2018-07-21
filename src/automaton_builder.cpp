@@ -26,10 +26,11 @@ void automaton_builder::dispatch(const rbg_parser::arithmetic_comparison& m){
 }
 
 void automaton_builder::dispatch(const rbg_parser::move_check& m){
-    automaton_builder element_builder(false);
+    result = edge_automaton(&m, should_assign_indices ? ++current_index : 0);
+    /*automaton_builder element_builder(false);
     m.get_content()->accept(element_builder);
     result = element_builder.get_final_result();
-    result.turn_into_check(m.is_negated());
+    result.turn_into_check(m.is_negated());*/
 }
 
 void automaton_builder::dispatch(const rbg_parser::shift& m){

@@ -47,6 +47,13 @@ class state{
         void connect_with_state(uint index_in_local_register, const std::vector<const rbg_parser::game_move*>& label_list=std::vector<const rbg_parser::game_move*>(), uint index_after_traversing=0);
         void set_as_check_begin(uint check_start, uint check_end, bool negated);
         void set_as_check_end(uint check_start, uint check_end, bool negated);
+        void print_transition_functions(
+            uint from_state,
+            cpp_container& output,
+            const std::map<rbg_parser::token, uint>& pieces_to_id,
+            const std::map<rbg_parser::token, uint>& edges_to_id,
+            const std::map<rbg_parser::token, uint>& variables_to_id,
+            const rbg_parser::declarations& decl)const;
 };
 
 #endif

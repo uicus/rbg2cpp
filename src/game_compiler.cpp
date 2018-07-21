@@ -179,6 +179,7 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("private:");
     output.add_header_line("int current_cell = 1;");
     output.add_header_line("int current_player = 0;");
+    output.add_header_line("int current_state = "+std::to_string(game_automaton.get_start_state())+";");
     generate_initial_pieces();
     generate_initial_variables();
     output.add_header_line("};");
@@ -278,8 +279,12 @@ void game_compiler::generate_states_iterator(void){
     output.add_header_line("private:");
     generate_iterator_helper_structures();
     generate_iterator_revert_methods();
+    output.add_header_line("");
+    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations());
+    output.add_header_line("");
     output.add_header_line("game_state& state_to_change;");
     output.add_header_line("resettable_bitarray_stack& cache;");
+    output.add_header_line("bool ready_to_report = false;");
     output.add_header_line("std::vector<backtrace_information> decision_points;");
     output.add_header_line("std::vector<board_revert_information> board_change_points;");
     output.add_header_line("std::vector<variable_revert_information> variables_change_points;");

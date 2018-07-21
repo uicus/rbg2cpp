@@ -55,8 +55,8 @@ void arithmetics_printer::dispatch(const rbg_parser::arithmetic_operation& m){
         final_result += "("+element_printer.get_final_result()+")";
         if(i!=elements.size()-1)
             final_result += operation_sign;
+        static_content = static_content and element_printer.can_be_precomputed();
         if(static_content){
-            static_content = element_printer.can_be_precomputed();
             switch(m.get_operation()){
                 case rbg_parser::addition:
                     value += element_printer.precomputed_value();
@@ -85,7 +85,7 @@ bool arithmetics_printer::can_be_precomputed(void){
     return static_content;
 }
 
-uint arithmetics_printer::precomputed_value(void){
+int arithmetics_printer::precomputed_value(void){
     assert(static_content);
     return value;
 }
