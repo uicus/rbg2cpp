@@ -1,6 +1,7 @@
 #include"automaton.hpp"
 
 #include<cassert>
+#include"cpp_container.hpp"
 
 uint automaton::get_start_state(void){
     return start_state;
@@ -73,6 +74,16 @@ void automaton::print_transition_functions(
     const rbg_parser::declarations& decl)const{
     for(uint i=0;i<local_register.size();++i)
         local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl);
+}
+
+void automaton::print_transition_table(cpp_container& output){
+    output.add_header_include("vector");
+    output.add_header_line("typedef void(next_states_iterator::*transition_function)(void);");
+    output.add_header_line("const static std::vector<transition_function> transitions["+std::to_string(local_register.size())+"];");
+    output.add_source_line("const std::vector<next_states_iterator::transition_function> next_states_iterator::transitions["+std::to_string(local_register.size())+"] = {");
+    for(uint i=0;i<local_register.size();++i)
+        local_register[i].print_outgoing_transitions(i,output);
+    output.add_source_line("};");
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){

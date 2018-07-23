@@ -6,6 +6,8 @@
 #include"types.hpp"
 #include"state.hpp"
 
+class cpp_container;
+
 namespace rbg_parser{
     class game_move;
 }
@@ -29,6 +31,7 @@ class automaton{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl)const;
+        void print_transition_table(cpp_container& output);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);

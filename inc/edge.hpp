@@ -23,6 +23,7 @@ class edge{
         void set_index(uint index);
         void shift(uint shift_value);
         void inform_abut_state_deletion(uint deleted_index);
+        uint get_endpoint(void)const;
         void print_transition_function(
             uint from_state,
             cpp_container& output,

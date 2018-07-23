@@ -1,6 +1,7 @@
 #include"state.hpp"
 
 #include<cassert>
+#include"cpp_container.hpp"
 
 uint state::next_free_id = 0;
 
@@ -101,4 +102,15 @@ void state::print_transition_functions(
     const rbg_parser::declarations& decl)const{
     for(const auto& el: next_states)
         el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl);
+}
+
+void state::print_outgoing_transitions(uint from_state, cpp_container& output)const{
+    std::string resulting_line = "{";
+    for(uint i=0;i<next_states.size();++i){
+        resulting_line += "&next_states_iterator::transition_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint());
+        if(i+1<next_states.size())
+            resulting_line += ',';
+    }
+    resulting_line += "},";
+    output.add_source_line(resulting_line);
 }

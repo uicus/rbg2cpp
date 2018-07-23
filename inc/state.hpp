@@ -7,6 +7,8 @@
 #include"types.hpp"
 #include"edge.hpp"
 
+class cpp_container;
+
 namespace rbg_parser{
     class game_move;
 }
@@ -54,6 +56,7 @@ class state{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl)const;
+        void print_outgoing_transitions(uint from_state, cpp_container& output)const;
 };
 
 #endif

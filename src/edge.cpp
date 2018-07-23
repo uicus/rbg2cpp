@@ -27,6 +27,10 @@ void edge::set_index(uint index){
     index_after_traversing = index;
 }
 
+uint edge::get_endpoint(void)const{
+    return local_register_endpoint_index;
+}
+
 void edge::print_transition_function(
     uint from_state,
     cpp_container& output,
@@ -41,6 +45,9 @@ void edge::print_transition_function(
         el->accept(ac);
     ac.finallize();
     output.add_source_line("state_to_change.current_state = "+std::to_string(local_register_endpoint_index)+";");
+    output.add_source_line("if(cache.is_set(state_to_change.current_state, state_to_change.current_cell)){");
+    output.add_source_line("// revert here");
+    output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("");
 }
