@@ -192,11 +192,11 @@ void game_compiler::generate_game_parameters(void){
     const auto& pi = input.get_declarations().get_legal_pieces();
     const auto& v = input.get_declarations().get_legal_variables();
     const auto& e = input.get_declarations().get_legal_edges();
-    output.add_header_line("constexpr int board_size = "+std::to_string(g.get_size())+";");
-    output.add_header_line("constexpr int number_of_players = "+std::to_string(pl.size()+1)+";");
-    output.add_header_line("constexpr int number_of_pieces = "+std::to_string(pi.size())+";");
-    output.add_header_line("constexpr int number_of_variables = "+std::to_string(pl.size()+v.size())+";");
-    output.add_header_line("constexpr int board_degree = "+std::to_string(e.size())+";");
+    output.add_header_line("constexpr int BOARD_SIZE = "+std::to_string(g.get_size())+";");
+    output.add_header_line("constexpr int NUMBER_OF_PLAYERS = "+std::to_string(pl.size()+1)+";");
+    output.add_header_line("constexpr int NUMBER_OF_PIECES = "+std::to_string(pi.size())+";");
+    output.add_header_line("constexpr int NUMBER_OF_VARIABLES = "+std::to_string(pl.size()+v.size())+";");
+    output.add_header_line("constexpr int BOARD_DEGREE = "+std::to_string(e.size())+";");
     output.add_header_line("");
 }
 
@@ -211,9 +211,9 @@ void game_compiler::generate_iterator_helper_structures(void){
     output.add_header_line("long unsigned int current_branch;");
     output.add_header_line("int state_checkpoint;");
     output.add_header_line("int current_cell_checkpoint;");
-    output.add_header_line("unsigned int modifiers_depth_checkpoint;");
-    output.add_header_line("unsigned int board_checkpoint;");
-    output.add_header_line("unsigned int variables_checkpoint;");
+    output.add_header_line("long unsigned int modifiers_depth_checkpoint;");
+    output.add_header_line("long unsigned int board_checkpoint;");
+    output.add_header_line("long unsigned int variables_checkpoint;");
     output.add_header_line("};");
     output.add_header_line("struct board_revert_information{");
     output.add_header_line("int cell;");
@@ -232,7 +232,7 @@ void game_compiler::generate_iterator_revert_methods(void){
     output.add_source_line("for(unsigned int i=board_change_points.size();i>to_point;--i){");
     output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[board_change_points[i-1].cell]];");
     output.add_source_line("++state_to_change.pieces_count[board_change_points[i-1].previous_piece];");
-    output.add_source_line("state_to_change.pieces[board_change_points[i-1].cell] = board_change_points[i].previous_piece;");
+    output.add_source_line("state_to_change.pieces[board_change_points[i-1].cell] = board_change_points[i-1].previous_piece;");
     output.add_source_line("}");
     output.add_source_line("board_change_points.resize(to_point);");
     output.add_source_line("}");
@@ -253,18 +253,19 @@ void game_compiler::generate_iterator_revert_methods(void){
     output.add_source_line("cache.revert_to_level(point_to_revert.modifiers_depth_checkpoint);");
     output.add_source_line("revert_board_changes(point_to_revert.board_checkpoint);");
     output.add_source_line("revert_variables_changes(point_to_revert.variables_checkpoint);");
-    output.add_source_line("decision_points.resize(decision_point);");
+    output.add_source_line("decision_points.resize(decision_point+1);");
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("void revert_to_last_choice(void);");
     output.add_source_line("void next_states_iterator::revert_to_last_choice(void){");
     output.add_source_line("for(unsigned int i=decision_points.size();i>0;--i){");
-    output.add_source_line("if(decision_points[i].current_branch < transitions[decision_points[i].state_checkpoint].size()){");
-    output.add_source_line("revert_to_point(i);");
+    output.add_source_line("if(decision_points[i-1].current_branch < transitions[decision_points[i-1].state_checkpoint].size()){");
+    output.add_source_line("revert_to_point(i-1);");
     output.add_source_line("return;");
     output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("revert_to_point(0);");
+    output.add_source_line("decision_points.pop_back();");
     output.add_source_line("}");
     output.add_source_line("");
 }
@@ -274,6 +275,7 @@ void game_compiler::generate_main_dfs(void){
     output.add_source_line("bool next_states_iterator::next(void){");
     output.add_source_line("ready_to_report = false;");
     output.add_source_line("state_to_change.current_player = moving_player;");
+    output.add_source_line("revert_to_last_choice();");
     output.add_source_line("while(not ready_to_report and not decision_points.empty()){");
     output.add_source_line("(this->*transitions[state_to_change.current_state][decision_points.back().current_branch++])();");
     output.add_source_line("}");
@@ -293,7 +295,8 @@ void game_compiler::generate_states_iterator(void){
     output.add_source_line("  cache(cache),");
     output.add_source_line("  moving_player(state_to_change.current_player){");
     output.add_source_line("cache.reset();");
-    output.add_source_line("decision_points.push_back({0,state_to_change.current_cell,state_to_change.current_cell,0,0,0});");
+    output.add_source_line("cache.push();");
+    output.add_source_line("decision_points.push_back({0,state_to_change.current_state,state_to_change.current_cell,1,0,0});");
     output.add_source_line("}");
     output.add_source_line("");
     generate_main_dfs();
@@ -345,7 +348,7 @@ void game_compiler::generate_resettable_bitarray(){
     output.add_source_line("");
     output.add_header_line("private:");
     output.add_header_line("int content["+std::to_string(game_automaton.get_size())+"]["+std::to_string(input.get_board().get_size())+"] = {};");
-    output.add_header_line("int current_threshold = std::numeric_limits<int>::min();");
+    output.add_header_line("int current_threshold = 1;");
     output.add_header_line("};");
     output.add_header_line("");
 }

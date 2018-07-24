@@ -73,7 +73,7 @@ void automaton::print_transition_functions(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl);
+        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register);
 }
 
 void automaton::print_transition_table(cpp_container& output){

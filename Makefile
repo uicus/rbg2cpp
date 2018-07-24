@@ -7,6 +7,7 @@ INC_DIR := inc
 OBJ_DIR := obj
 BIN_DIR := bin
 DEP_DIR := dep
+TEST_DIR = test
 MAIN_FILE := $(SRC_DIR)/main.cpp
 RBG_PARSER_DIR := rbgParser
 PARSER_INC_DIR := $(RBG_PARSER_DIR)/src
@@ -14,7 +15,8 @@ PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-CFLAGS := -Wall -Wextra -Wpedantic -O3 -flto -std=c++11 -s $(INCLUDE)
+COMMON_CFLAGS = -Wall -Wextra -Wpedantic -O3 -flto -std=c++11
+CFLAGS := $(COMMON_CFLAGS) -s $(INCLUDE)
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
@@ -44,10 +46,22 @@ $(OBJ_DIR):
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
+test_%: $(RBG_PARSER_DIR)/examples/%.rbg
+	rm -rf $(TEST_DIR)/reasoner.*
+	rm -rf $(TEST_DIR)/test
+	$(BIN_DIR)/$(TARGET) -o reasoner $<
+	mv reasoner.hpp $(TEST_DIR)/
+	mv reasoner.cpp $(TEST_DIR)/
+	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp
+	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/main.cpp
+	ulimit -Sv 500000 && $(TEST_DIR)/test
+
 clean:
 	cd $(RBG_PARSER_DIR); make clean; cd ..
 	rm -rf $(OBJ_DIR)
 	rm -rf $(DEP_DIR)
+	rm -rf $(TEST_DIR)/reasoner.*
+	rm -rf $(TEST_DIR)/test
 
 distclean: clean
 	cd $(RBG_PARSER_DIR); make distclean; cd ..

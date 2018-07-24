@@ -99,9 +99,10 @@ void state::print_transition_functions(
     const std::map<rbg_parser::token, uint>& pieces_to_id,
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl)const{
+    const rbg_parser::declarations& decl,
+    const std::vector<state>& local_register)const{
     for(const auto& el: next_states)
-        el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl);
+        el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
 }
 
 void state::print_outgoing_transitions(uint from_state, cpp_container& output)const{
@@ -113,4 +114,12 @@ void state::print_outgoing_transitions(uint from_state, cpp_container& output)co
     }
     resulting_line += "},";
     output.add_source_line(resulting_line);
+}
+
+bool state::is_dead_end(void)const{
+    return next_states.empty();
+}
+
+bool state::is_no_choicer(void)const{
+    return next_states.size() == 1;
 }

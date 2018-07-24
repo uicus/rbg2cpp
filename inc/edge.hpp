@@ -7,6 +7,7 @@
 #include"token.hpp"
 
 class cpp_container;
+class state;
 
 namespace rbg_parser{
     class game_move;
@@ -30,7 +31,8 @@ class edge{
             const std::map<rbg_parser::token, uint>& pieces_to_id,
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl)const;
+            const rbg_parser::declarations& decl,
+            const std::vector<state>& local_register)const;
 };
 
 #endif

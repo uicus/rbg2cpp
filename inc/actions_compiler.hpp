@@ -23,6 +23,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         const rbg_parser::declarations& decl;
         bool should_check_cell_correctness;
         bool has_modifier;
+        bool is_finisher;
     public:
         actions_compiler(void)=delete;
         actions_compiler(const actions_compiler&)=delete;
@@ -52,6 +53,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);}
         void finallize(void);
+        bool is_ready_to_report(void)const;
 };
 
 #endif
