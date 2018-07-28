@@ -5,17 +5,17 @@
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
-constexpr uint NUMBER_OF_SIMULATIONS = 10;
+constexpr uint NUMBER_OF_SIMULATIONS = 50;
 constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
 
 uint avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
 uint states_count = 0;
+reasoner::resettable_bitarray_stack cache;
 
 void random_simulation() {
     reasoner::game_state state;
-    reasoner::resettable_bitarray_stack cache;
     while(true){
         uint legal_moves = 0;
         if(state.get_current_player() == KEEPER){

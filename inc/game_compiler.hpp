@@ -3,6 +3,7 @@
 
 #include<string>
 #include<map>
+#include<vector>
 
 #include"cpp_container.hpp"
 #include"types.hpp"
@@ -20,6 +21,7 @@ class game_compiler{
         std::map<rbg_parser::token, uint> edges_to_id;
         std::map<rbg_parser::token, uint> variables_to_id;
         automaton game_automaton;
+        std::vector<automaton> pattern_automata;
         const rbg_parser::parsed_game& input;
         game_compiler(void)=delete;
         void generate_board_cells_decoder(void);

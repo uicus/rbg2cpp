@@ -5,6 +5,7 @@
 #include"automaton.hpp"
 #include"types.hpp"
 #include<cassert>
+#include<vector>
 
 namespace rbg_parser{
     class game_move;
@@ -14,14 +15,17 @@ class automaton_builder : public rbg_parser::abstract_dispatcher{
         automaton result;
         static uint current_index;
         bool should_assign_indices;
+        std::vector<automaton>& pattern_automata;
+        bool block_building_mode;
+        std::vector<label> current_block;
     public:
-        automaton_builder(void)=default;
         automaton_builder(const automaton_builder&)=delete;
         automaton_builder(automaton_builder&&)=default;
         automaton_builder& operator=(const automaton_builder&)=delete;
         automaton_builder& operator=(automaton_builder&&)=default;
         ~automaton_builder(void)override=default;
-        automaton_builder(bool should_assign_indices);
+//        automaton_builder(bool should_assign_indices);
+        automaton_builder(std::vector<automaton>& pattern_automata, bool should_assign_indices=true);
         void dispatch(const rbg_parser::sum& m)override;
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;

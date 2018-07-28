@@ -61,11 +61,6 @@ void automaton::starify_automaton(void){
     set_endpoints(new_endpoints);
 }
 
-void automaton::turn_into_check(bool negated){
-    local_register[start_state].set_as_check_begin(start_state, accept_state, negated);
-    local_register[accept_state].set_as_check_end(start_state, accept_state, negated);
-}
-
 void automaton::print_transition_functions(
     cpp_container& output,
     const std::map<rbg_parser::token, uint>& pieces_to_id,
@@ -108,7 +103,7 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
     return result;
 }
 
-automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index){
+automaton edge_automaton(const std::vector<label>& label_list, uint index){
     automaton result;
     auto result_endpoints = result.prepare_new_endpoints();
     result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list, index);
@@ -116,8 +111,14 @@ automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_
     return result;
 }
 
-automaton edge_automaton(const rbg_parser::game_move* label, uint index){
-    std::vector<const rbg_parser::game_move*> label_list;
-    label_list.push_back(label);
+automaton edge_automaton(const rbg_parser::game_move* action_label, uint index){
+    std::vector<label> label_list;
+    label_list.push_back({action,action_label,0});
+    return edge_automaton(label_list, index);
+}
+
+automaton edge_automaton(uint pattern_automaton_index, bool positive, uint index){
+    std::vector<label> label_list;
+    label_list.push_back({(positive?positive_pattern:negative_pattern),nullptr,pattern_automaton_index});
     return edge_automaton(label_list, index);
 }

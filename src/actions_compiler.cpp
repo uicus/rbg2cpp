@@ -122,10 +122,6 @@ void actions_compiler::dispatch(const rbg_parser::keeper_switch&){
     is_finisher = true;
 }
 
-void actions_compiler::dispatch(const rbg_parser::move_check& m){
-    output.add_source_line("// move pattern checking will eventually appear here...");
-}
-
 void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
     arithmetics_printer left_side_printer(pieces_to_id, variables_to_id);
     arithmetics_printer right_side_printer(pieces_to_id, variables_to_id);

@@ -22,7 +22,6 @@ class automaton{
         void concat_automaton(automaton&& concatee);
     public:
         void starify_automaton(void);
-        void turn_into_check(bool negated);
         uint get_start_state(void);
         uint get_size(void);
         void print_transition_functions(
@@ -34,13 +33,15 @@ class automaton{
         void print_transition_table(cpp_container& output);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
-        friend automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);
+        friend automaton edge_automaton(const std::vector<label>& label_list, uint index);
         friend automaton edge_automaton(const rbg_parser::game_move*, uint index);
+        friend automaton edge_automaton(uint pattern_automaton_index, bool positive, uint index);
 };
 
 automaton sum_of_automatons(std::vector<automaton>&& elements);
 automaton concatenation_of_automatons(std::vector<automaton>&& elements);
-automaton edge_automaton(const std::vector<const rbg_parser::game_move*>& label_list, uint index);
-automaton edge_automaton(const rbg_parser::game_move* label, uint index);
+automaton edge_automaton(const std::vector<label>& label_list, uint index);
+automaton edge_automaton(const rbg_parser::game_move* action_label, uint index);
+automaton edge_automaton(uint pattern_automaton_index, bool positive, uint index);
 
 #endif

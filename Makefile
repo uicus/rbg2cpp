@@ -49,7 +49,7 @@ $(BIN_DIR):
 test_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	rm -rf $(TEST_DIR)/reasoner.*
 	rm -rf $(TEST_DIR)/test
-	$(BIN_DIR)/$(TARGET) -o reasoner $<
+	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -o reasoner $<
 	mv reasoner.hpp $(TEST_DIR)/
 	mv reasoner.cpp $(TEST_DIR)/
 	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp

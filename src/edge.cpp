@@ -11,8 +11,12 @@ label_list(),
 index_after_traversing(0){
 }
 
-void edge::add_another_action(const rbg_parser::game_move* action){
-    label_list.push_back(action);
+void edge::add_another_action(const rbg_parser::game_move* a){
+    label_list.push_back({action,a,0});
+}
+
+void edge::add_another_pattern_check(bool positive, uint automaton_index){
+    label_list.push_back({(positive?positive_pattern:negative_pattern),nullptr,automaton_index});
 }
 
 void edge::shift(uint shift_value){
@@ -48,14 +52,24 @@ void edge::print_transition_function(
     else{
         actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl);
         for(const auto& el: label_list)
-            el->accept(ac);
+            switch(el.k){
+                case action:
+                    el.a->accept(ac);
+                    break;
+                case positive_pattern:
+                    output.add_source_line("// positive pattern");
+                    break;
+                case negative_pattern:
+                    output.add_source_line("// negative pattern");
+                    break;
+            }
         ac.finallize();
         output.add_source_line("state_to_change.current_state = "+std::to_string(local_register_endpoint_index)+";");
-        output.add_source_line("if(cache.is_set(state_to_change.current_state, state_to_change.current_cell)){");
+        output.add_source_line("if(cache.is_set(state_to_change.current_state, state_to_change.current_cell-1)){");
         output.add_source_line("revert_to_last_choice();");
         output.add_source_line("return;");
         output.add_source_line("}");
-        output.add_source_line("cache.set(state_to_change.current_state, state_to_change.current_cell);");
+        output.add_source_line("cache.set(state_to_change.current_state, state_to_change.current_cell-1);");
         if(ac.is_ready_to_report())
             output.add_source_line("ready_to_report = true;");
         else{
