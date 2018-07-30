@@ -40,6 +40,7 @@ class game_compiler{
         void generate_states_iterator(void);
         void generate_iterator_helper_structures(void);
         void generate_iterator_revert_methods(void);
+        void generate_resettable_pattern_array(void);
         void generate_resettable_bitarray(void);
         void generate_resettable_bitarray_stack(void);
         void generate_main_dfs(void);

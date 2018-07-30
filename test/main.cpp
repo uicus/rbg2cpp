@@ -5,7 +5,7 @@
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
-constexpr uint NUMBER_OF_SIMULATIONS = 50;
+constexpr uint NUMBER_OF_SIMULATIONS = 100;
 constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
