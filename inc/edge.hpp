@@ -46,6 +46,15 @@ class edge{
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register)const;
+        void print_transition_function_inside_pattern(
+            uint from_state,
+            uint pattern_index,
+            cpp_container& output,
+            const std::map<rbg_parser::token, uint>& pieces_to_id,
+            const std::map<rbg_parser::token, uint>& edges_to_id,
+            const std::map<rbg_parser::token, uint>& variables_to_id,
+            const rbg_parser::declarations& decl,
+            const std::vector<state>& local_register)const;
 };
 
 #endif

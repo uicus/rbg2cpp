@@ -39,6 +39,11 @@ class game_compiler{
         void build_game_automaton(void);
         void generate_states_iterator(void);
         void generate_iterator_helper_structures(void);
+        void generate_revert_to_decision_body(
+            const std::string& stack_name,
+            const std::string& transitions_name,
+            const std::string& visited_method_name,
+            bool should_set_as_true_while_returning=false);
         void generate_iterator_revert_methods(void);
         void generate_resettable_pattern_array(void);
         void generate_resettable_bitarray(void);

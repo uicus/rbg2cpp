@@ -75,10 +75,23 @@ void state::print_transition_functions(
         el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
 }
 
-void state::print_outgoing_transitions(uint from_state, cpp_container& output)const{
+void state::print_transition_functions_inside_pattern(
+    uint from_state,
+    uint pattern_index,
+    cpp_container& output,
+    const std::map<rbg_parser::token, uint>& pieces_to_id,
+    const std::map<rbg_parser::token, uint>& edges_to_id,
+    const std::map<rbg_parser::token, uint>& variables_to_id,
+    const rbg_parser::declarations& decl,
+    const std::vector<state>& local_register)const{
+    for(const auto& el: next_states)
+        el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
+}
+
+void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
     std::string resulting_line = "{";
     for(uint i=0;i<next_states.size();++i){
-        resulting_line += "&next_states_iterator::transition_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint());
+        resulting_line += "&next_states_iterator::"+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint());
         if(i+1<next_states.size())
             resulting_line += ',';
     }

@@ -16,12 +16,14 @@ actions_compiler::actions_compiler(
     const std::map<rbg_parser::token, uint>& pieces_to_id,
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl):
+    const rbg_parser::declarations& decl,
+    const std::string& reverting_function):
     output(output),
     pieces_to_id(pieces_to_id),
     edges_to_id(edges_to_id),
     variables_to_id(variables_to_id),
     decl(decl),
+    reverting_function(reverting_function),
     should_check_cell_correctness(false),
     has_modifier(false),
     is_finisher(false){
@@ -36,7 +38,7 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
     if(should_check_cell_correctness){
         should_check_cell_correctness = false;
         output.add_source_line("if(state_to_change.current_cell == 0){");
-        output.add_source_line("revert_to_last_choice();");
+        output.add_source_line(reverting_function+"();");
         output.add_source_line("return;");
         output.add_source_line("}");
     }
@@ -49,14 +51,14 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
 
 void actions_compiler::dispatch(const rbg_parser::ons& m){
     if(m.get_legal_ons().size() == 0){
-        output.add_source_line("revert_to_last_choice();");
+        output.add_source_line(reverting_function+"();");
         output.add_source_line("return;");
     }
     else if(m.get_legal_ons().size() < pieces_to_id.size()){
         if(should_check_cell_correctness){
             should_check_cell_correctness = false;
             output.add_source_line("if(state_to_change.current_cell == 0){");
-            output.add_source_line("revert_to_last_choice();");
+            output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
             output.add_source_line("}");
         }
@@ -66,14 +68,14 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
                 output.add_source_line("case "+std::to_string(pieces_to_id.at(el))+":");
             output.add_source_line("break;");
             output.add_source_line("default:");
-            output.add_source_line("revert_to_last_choice();");
+            output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
         }
         else{
             for(const auto& el: pieces_to_id)
                 if(not m.get_legal_ons().count(el.first))
                     output.add_source_line("case "+std::to_string(el.second)+":");
-            output.add_source_line("revert_to_last_choice();");
+            output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
             output.add_source_line("default:");
             output.add_source_line("break;");
@@ -93,7 +95,7 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
         if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound)){
-            output.add_source_line("revert_to_last_choice();");
+            output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
         }
         else{
@@ -105,7 +107,7 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
             output.add_source_line("variables_change_points.push_back({"+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]});");
             output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+right_side_printer.get_final_result()+";");
             output.add_source_line("if(state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] > bounds["+std::to_string(variables_to_id.at(left_side))+"]){");
-            output.add_source_line("revert_to_last_choice();");
+            output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
             output.add_source_line("}");
     }
@@ -152,7 +154,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         if(not can_pass_through){
-            output.add_source_line("revert_to_last_choice();");
+            output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
         }
     }
@@ -181,7 +183,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         output.add_source_line("if("+left_side_printer.get_final_result()+" "+operation_character+" "+right_side_printer.get_final_result()+"){");
-        output.add_source_line("revert_to_last_choice();");
+        output.add_source_line(reverting_function+"();");
         output.add_source_line("return;");
         output.add_source_line("}");
     }
@@ -190,7 +192,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
 void actions_compiler::finallize(void){
     if(should_check_cell_correctness){
         output.add_source_line("if(state_to_change.current_cell == 0){");
-        output.add_source_line("revert_to_last_choice();");
+        output.add_source_line(reverting_function+"();");
         output.add_source_line("return;");
         output.add_source_line("}");
     }

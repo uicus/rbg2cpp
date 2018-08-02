@@ -71,13 +71,23 @@ void automaton::print_transition_functions(
         local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register);
 }
 
-void automaton::print_transition_table(cpp_container& output){
-    output.add_header_include("vector");
-    output.add_header_line("typedef void(next_states_iterator::*transition_function)(void);");
-    output.add_header_line("const static std::vector<transition_function> transitions["+std::to_string(local_register.size())+"];");
-    output.add_source_line("const std::vector<next_states_iterator::transition_function> next_states_iterator::transitions["+std::to_string(local_register.size())+"] = {");
+void automaton::print_transition_functions_inside_pattern(
+    uint pattern_index,
+    cpp_container& output,
+    const std::map<rbg_parser::token, uint>& pieces_to_id,
+    const std::map<rbg_parser::token, uint>& edges_to_id,
+    const std::map<rbg_parser::token, uint>& variables_to_id,
+    const rbg_parser::declarations& decl)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_outgoing_transitions(i,output);
+        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register);
+}
+
+void automaton::print_transition_table(cpp_container& output, const std::string& table_name, const std::string& functions_prefix)const{
+    output.add_header_include("vector");
+    output.add_header_line("const static std::vector<transition_function> "+table_name+"["+std::to_string(local_register.size())+"];");
+    output.add_source_line("const std::vector<next_states_iterator::transition_function> next_states_iterator::"+table_name+"["+std::to_string(local_register.size())+"] = {");
+    for(uint i=0;i<local_register.size();++i)
+        local_register[i].print_outgoing_transitions(i,output, functions_prefix);
     output.add_source_line("};");
 }
 
