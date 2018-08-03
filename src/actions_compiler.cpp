@@ -198,6 +198,8 @@ void actions_compiler::finallize(void){
     }
     if(has_modifier)
         output.add_source_line("cache.push();");
+    should_check_cell_correctness = false;
+    has_modifier = false;
 }
 
 bool actions_compiler::is_ready_to_report(void)const{

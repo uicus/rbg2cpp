@@ -42,13 +42,13 @@ class game_compiler{
         void generate_revert_to_decision_body(
             const std::string& stack_name,
             const std::string& transitions_name,
-            const std::string& visited_method_name,
-            bool should_set_as_true_while_returning=false);
+            const std::string& state_name);
         void generate_iterator_revert_methods(void);
         void generate_resettable_pattern_array(void);
         void generate_resettable_bitarray(void);
         void generate_resettable_bitarray_stack(void);
         void generate_main_dfs(void);
+        void generate_dfs_for_pattern(uint pattern_index);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
         game_compiler(const game_compiler&)=default;

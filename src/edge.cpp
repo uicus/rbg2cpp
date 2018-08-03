@@ -58,10 +58,20 @@ void edge::print_transition_function(
                     el.a->accept(ac);
                     break;
                 case positive_pattern:
-                    output.add_source_line("// positive pattern");
+                    ac.finallize();
+                    output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
+                    output.add_source_line("if(not success_to_report"+std::to_string(el.automaton_index)+"){");
+                    output.add_source_line("revert_to_last_choice();");
+                    output.add_source_line("return;");
+                    output.add_source_line("}");
                     break;
                 case negative_pattern:
-                    output.add_source_line("// negative pattern");
+                    ac.finallize();
+                    output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
+                    output.add_source_line("if(success_to_report"+std::to_string(el.automaton_index)+"){");
+                    output.add_source_line("revert_to_last_choice();");
+                    output.add_source_line("return;");
+                    output.add_source_line("}");
                     break;
             }
         ac.finallize();
@@ -103,17 +113,28 @@ void edge::print_transition_function_inside_pattern(
                 el.a->accept(ac);
                 break;
             case positive_pattern:
-                output.add_source_line("// positive pattern");
+                ac.finallize();
+                output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
+                output.add_source_line("if(not success_to_report"+std::to_string(el.automaton_index)+"){");
+                output.add_source_line("revert_to_last_choice_because_failure"+std::to_string(pattern_index)+"();");
+                output.add_source_line("return;");
+                output.add_source_line("}");
                 break;
             case negative_pattern:
-                output.add_source_line("// negative pattern");
+                ac.finallize();
+                output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
+                output.add_source_line("if(success_to_report"+std::to_string(el.automaton_index)+"){");
+                output.add_source_line("revert_to_last_choice_because_failure"+std::to_string(pattern_index)+"();");
+                output.add_source_line("return;");
+                output.add_source_line("}");
                 break;
         }
     ac.finallize();
     output.add_source_line("pattern_state"+std::to_string(pattern_index)+" = "+std::to_string(local_register_endpoint_index)+";");
-    output.add_source_line("if(cache.already_visited"+std::to_string(pattern_index)+"(state_to_change.current_state, state_to_change.current_cell-1)){");
+    output.add_source_line("if(cache.already_visited"+std::to_string(pattern_index)+"(pattern_state"+std::to_string(pattern_index)+", state_to_change.current_cell-1)){");
     output.add_source_line("if(cache.is_true"+std::to_string(pattern_index)+"(pattern_state"+std::to_string(pattern_index)+", state_to_change.current_cell-1)){");
-    output.add_source_line("revert_to_last_choice_because_success"+std::to_string(pattern_index)+"();");
+    output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
+    output.add_source_line("revert_because_success"+std::to_string(pattern_index)+"();");
     output.add_source_line("}");
     output.add_source_line("else{");
     output.add_source_line("revert_to_last_choice_because_failure"+std::to_string(pattern_index)+"();");
@@ -124,11 +145,13 @@ void edge::print_transition_function_inside_pattern(
     assert(not ac.is_ready_to_report());
     if(local_register[local_register_endpoint_index].is_dead_end()){
         output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
-        output.add_source_line("revert_to_last_choice_because_success"+std::to_string(pattern_index)+"();");
+        output.add_source_line("revert_because_success"+std::to_string(pattern_index)+"();");
     }
     else{
-        if(local_register[local_register_endpoint_index].is_no_choicer())
+        if(local_register[local_register_endpoint_index].is_no_choicer()){
+//            output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({1,pattern_state"+std::to_string(pattern_index)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
             output.add_source_line("(this->*pattern_transitions"+std::to_string(pattern_index)+"[pattern_state"+std::to_string(pattern_index)+"][0])();");
+        }
         else
             output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({0,pattern_state"+std::to_string(pattern_index)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
     }
