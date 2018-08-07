@@ -16,16 +16,12 @@
 
 uint automaton_builder::current_index = 0;
 
-//automaton_builder::automaton_builder(bool should_assign_indices):
-//result(),
-//should_assign_indices(should_assign_indices){
-//}
-
 automaton_builder::automaton_builder(std::vector<automaton>& pattern_automata, bool should_assign_indices):
 result(),
 should_assign_indices(should_assign_indices),
 pattern_automata(pattern_automata),
 block_building_mode(false),
+block_has_switch(false),
 current_block(){
 }
 
@@ -75,17 +71,25 @@ void automaton_builder::dispatch(const rbg_parser::assignment& m){
 }
 
 void automaton_builder::dispatch(const rbg_parser::player_switch& m){
-    if(block_building_mode)
+    if(block_building_mode){
         current_block.push_back({action,&m,0});
-    else
+        block_has_switch = true;
+    }
+    else{
         result = edge_automaton(&m, should_assign_indices ? ++current_index : 0);
+        result.mark_end_as_outgoing_usable();
+    }
 }
 
 void automaton_builder::dispatch(const rbg_parser::keeper_switch& m){
-    if(block_building_mode)
+    if(block_building_mode){
         current_block.push_back({action,&m,0});
-    else
+        block_has_switch = true;
+    }
+    else{
         result = edge_automaton(&m, should_assign_indices ? ++current_index : 0);
+        result.mark_end_as_outgoing_usable();
+    }
 }
 
 void automaton_builder::dispatch(const rbg_parser::actions_block& m){
@@ -97,6 +101,8 @@ void automaton_builder::dispatch(const rbg_parser::actions_block& m){
         el->accept(elements_builder);
     }
     result = edge_automaton(elements_builder.current_block, current_index);
+    if(block_has_switch)
+        result.mark_end_as_outgoing_usable();
 }
 
 void automaton_builder::dispatch(const rbg_parser::star_move& m){

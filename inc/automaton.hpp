@@ -38,6 +38,8 @@ class automaton{
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl)const;
         void print_transition_table(cpp_container& output, const std::string& table_name, const std::string& functions_prefix)const;
+        void mark_end_as_outgoing_usable(void);
+        void mark_start_as_outgoing_usable(void);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list, uint index);

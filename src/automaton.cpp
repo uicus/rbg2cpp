@@ -91,6 +91,14 @@ void automaton::print_transition_table(cpp_container& output, const std::string&
     output.add_source_line("};");
 }
 
+void automaton::mark_end_as_outgoing_usable(void){
+    local_register[accept_state].mark_explicitly_as_transition_start();
+}
+
+void automaton::mark_start_as_outgoing_usable(void){
+    local_register[start_state].mark_explicitly_as_transition_start();
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

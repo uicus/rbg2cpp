@@ -17,6 +17,7 @@ class state{
         uint state_id;
         static uint next_free_id;
         std::vector<edge> next_states;
+        bool outgoing_edges_needed;
     public:
         state(void);
         state(const state& rhs);
@@ -47,6 +48,8 @@ class state{
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register)const;
         void print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
+        void mark_explicitly_as_transition_start(void);
+        const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;
         bool is_no_choicer(void)const;
 };

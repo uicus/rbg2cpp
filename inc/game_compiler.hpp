@@ -42,7 +42,8 @@ class game_compiler{
         void generate_revert_to_decision_body(
             const std::string& stack_name,
             const std::string& transitions_name,
-            const std::string& state_name);
+            const std::string& state_name,
+            bool has_state=true);
         void generate_iterator_revert_methods(void);
         void generate_resettable_pattern_array(void);
         void generate_resettable_bitarray(void);

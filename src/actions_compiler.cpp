@@ -35,13 +35,7 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
-    if(should_check_cell_correctness){
-        should_check_cell_correctness = false;
-        output.add_source_line("if(state_to_change.current_cell == 0){");
-        output.add_source_line(reverting_function+"();");
-        output.add_source_line("return;");
-        output.add_source_line("}");
-    }
+    check_cell_correctness();
     output.add_source_line("board_change_points.push_back({state_to_change.current_cell, state_to_change.pieces[state_to_change.current_cell]});");
     output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[state_to_change.current_cell]];");
     output.add_source_line("++state_to_change.pieces_count["+std::to_string(pieces_to_id.at(m.get_piece()))+"];");
@@ -55,13 +49,7 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
         output.add_source_line("return;");
     }
     else if(m.get_legal_ons().size() < pieces_to_id.size()){
-        if(should_check_cell_correctness){
-            should_check_cell_correctness = false;
-            output.add_source_line("if(state_to_change.current_cell == 0){");
-            output.add_source_line(reverting_function+"();");
-            output.add_source_line("return;");
-            output.add_source_line("}");
-        }
+        check_cell_correctness();
         output.add_source_line("switch(state_to_change.pieces[state_to_change.current_cell]){");
         if(m.get_legal_ons().size() < pieces_to_id.size()/2+1){
             for(const auto& el: m.get_legal_ons())
@@ -190,15 +178,23 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
 }
 
 void actions_compiler::finallize(void){
+    check_cell_correctness();
+    notify_about_modifier();
+}
+
+void actions_compiler::check_cell_correctness(void){
     if(should_check_cell_correctness){
         output.add_source_line("if(state_to_change.current_cell == 0){");
         output.add_source_line(reverting_function+"();");
         output.add_source_line("return;");
         output.add_source_line("}");
     }
-    if(has_modifier)
-        output.add_source_line("cache.push();");
     should_check_cell_correctness = false;
+}
+
+void actions_compiler::notify_about_modifier(void){
+    if(has_modifier || is_finisher)
+        output.add_source_line("cache.push();");
     has_modifier = false;
 }
 

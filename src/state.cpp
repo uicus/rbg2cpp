@@ -7,12 +7,14 @@ uint state::next_free_id = 0;
 
 state::state(void):
 state_id(next_free_id++),
-next_states(){
+next_states(),
+outgoing_edges_needed(false){
 }
 
 state::state(const state& rhs):
 state_id(next_free_id++),
-next_states(rhs.next_states){
+next_states(rhs.next_states),
+outgoing_edges_needed(rhs.outgoing_edges_needed){
 }
 
 state& state::operator=(const state& rhs){
@@ -20,6 +22,7 @@ state& state::operator=(const state& rhs){
         return *this;
     state_id = next_free_id++;
     next_states = rhs.next_states;
+    outgoing_edges_needed = rhs.outgoing_edges_needed;
     return *this;
 }
 
@@ -41,6 +44,7 @@ void state::absorb(state&& rhs){
     assert(next_states.empty());
     if(not rhs.next_states.empty()){
         next_states = std::move(rhs.next_states);
+        outgoing_edges_needed |= rhs.outgoing_edges_needed;
         rhs.next_states.clear();
     }
 }
@@ -71,8 +75,9 @@ void state::print_transition_functions(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register)const{
-    for(const auto& el: next_states)
-        el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
+    if(next_states.size()>1 or outgoing_edges_needed)
+        for(const auto& el: next_states)
+            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
 }
 
 void state::print_transition_functions_inside_pattern(
@@ -84,19 +89,30 @@ void state::print_transition_functions_inside_pattern(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register)const{
-    for(const auto& el: next_states)
-        el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
+    if(next_states.size()>1 or outgoing_edges_needed)
+        for(const auto& el: next_states)
+            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
 }
 
 void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
     std::string resulting_line = "{";
-    for(uint i=0;i<next_states.size();++i){
-        resulting_line += "&next_states_iterator::"+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint());
-        if(i+1<next_states.size())
-            resulting_line += ',';
-    }
+    if(next_states.size()>1 or outgoing_edges_needed)
+        for(uint i=0;i<next_states.size();++i){
+            resulting_line += "&next_states_iterator::"+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint());
+            if(i+1<next_states.size())
+                resulting_line += ',';
+        }
     resulting_line += "},";
     output.add_source_line(resulting_line);
+}
+
+void state::mark_explicitly_as_transition_start(void){
+    outgoing_edges_needed = true;
+}
+
+const edge& state::get_only_exit(void)const{
+    assert(is_no_choicer());
+    return next_states[0];
 }
 
 bool state::is_dead_end(void)const{

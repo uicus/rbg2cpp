@@ -8,6 +8,7 @@
 
 class cpp_container;
 class state;
+class actions_compiler;
 
 namespace rbg_parser{
     class game_move;
@@ -30,6 +31,9 @@ class edge{
         uint local_register_endpoint_index;
         std::vector<label> label_list;
         uint index_after_traversing;
+        void handle_labels(cpp_container& output, actions_compiler& ac, const std::string& revert_name)const;
+        void visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const;
+        void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const;
     public:
         edge(uint local_register_endpoint_index);
         void add_another_action(const rbg_parser::game_move* a);
