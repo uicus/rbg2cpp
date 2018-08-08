@@ -103,11 +103,14 @@ void edge::print_transition_function(
         handle_labels(output,ac,revert);
         uint current_state = local_register_endpoint_index;
         while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer()){
-            visit_node(output, current_state,ac);
+            if(local_register[current_state].can_be_checked_for_visit())
+                visit_node(output, current_state,ac);
             local_register[current_state].get_only_exit().handle_labels(output,ac,revert);
             current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
         }
-        visit_node(output, current_state,ac);
+        if(local_register[current_state].can_be_checked_for_visit())
+            visit_node(output, current_state,ac);
+        ac.finallize();
         if(ac.is_ready_to_report()){
             output.add_source_line("ready_to_report = true;");
             output.add_source_line("state_to_change.current_state = "+std::to_string(current_state)+";");
@@ -136,21 +139,27 @@ void edge::print_transition_function_inside_pattern(
     handle_labels(output,ac,revert);
     uint current_state = local_register_endpoint_index;
     while(local_register[current_state].is_no_choicer()){
-        visit_node_in_pattern(output,current_state,pattern_index,ac);
-        output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({1,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
+        if(local_register[current_state].can_be_checked_for_visit()){
+            visit_node_in_pattern(output,current_state,pattern_index,ac);
+            output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
+            output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({1,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
+        }
         local_register[current_state].get_only_exit().handle_labels(output,ac,revert);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
-    visit_node_in_pattern(output,current_state,pattern_index,ac);
+    if(local_register[current_state].can_be_checked_for_visit())
+        visit_node_in_pattern(output,current_state,pattern_index,ac);
+    ac.finallize();
     assert(not ac.is_ready_to_report());
     if(local_register[current_state].is_dead_end()){
         output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
-        output.add_source_line("cache.set_as_true"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
+        if(local_register[current_state].can_be_checked_for_visit())
+            output.add_source_line("cache.set_as_true"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
         output.add_source_line("revert_because_success"+std::to_string(pattern_index)+"();");
     }
     else{
-        output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
+        if(local_register[current_state].can_be_checked_for_visit())
+            output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
         output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
     }
     output.add_source_line("}");

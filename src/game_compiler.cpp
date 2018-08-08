@@ -206,8 +206,11 @@ void game_compiler::build_game_automaton(void){
     input.get_moves()->accept(b);
     game_automaton = b.get_final_result();
     game_automaton.mark_start_as_outgoing_usable();
-    for(auto& el: pattern_automata)
+    game_automaton.mark_states_as_double_reachable();
+    for(auto& el: pattern_automata){
         el.mark_start_as_outgoing_usable();
+        el.mark_states_as_double_reachable();
+    }
 }
 
 void game_compiler::generate_iterator_helper_structures(void){
@@ -314,6 +317,12 @@ void game_compiler::generate_dfs_for_pattern(uint pattern_index){
     output.add_header_line("void evaluate"+std::to_string(pattern_index)+"(void);");
     output.add_source_line("void next_states_iterator::evaluate"+std::to_string(pattern_index)+"(void){");
     output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = false;");
+    output.add_source_line("if(cache.already_visited"+std::to_string(pattern_index)+"("+std::to_string(pattern_automata[pattern_index].get_start_state())+", state_to_change.current_cell-1)){");
+    output.add_source_line("if(cache.is_true"+std::to_string(pattern_index)+"("+std::to_string(pattern_automata[pattern_index].get_start_state())+", state_to_change.current_cell-1)){");
+    output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
+    output.add_source_line("}");
+    output.add_source_line("return;");
+    output.add_source_line("}");
     output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({0,"+std::to_string(pattern_automata[pattern_index].get_start_state())+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
     output.add_source_line("while(not pattern_decision_points"+std::to_string(pattern_index)+".empty()){");
     output.add_source_line("(this->*pattern_transitions"+std::to_string(pattern_index)+"[pattern_decision_points"+std::to_string(pattern_index)+".back().state_checkpoint][pattern_decision_points"+std::to_string(pattern_index)+".back().current_branch++])();");

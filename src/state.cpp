@@ -8,13 +8,15 @@ uint state::next_free_id = 0;
 state::state(void):
 state_id(next_free_id++),
 next_states(),
-outgoing_edges_needed(false){
+outgoing_edges_needed(false),
+doubly_reachable(false){
 }
 
 state::state(const state& rhs):
 state_id(next_free_id++),
 next_states(rhs.next_states),
-outgoing_edges_needed(rhs.outgoing_edges_needed){
+outgoing_edges_needed(rhs.outgoing_edges_needed),
+doubly_reachable(rhs.doubly_reachable){
 }
 
 state& state::operator=(const state& rhs){
@@ -23,6 +25,7 @@ state& state::operator=(const state& rhs){
     state_id = next_free_id++;
     next_states = rhs.next_states;
     outgoing_edges_needed = rhs.outgoing_edges_needed;
+    doubly_reachable = rhs.doubly_reachable;
     return *this;
 }
 
@@ -45,6 +48,7 @@ void state::absorb(state&& rhs){
     if(not rhs.next_states.empty()){
         next_states = std::move(rhs.next_states);
         outgoing_edges_needed |= rhs.outgoing_edges_needed;
+        doubly_reachable |= rhs.doubly_reachable;
         rhs.next_states.clear();
     }
 }
@@ -104,6 +108,19 @@ void state::print_outgoing_transitions(uint from_state, cpp_container& output, c
         }
     resulting_line += "},";
     output.add_source_line(resulting_line);
+}
+
+void state::notify_endpoints_about_being_reachable(std::vector<uint>& reachability)const{
+    for(const auto& el: next_states)
+        ++reachability[el.get_endpoint()];
+}
+
+void state::mark_as_doubly_reachable(void){
+    doubly_reachable = true;
+}
+
+bool state::can_be_checked_for_visit(void)const{
+    return doubly_reachable;
 }
 
 void state::mark_explicitly_as_transition_start(void){

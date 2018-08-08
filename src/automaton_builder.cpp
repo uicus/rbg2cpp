@@ -101,7 +101,7 @@ void automaton_builder::dispatch(const rbg_parser::actions_block& m){
         el->accept(elements_builder);
     }
     result = edge_automaton(elements_builder.current_block, current_index);
-    if(block_has_switch)
+    if(elements_builder.block_has_switch)
         result.mark_end_as_outgoing_usable();
 }
 

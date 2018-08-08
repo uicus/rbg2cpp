@@ -99,6 +99,16 @@ void automaton::mark_start_as_outgoing_usable(void){
     local_register[start_state].mark_explicitly_as_transition_start();
 }
 
+void automaton::mark_states_as_double_reachable(void){
+    std::vector<uint> reachability;
+    reachability.resize(local_register.size());
+    for(const auto& el: local_register)
+        el.notify_endpoints_about_being_reachable(reachability);
+    for(uint i=0;i<reachability.size();++i)
+        if(reachability[i]>1)
+            local_register[i].mark_as_doubly_reachable();
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

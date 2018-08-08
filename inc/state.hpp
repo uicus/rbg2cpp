@@ -18,6 +18,7 @@ class state{
         static uint next_free_id;
         std::vector<edge> next_states;
         bool outgoing_edges_needed;
+        bool doubly_reachable;
     public:
         state(void);
         state(const state& rhs);
@@ -48,6 +49,9 @@ class state{
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register)const;
         void print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
+        void notify_endpoints_about_being_reachable(std::vector<uint>& reachability)const;
+        void mark_as_doubly_reachable(void);
+        bool can_be_checked_for_visit(void)const;
         void mark_explicitly_as_transition_start(void);
         const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;

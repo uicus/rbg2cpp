@@ -193,7 +193,7 @@ void actions_compiler::check_cell_correctness(void){
 }
 
 void actions_compiler::notify_about_modifier(void){
-    if(has_modifier || is_finisher)
+    if(has_modifier)
         output.add_source_line("cache.push();");
     has_modifier = false;
 }
