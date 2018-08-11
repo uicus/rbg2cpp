@@ -30,6 +30,8 @@ class game_compiler{
         void fill_edges_map(void);
         std::string numbers_to_array(const std::vector<int>& numbers)const;
         void generate_board_structure(void);
+        void generate_appliers_lists(void);
+        void generate_move_class(void);
         void generate_game_state_class(void);
         void generate_initial_pieces(void);
         void generate_variables_bounds(void);
@@ -43,8 +45,9 @@ class game_compiler{
             const std::string& stack_name,
             const std::string& transitions_name,
             const std::string& state_name,
-            bool has_state=true);
+            bool after_pattern=true);
         void generate_iterator_revert_methods(void);
+        void generate_move_getter(void);
         void generate_resettable_pattern_array(void);
         void generate_resettable_bitarray(void);
         void generate_resettable_bitarray_stack(void);

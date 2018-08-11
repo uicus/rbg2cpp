@@ -99,7 +99,7 @@ void edge::print_transition_function(
     }
     else{
         std::string revert = "revert_to_last_choice";
-        actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert);
+        actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,true);
         handle_labels(output,ac,revert);
         uint current_state = local_register_endpoint_index;
         while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer()){
@@ -116,7 +116,7 @@ void edge::print_transition_function(
             output.add_source_line("state_to_change.current_state = "+std::to_string(current_state)+";");
         }
         else{
-            output.add_source_line("decision_points.push_back({0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
+            output.add_source_line("decision_points.emplace_back(0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
         }
     }
     output.add_source_line("}");
@@ -135,14 +135,14 @@ void edge::print_transition_function_inside_pattern(
     output.add_header_line("void pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);");
     output.add_source_line("void next_states_iterator::pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void){");
     std::string revert = "revert_to_last_choice_because_failure"+std::to_string(pattern_index);
-    actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert);
+    actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,false);
     handle_labels(output,ac,revert);
     uint current_state = local_register_endpoint_index;
     while(local_register[current_state].is_no_choicer()){
         if(local_register[current_state].can_be_checked_for_visit()){
             visit_node_in_pattern(output,current_state,pattern_index,ac);
             output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-            output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({1,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
+            output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(1,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
         }
         local_register[current_state].get_only_exit().handle_labels(output,ac,revert);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
@@ -160,7 +160,7 @@ void edge::print_transition_function_inside_pattern(
     else{
         if(local_register[current_state].can_be_checked_for_visit())
             output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".push_back({0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size()});");
+        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
     }
     output.add_source_line("}");
     output.add_source_line("");

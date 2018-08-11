@@ -17,32 +17,28 @@ reasoner::resettable_bitarray_stack cache;
 void random_simulation() {
     reasoner::game_state state;
     while(true){
-        uint legal_moves = 0;
+        std::vector<reasoner::move> legal_moves;
         if(state.get_current_player() == KEEPER){
             reasoner::next_states_iterator it(state, cache);
-            if(it.next()){
+            if(it.next())
                 continue;
-            }
         }
         else{
             states_count++;
             reasoner::next_states_iterator it(state, cache);
-            while (it.next()){
-                legal_moves++;
-            }
+            while(it.next())
+                legal_moves.push_back(it.get_move());
         }
 
-        if(legal_moves == 0){
+        if(legal_moves.empty()){
             for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
                 avg_goals[i] += state.get_player_score(i);
             return;
         }
 
-        std::uniform_int_distribution<> random_distribution(1,legal_moves);
+        std::uniform_int_distribution<> random_distribution(0,legal_moves.size()-1);
         uint chosen_move = random_distribution(random_generator);
-        reasoner::next_states_iterator it(state, cache);
-        for(uint i=0;i<chosen_move;++i)
-            it.next();
+        state.apply_move(legal_moves[chosen_move]);
     }
 }
 

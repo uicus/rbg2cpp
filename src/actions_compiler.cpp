@@ -17,7 +17,8 @@ actions_compiler::actions_compiler(
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
-    const std::string& reverting_function):
+    const std::string& reverting_function,
+    bool should_build_move):
     output(output),
     pieces_to_id(pieces_to_id),
     edges_to_id(edges_to_id),
@@ -26,7 +27,8 @@ actions_compiler::actions_compiler(
     reverting_function(reverting_function),
     should_check_cell_correctness(false),
     has_modifier(false),
-    is_finisher(false){
+    is_finisher(false),
+    should_build_move(should_build_move){
 }
 
 void actions_compiler::dispatch(const rbg_parser::shift& m){
@@ -36,10 +38,12 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
     check_cell_correctness();
-    output.add_source_line("board_change_points.push_back({state_to_change.current_cell, state_to_change.pieces[state_to_change.current_cell]});");
+    output.add_source_line("board_change_points.emplace_back(state_to_change.current_cell, state_to_change.pieces[state_to_change.current_cell]);");
     output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[state_to_change.current_cell]];");
     output.add_source_line("++state_to_change.pieces_count["+std::to_string(pieces_to_id.at(m.get_piece()))+"];");
     output.add_source_line("state_to_change.pieces[state_to_change.current_cell] = "+std::to_string(pieces_to_id.at(m.get_piece()))+";");
+    if(should_build_move)
+        output.add_source_line("board_list = std::make_shared<board_appliers>(state_to_change.current_cell,"+std::to_string(pieces_to_id.at(m.get_piece()))+",board_list);");
     has_modifier = true;
 }
 
@@ -87,13 +91,18 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
             output.add_source_line("return;");
         }
         else{
-            output.add_source_line("variables_change_points.push_back({"+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]});");
+            output.add_source_line("variables_change_points.emplace_back("+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]);");
             output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+std::to_string(right_side_printer.precomputed_value())+";");
+            if(should_build_move)
+                output.add_source_line("variables_list = std::make_shared<variables_appliers>("+std::to_string(variables_to_id.at(left_side))+","+std::to_string(right_side_printer.precomputed_value())+",variables_list);");
         }
     }
     else{
-            output.add_source_line("variables_change_points.push_back({"+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]});");
-            output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+right_side_printer.get_final_result()+";");
+            output.add_source_line("variables_change_points.emplace_back("+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]);");
+            std::string final_result = right_side_printer.get_final_result();
+            output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+final_result+";");
+            if(should_build_move)
+                output.add_source_line("variables_list = std::make_shared<variables_appliers>("+std::to_string(variables_to_id.at(left_side))+","+final_result+",variables_list);");
             output.add_source_line("if(state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] > bounds["+std::to_string(variables_to_id.at(left_side))+"]){");
             output.add_source_line(reverting_function+"();");
             output.add_source_line("return;");
