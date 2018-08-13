@@ -48,6 +48,7 @@ class game_compiler{
             bool after_pattern=true);
         void generate_iterator_revert_methods(void);
         void generate_move_getter(void);
+        void generate_resetter(void);
         void generate_resettable_pattern_array(void);
         void generate_resettable_bitarray(void);
         void generate_resettable_bitarray_stack(void);

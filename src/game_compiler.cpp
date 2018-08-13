@@ -391,6 +391,17 @@ void game_compiler::generate_move_getter(void){
     output.add_source_line("");
 }
 
+void game_compiler::generate_resetter(void){
+    output.add_header_line("void reset(void);");
+    output.add_source_line("void next_states_iterator::reset(void){");
+    output.add_source_line("state_to_change.current_player = moving_player;");
+    output.add_source_line("state_to_change.current_state = decision_points[0].state_checkpoint;");
+    output.add_source_line("revert_to_point(decision_points[0]);");
+    output.add_source_line("decision_points.resize(1);");
+    output.add_source_line("}");
+    output.add_source_line("");
+}
+
 void game_compiler::generate_main_dfs(void){
     output.add_header_line("bool next(void);");
     output.add_source_line("bool next_states_iterator::next(void){");
@@ -441,6 +452,7 @@ void game_compiler::generate_states_iterator(void){
     output.add_source_line("");
     generate_main_dfs();
     generate_move_getter();
+    generate_resetter();
     output.add_header_line("private:");
     output.add_header_line("typedef void(next_states_iterator::*transition_function)(void);");
     for(uint i=0;i<pattern_automata.size();++i){

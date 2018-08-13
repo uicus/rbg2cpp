@@ -46,14 +46,24 @@ $(OBJ_DIR):
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-test_%: $(RBG_PARSER_DIR)/examples/%.rbg
+simulate_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	rm -rf $(TEST_DIR)/reasoner.*
 	rm -rf $(TEST_DIR)/test
 	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -o reasoner $<
 	mv reasoner.hpp $(TEST_DIR)/
 	mv reasoner.cpp $(TEST_DIR)/
 	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp
-	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/main.cpp
+	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp
+	ulimit -Sv 500000 && $(TEST_DIR)/test
+
+perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
+	rm -rf $(TEST_DIR)/reasoner.*
+	rm -rf $(TEST_DIR)/test
+	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -o reasoner $<
+	mv reasoner.hpp $(TEST_DIR)/
+	mv reasoner.cpp $(TEST_DIR)/
+	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp
+	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp
 	ulimit -Sv 500000 && $(TEST_DIR)/test
 
 clean:
