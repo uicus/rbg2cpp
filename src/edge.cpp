@@ -46,7 +46,7 @@ void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std:
                 ac.finallize();
                 output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
                 output.add_source_line("if(not success_to_report"+std::to_string(el.automaton_index)+"){");
-                output.add_source_line(revert_name+"();");
+                output.add_source_line(revert_name);
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
@@ -54,7 +54,7 @@ void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std:
                 ac.finallize();
                 output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
                 output.add_source_line("if(success_to_report"+std::to_string(el.automaton_index)+"){");
-                output.add_source_line(revert_name+"();");
+                output.add_source_line(revert_name);
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
@@ -75,10 +75,10 @@ void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint
     output.add_source_line("if(cache.already_visited"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
     output.add_source_line("if(cache.is_true"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
     output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
-    output.add_source_line("revert_because_success"+std::to_string(pattern_index)+"();");
+    output.add_source_line("revert_because_success(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+", &resettable_bitarray_stack::set_as_true"+std::to_string(pattern_index)+");");
     output.add_source_line("}");
     output.add_source_line("else{");
-    output.add_source_line("revert_to_last_choice_because_failure"+std::to_string(pattern_index)+"();");
+    output.add_source_line("revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+");");
     output.add_source_line("}");
     output.add_source_line("return;");
     output.add_source_line("}");
@@ -98,7 +98,7 @@ void edge::print_transition_function(
         output.add_source_line("revert_to_last_choice();");
     }
     else{
-        std::string revert = "revert_to_last_choice";
+        std::string revert = "revert_to_last_choice();";
         actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,true);
         handle_labels(output,ac,revert);
         uint current_state = local_register_endpoint_index;
@@ -134,7 +134,7 @@ void edge::print_transition_function_inside_pattern(
     const std::vector<state>& local_register)const{
     output.add_header_line("void pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);");
     output.add_source_line("void next_states_iterator::pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void){");
-    std::string revert = "revert_to_last_choice_because_failure"+std::to_string(pattern_index);
+    std::string revert = "revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+");";
     actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,false);
     handle_labels(output,ac,revert);
     uint current_state = local_register_endpoint_index;
@@ -155,7 +155,7 @@ void edge::print_transition_function_inside_pattern(
         output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
         if(local_register[current_state].can_be_checked_for_visit())
             output.add_source_line("cache.set_as_true"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-        output.add_source_line("revert_because_success"+std::to_string(pattern_index)+"();");
+        output.add_source_line("revert_because_success(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+", &resettable_bitarray_stack::set_as_true"+std::to_string(pattern_index)+");");
     }
     else{
         if(local_register[current_state].can_be_checked_for_visit())

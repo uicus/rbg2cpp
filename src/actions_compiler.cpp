@@ -49,7 +49,7 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
 
 void actions_compiler::dispatch(const rbg_parser::ons& m){
     if(m.get_legal_ons().size() == 0){
-        output.add_source_line(reverting_function+"();");
+        output.add_source_line(reverting_function);
         output.add_source_line("return;");
     }
     else if(m.get_legal_ons().size() < pieces_to_id.size()){
@@ -60,14 +60,14 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
                 output.add_source_line("case "+std::to_string(pieces_to_id.at(el))+":");
             output.add_source_line("break;");
             output.add_source_line("default:");
-            output.add_source_line(reverting_function+"();");
+            output.add_source_line(reverting_function);
             output.add_source_line("return;");
         }
         else{
             for(const auto& el: pieces_to_id)
                 if(not m.get_legal_ons().count(el.first))
                     output.add_source_line("case "+std::to_string(el.second)+":");
-            output.add_source_line(reverting_function+"();");
+            output.add_source_line(reverting_function);
             output.add_source_line("return;");
             output.add_source_line("default:");
             output.add_source_line("break;");
@@ -87,7 +87,7 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
         if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound)){
-            output.add_source_line(reverting_function+"();");
+            output.add_source_line(reverting_function);
             output.add_source_line("return;");
         }
         else{
@@ -104,7 +104,7 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
             if(should_build_move)
                 output.add_source_line("variables_list = std::make_shared<variables_appliers>("+std::to_string(variables_to_id.at(left_side))+","+final_result+",variables_list);");
             output.add_source_line("if(state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] > bounds["+std::to_string(variables_to_id.at(left_side))+"]){");
-            output.add_source_line(reverting_function+"();");
+            output.add_source_line(reverting_function);
             output.add_source_line("return;");
             output.add_source_line("}");
     }
@@ -151,7 +151,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         if(not can_pass_through){
-            output.add_source_line(reverting_function+"();");
+            output.add_source_line(reverting_function);
             output.add_source_line("return;");
         }
     }
@@ -180,7 +180,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         output.add_source_line("if("+left_side_printer.get_final_result()+" "+operation_character+" "+right_side_printer.get_final_result()+"){");
-        output.add_source_line(reverting_function+"();");
+        output.add_source_line(reverting_function);
         output.add_source_line("return;");
         output.add_source_line("}");
     }
@@ -194,7 +194,7 @@ void actions_compiler::finallize(void){
 void actions_compiler::check_cell_correctness(void){
     if(should_check_cell_correctness){
         output.add_source_line("if(state_to_change.current_cell == 0){");
-        output.add_source_line(reverting_function+"();");
+        output.add_source_line(reverting_function);
         output.add_source_line("return;");
         output.add_source_line("}");
     }
