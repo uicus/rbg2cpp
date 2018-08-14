@@ -10,6 +10,8 @@ name(output_name),
 pieces_to_id(),
 game_automaton(),
 pattern_automata(),
+patterns_offsets(),
+patterns_size(0),
 input(input){
 }
 
@@ -237,19 +239,21 @@ void game_compiler::build_game_automaton(void){
     for(auto& el: pattern_automata){
         el.mark_start_as_outgoing_usable();
         el.mark_states_as_double_reachable();
+        patterns_offsets.push_back(patterns_size);
+        patterns_size += el.get_size();
     }
 }
 
 void game_compiler::generate_iterator_helper_structures(void){
     output.add_header_line("struct backtrace_information{");
-    output.add_header_line("long unsigned int current_branch;");
+    output.add_header_line("unsigned int current_branch;");
     output.add_header_line("int state_checkpoint;");
     output.add_header_line("int current_cell_checkpoint;");
-    output.add_header_line("long unsigned int modifiers_depth_checkpoint;");
-    output.add_header_line("long unsigned int board_checkpoint;");
-    output.add_header_line("long unsigned int variables_checkpoint;");
+    output.add_header_line("unsigned int modifiers_depth_checkpoint;");
+    output.add_header_line("unsigned int board_checkpoint;");
+    output.add_header_line("unsigned int variables_checkpoint;");
     output.add_header_line("backtrace_information(void)=default;");
-    output.add_header_line("backtrace_information(long unsigned int current_branch,int state_checkpoint,int current_cell_checkpoint,long unsigned int modifiers_depth_checkpoint,long unsigned int board_checkpoint,long unsigned int variables_checkpoint)");
+    output.add_header_line("backtrace_information(unsigned int current_branch,int state_checkpoint,int current_cell_checkpoint,unsigned int modifiers_depth_checkpoint,unsigned int board_checkpoint,unsigned int variables_checkpoint)");
     output.add_header_line(": current_branch(current_branch),");
     output.add_header_line("  state_checkpoint(state_checkpoint),");
     output.add_header_line("  current_cell_checkpoint(current_cell_checkpoint),");
@@ -490,41 +494,45 @@ void game_compiler::generate_states_iterator(void){
 
 void game_compiler::generate_resettable_pattern_array(){
     output.add_header_include("limits");
-    output.add_header_line("template<int states, int cells>");
     output.add_header_line("class resettable_pattern_array{");
     output.add_header_line("public:");
-    output.add_header_line("inline bool already_visited(int state, int cell)const{");
-    output.add_header_line("return content[state][cell] >= current_threshold;");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("inline int is_true(int state, int cell)const{");
-    output.add_header_line("return content[state][cell] - current_threshold;");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("inline void set_as_true(int state, int cell){");
-    output.add_header_line("content[state][cell] = current_threshold+1;");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("inline void set_as_false(int state, int cell){");
-    output.add_header_line("content[state][cell] = current_threshold;");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("inline void reset(void){");
-    output.add_header_line("if(current_threshold >= std::numeric_limits<int>::max()-1){");
-    output.add_header_line("for(unsigned int i=0;i<states;++i){");
-    output.add_header_line("for(unsigned int j=0;j<cells;++j){");
-    output.add_header_line("content[i][j] = std::numeric_limits<int>::min();");
-    output.add_header_line("}");
-    output.add_header_line("}");
-    output.add_header_line("current_threshold = std::numeric_limits<int>::min()+1;");
-    output.add_header_line("}");
-    output.add_header_line("else{");
-    output.add_header_line("current_threshold += 2;");
-    output.add_header_line("}");
-    output.add_header_line("}");
-    output.add_header_line("");
+    output.add_header_line("bool already_visited(int state, int cell)const;");
+    output.add_source_line("bool resettable_pattern_array::already_visited(int state, int cell)const{");
+    output.add_source_line("return content[state][cell] >= current_threshold;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("int is_true(int state, int cell)const;");
+    output.add_source_line("int resettable_pattern_array::is_true(int state, int cell)const{");
+    output.add_source_line("return content[state][cell] - current_threshold;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("void set_as_true(int state, int cell);");
+    output.add_source_line("void resettable_pattern_array::set_as_true(int state, int cell){");
+    output.add_source_line("content[state][cell] = current_threshold+1;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("void set_as_false(int state, int cell);");
+    output.add_source_line("void resettable_pattern_array::set_as_false(int state, int cell){");
+    output.add_source_line("content[state][cell] = current_threshold;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("void reset(void);");
+    output.add_source_line("void resettable_pattern_array::reset(void){");
+    output.add_source_line("if(current_threshold >= std::numeric_limits<int>::max()-1){");
+    output.add_source_line("for(unsigned int i=0;i<"+std::to_string(patterns_size)+";++i){");
+    output.add_source_line("for(unsigned int j=0;j<"+std::to_string(input.get_board().get_size())+";++j){");
+    output.add_source_line("content[i][j] = std::numeric_limits<int>::min();");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("current_threshold = std::numeric_limits<int>::min()+1;");
+    output.add_source_line("}");
+    output.add_source_line("else{");
+    output.add_source_line("current_threshold += 2;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
     output.add_header_line("private:");
-    output.add_header_line("int content[states][cells] = {};");
+    output.add_header_line("int content["+std::to_string(patterns_size)+"]["+std::to_string(input.get_board().get_size())+"] = {};");
     output.add_header_line("int current_threshold = 1;");
     output.add_header_line("};");
     output.add_header_line("");
@@ -576,13 +584,11 @@ void game_compiler::generate_resettable_bitarray_stack(void){
     output.add_source_line("void resettable_bitarray_stack::push(void){");
     output.add_source_line("if(current_top >= main_content.size()){");
     output.add_source_line("main_content.emplace_back();");
-    for(uint i=0;i<pattern_automata.size();++i)
-        output.add_source_line("pattern_content"+std::to_string(i)+".emplace_back();");
+    output.add_source_line("pattern_content.emplace_back();");
     output.add_source_line("}");
     output.add_source_line("else{");
     output.add_source_line("main_content[current_top].reset();");
-    for(uint i=0;i<pattern_automata.size();++i)
-        output.add_source_line("pattern_content"+std::to_string(i)+"[current_top].reset();");
+    output.add_source_line("pattern_content[current_top].reset();");
     output.add_source_line("}");
     output.add_source_line("++current_top;");
     output.add_source_line("}");
@@ -610,22 +616,22 @@ void game_compiler::generate_resettable_bitarray_stack(void){
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("bool already_visited"+std::to_string(i)+"(int state, int cell)const;");
         output.add_source_line("bool resettable_bitarray_stack::already_visited"+std::to_string(i)+"(int state, int cell)const{");
-        output.add_source_line("return pattern_content"+std::to_string(i)+"[current_top-1].already_visited(state, cell);");
+        output.add_source_line("return pattern_content[current_top-1].already_visited("+std::to_string(patterns_offsets[i])+"+state, cell);");
         output.add_source_line("}");
         output.add_source_line("");
         output.add_header_line("int is_true"+std::to_string(i)+"(int state, int cell)const;");
         output.add_source_line("int resettable_bitarray_stack::is_true"+std::to_string(i)+"(int state, int cell)const{");
-        output.add_source_line("return pattern_content"+std::to_string(i)+"[current_top-1].is_true(state, cell);");
+        output.add_source_line("return pattern_content[current_top-1].is_true("+std::to_string(patterns_offsets[i])+"+state, cell);");
         output.add_source_line("}");
         output.add_source_line("");
         output.add_header_line("void set_as_true"+std::to_string(i)+"(int state, int cell);");
         output.add_source_line("void resettable_bitarray_stack::set_as_true"+std::to_string(i)+"(int state, int cell){");
-        output.add_source_line("pattern_content"+std::to_string(i)+"[current_top-1].set_as_true(state, cell);");
+        output.add_source_line("pattern_content[current_top-1].set_as_true("+std::to_string(patterns_offsets[i])+"+state, cell);");
         output.add_source_line("}");
         output.add_source_line("");
         output.add_header_line("void set_as_false"+std::to_string(i)+"(int state, int cell);");
         output.add_source_line("void resettable_bitarray_stack::set_as_false"+std::to_string(i)+"(int state, int cell){");
-        output.add_source_line("pattern_content"+std::to_string(i)+"[current_top-1].set_as_false(state, cell);");
+        output.add_source_line("pattern_content[current_top-1].set_as_false("+std::to_string(patterns_offsets[i])+"+state, cell);");
         output.add_source_line("}");
         output.add_source_line("");
     }
@@ -636,8 +642,7 @@ void game_compiler::generate_resettable_bitarray_stack(void){
     output.add_source_line("");
     output.add_header_line("private:");
     output.add_header_line("std::vector<resettable_bitarray> main_content = {};");
-    for(uint i=0;i<pattern_automata.size();++i)
-        output.add_header_line("std::vector<resettable_pattern_array<"+std::to_string(pattern_automata[i].get_size())+","+std::to_string(input.get_board().get_size())+">> pattern_content"+std::to_string(i)+" = {};");
+    output.add_header_line("std::vector<resettable_pattern_array> pattern_content = {};");
     output.add_header_line("unsigned int current_top = 0;");
     output.add_header_line("};");
     output.add_header_line("");

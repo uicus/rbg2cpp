@@ -22,6 +22,8 @@ class game_compiler{
         std::map<rbg_parser::token, uint> variables_to_id;
         automaton game_automaton;
         std::vector<automaton> pattern_automata;
+        std::vector<uint> patterns_offsets;
+        uint patterns_size;
         const rbg_parser::parsed_game& input;
         game_compiler(void)=delete;
         void generate_board_cells_decoder(void);
