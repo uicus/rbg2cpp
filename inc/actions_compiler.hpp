@@ -22,6 +22,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         const std::map<rbg_parser::token, uint>& variables_to_id;
         const rbg_parser::declarations& decl;
         const std::string& reverting_function;
+        const std::string& cache_pusher;
         bool should_check_cell_correctness;
         bool has_modifier;
         bool is_finisher;
@@ -40,6 +41,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
             const std::string& reverting_function,
+            const std::string& cache_pusher,
             bool should_build_move);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}

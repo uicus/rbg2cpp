@@ -18,6 +18,7 @@ actions_compiler::actions_compiler(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::string& reverting_function,
+    const std::string& cache_pusher,
     bool should_build_move):
     output(output),
     pieces_to_id(pieces_to_id),
@@ -25,6 +26,7 @@ actions_compiler::actions_compiler(
     variables_to_id(variables_to_id),
     decl(decl),
     reverting_function(reverting_function),
+    cache_pusher(cache_pusher),
     should_check_cell_correctness(false),
     has_modifier(false),
     is_finisher(false),
@@ -203,7 +205,7 @@ void actions_compiler::check_cell_correctness(void){
 
 void actions_compiler::notify_about_modifier(void){
     if(has_modifier)
-        output.add_source_line("cache.push();");
+        output.add_source_line("cache."+cache_pusher+";");
     has_modifier = false;
 }
 

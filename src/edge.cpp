@@ -72,16 +72,11 @@ void edge::visit_node(cpp_container& output, uint current_state, actions_compile
 
 void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const{
     ac.finallize();
-    output.add_source_line("if(cache.already_visited"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
-    output.add_source_line("if(cache.is_true"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
-    output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
-    output.add_source_line("revert_because_success(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+", &resettable_bitarray_stack::set_as_true"+std::to_string(pattern_index)+");");
-    output.add_source_line("}");
-    output.add_source_line("else{");
-    output.add_source_line("revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+");");
-    output.add_source_line("}");
+    output.add_source_line("if(cache.pattern_is_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
+    output.add_source_line("revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+",&resettable_bitarray_stack::pattern_revert_to_level"+std::to_string(pattern_index)+");");
     output.add_source_line("return;");
     output.add_source_line("}");
+    output.add_source_line("cache.pattern_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
 }
 
 void edge::print_transition_function(
@@ -99,7 +94,8 @@ void edge::print_transition_function(
     }
     else{
         std::string revert = "revert_to_last_choice();";
-        actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,true);
+        std::string pusher = "push()";
+        actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,pusher,true);
         handle_labels(output,ac,revert);
         uint current_state = local_register_endpoint_index;
         while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer()){
@@ -134,16 +130,14 @@ void edge::print_transition_function_inside_pattern(
     const std::vector<state>& local_register)const{
     output.add_header_line("void pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);");
     output.add_source_line("void next_states_iterator::pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void){");
-    std::string revert = "revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+");";
-    actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,false);
+    std::string revert = "revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+",&resettable_bitarray_stack::pattern_revert_to_level"+std::to_string(pattern_index)+");";
+    std::string pusher = "pattern_push"+std::to_string(pattern_index)+"()";
+    actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,pusher,false);
     handle_labels(output,ac,revert);
     uint current_state = local_register_endpoint_index;
     while(local_register[current_state].is_no_choicer()){
-        if(local_register[current_state].can_be_checked_for_visit()){
+        if(local_register[current_state].can_be_checked_for_visit())
             visit_node_in_pattern(output,current_state,pattern_index,ac);
-            output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-            output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(1,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
-        }
         local_register[current_state].get_only_exit().handle_labels(output,ac,revert);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
@@ -153,15 +147,11 @@ void edge::print_transition_function_inside_pattern(
     assert(not ac.is_ready_to_report());
     if(local_register[current_state].is_dead_end()){
         output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = true;");
-        if(local_register[current_state].can_be_checked_for_visit())
-            output.add_source_line("cache.set_as_true"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-        output.add_source_line("revert_because_success(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+", &resettable_bitarray_stack::set_as_true"+std::to_string(pattern_index)+");");
+        output.add_source_line("revert_to_point_after_pattern(pattern_decision_points"+std::to_string(pattern_index)+"[0], &resettable_bitarray_stack::pattern_revert_to_level"+std::to_string(pattern_index)+");");
+        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".clear();");
     }
-    else{
-        if(local_register[current_state].can_be_checked_for_visit())
-            output.add_source_line("cache.set_as_false"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
-        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
-    }
+    else
+        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.pattern_get_level"+std::to_string(pattern_index)+"(),board_change_points.size(),variables_change_points.size());");
     output.add_source_line("}");
     output.add_source_line("");
 }
