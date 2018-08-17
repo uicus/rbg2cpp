@@ -45,16 +45,16 @@ void random_simulation(){
 int main(){
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
     for(uint i=0;i<NUMBER_OF_SIMULATIONS;++i){
-        std::cout << "Simulation number: " << i << std::endl;
+        //std::cout << "Simulation number: " << i << std::endl;
         random_simulation();
     }
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     uint ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout << "performed " << NUMBER_OF_SIMULATIONS << " in " << ms << " ms" << std::endl;
+    std::cout << "performed " << NUMBER_OF_SIMULATIONS << " plays in " << ms << " ms" << std::endl;
     std::cout << "average time " << ms/NUMBER_OF_SIMULATIONS << " ms" << std::endl;
     std::cout << "visited " << states_count << " states" << std::endl;
-    std::cout << static_cast<double>(states_count)/static_cast<double>(ms)*1000.0 << " states per sec" << std::endl;
+    std::cout << static_cast<double>(states_count)/static_cast<double>(ms)*1000.0 << " states/sec" << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "average goal of player " << i << ": " << avg_goals[i]/NUMBER_OF_SIMULATIONS << std::endl;
     return 0;
