@@ -31,7 +31,7 @@ class edge{
         uint local_register_endpoint_index;
         std::vector<label> label_list;
         uint index_after_traversing;
-        void handle_labels(cpp_container& output, actions_compiler& ac, const std::string& revert_name)const;
+        void handle_labels(cpp_container& output, actions_compiler& ac, const std::string& revert_name, std::string& human_readable_labels)const;
         void visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const;
         void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const;
     public:
