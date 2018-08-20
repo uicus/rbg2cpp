@@ -13,9 +13,10 @@ uint avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
 uint states_count = 0;
 reasoner::resettable_bitarray_stack cache;
 std::vector<reasoner::move> legal_moves;
+reasoner::game_state initial_state;
 
 void random_simulation(){
-    reasoner::game_state state;
+    reasoner::game_state state = initial_state;
     while(true){
         legal_moves.clear();
         if(state.get_current_player() == KEEPER){
@@ -43,6 +44,11 @@ void random_simulation(){
 }
 
 int main(){
+    while(initial_state.get_current_player() == KEEPER) {// Keeper completion of the initial state
+      reasoner::next_states_iterator it(initial_state, cache);
+      if(it.next()) continue;
+    }
+    
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
     for(uint i=0;i<NUMBER_OF_SIMULATIONS;++i){
         //std::cout << "Simulation number: " << i << std::endl;
