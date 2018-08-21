@@ -247,14 +247,16 @@ void game_compiler::build_game_automaton(void){
 void game_compiler::generate_iterator_helper_structures(void){
     output.add_header_line("struct backtrace_information{");
     output.add_header_line("unsigned int current_branch;");
+    output.add_header_line("unsigned int current_shift_table_branch;");
     output.add_header_line("int state_checkpoint;");
     output.add_header_line("int current_cell_checkpoint;");
     output.add_header_line("unsigned int modifiers_depth_checkpoint;");
     output.add_header_line("unsigned int board_checkpoint;");
     output.add_header_line("unsigned int variables_checkpoint;");
     output.add_header_line("backtrace_information(void)=default;");
-    output.add_header_line("backtrace_information(unsigned int current_branch,int state_checkpoint,int current_cell_checkpoint,unsigned int modifiers_depth_checkpoint,unsigned int board_checkpoint,unsigned int variables_checkpoint)");
+    output.add_header_line("backtrace_information(unsigned int current_branch,unsigned int current_shift_table_branch,int state_checkpoint,int current_cell_checkpoint,unsigned int modifiers_depth_checkpoint,unsigned int board_checkpoint,unsigned int variables_checkpoint)");
     output.add_header_line(": current_branch(current_branch),");
+    output.add_header_line("  current_shift_table_branch(current_shift_table_branch),");
     output.add_header_line("  state_checkpoint(state_checkpoint),");
     output.add_header_line("  current_cell_checkpoint(current_cell_checkpoint),");
     output.add_header_line("  modifiers_depth_checkpoint(modifiers_depth_checkpoint),");
@@ -411,7 +413,7 @@ void game_compiler::generate_dfs_for_pattern(uint pattern_index){
     output.add_source_line("void next_states_iterator::evaluate"+std::to_string(pattern_index)+"(void){");
     output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = false;");
     output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
-    output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+std::to_string(pattern_automata[pattern_index].get_start_state())+",state_to_change.current_cell,1,board_change_points.size(),variables_change_points.size());");
+    output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,0,"+std::to_string(pattern_automata[pattern_index].get_start_state())+",state_to_change.current_cell,1,board_change_points.size(),variables_change_points.size());");
     output.add_source_line("while(not pattern_decision_points"+std::to_string(pattern_index)+".empty()){");
     output.add_source_line("(this->*pattern_transitions"+std::to_string(pattern_index)+"[pattern_decision_points"+std::to_string(pattern_index)+".back().state_checkpoint][pattern_decision_points"+std::to_string(pattern_index)+".back().current_branch++])();");
     output.add_source_line("}");
@@ -431,7 +433,7 @@ void game_compiler::generate_states_iterator(void){
     output.add_source_line("  cache(cache),");
     output.add_source_line("  moving_player(state_to_change.current_player){");
     output.add_source_line("cache.reset();");
-    output.add_source_line("decision_points.emplace_back(0,state_to_change.current_state,state_to_change.current_cell,1,0,0);");
+    output.add_source_line("decision_points.emplace_back(0,0,state_to_change.current_state,state_to_change.current_cell,1,0,0);");
     output.add_source_line("}");
     output.add_source_line("");
     generate_main_dfs();

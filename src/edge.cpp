@@ -127,7 +127,7 @@ void edge::print_transition_function(
             output.add_source_line("state_to_change.current_state = "+std::to_string(current_state)+";");
         }
         else{
-            output.add_source_line("decision_points.emplace_back(0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
+            output.add_source_line("decision_points.emplace_back(0,0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.get_level(),board_change_points.size(),variables_change_points.size());");
         }
         output.add_source_line("// generated from: "+human_readable_labels);
     }
@@ -181,7 +181,7 @@ void edge::print_transition_function_inside_pattern(
         output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".clear();");
     }
     else
-        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.pattern_get_level"+std::to_string(pattern_index)+"(),board_change_points.size(),variables_change_points.size());");
+        output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,0,"+std::to_string(current_state)+",state_to_change.current_cell,cache.pattern_get_level"+std::to_string(pattern_index)+"(),board_change_points.size(),variables_change_points.size());");
     output.add_source_line("// generated from: "+human_readable_labels);
     output.add_source_line("}");
     output.add_source_line("");
