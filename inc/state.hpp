@@ -8,6 +8,7 @@
 #include"edge.hpp"
 
 class cpp_container;
+class compiler_options;
 
 namespace rbg_parser{
     class game_move;
@@ -38,7 +39,8 @@ class state{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
-            const std::vector<state>& local_register)const;
+            const std::vector<state>& local_register,
+            const compiler_options& opts)const;
         void print_transition_functions_inside_pattern(
             uint from_state,
             uint pattern_index,
@@ -47,7 +49,8 @@ class state{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
-            const std::vector<state>& local_register)const;
+            const std::vector<state>& local_register,
+            const compiler_options& opts)const;
         void print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
         void notify_endpoints_about_being_reachable(std::vector<uint>& reachability)const;
         void mark_as_doubly_reachable(void);

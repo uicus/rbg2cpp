@@ -9,6 +9,8 @@
 #include"types.hpp"
 #include"automaton.hpp"
 
+class compiler_options;
+
 namespace rbg_parser{
     class token;
     class parsed_game;
@@ -16,6 +18,7 @@ namespace rbg_parser{
 
 class game_compiler{
         cpp_container output;
+        const compiler_options& opts;
         std::string name;
         std::map<rbg_parser::token, uint> pieces_to_id;
         std::map<rbg_parser::token, uint> edges_to_id;
@@ -51,11 +54,11 @@ class game_compiler{
         void generate_main_dfs(void);
         void generate_dfs_for_pattern(uint pattern_index);
     public:
-        game_compiler(const rbg_parser::parsed_game& input, const std::string& output_name);
-        game_compiler(const game_compiler&)=default;
-        game_compiler(game_compiler&&)=default;
-        game_compiler& operator=(const game_compiler&)=default;
-        game_compiler& operator=(game_compiler&&)=default;
+        game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);
+        game_compiler(const game_compiler&)=delete;
+        game_compiler(game_compiler&&)=delete;
+        game_compiler& operator=(const game_compiler&)=delete;
+        game_compiler& operator=(game_compiler&&)=delete;
         ~game_compiler(void)=default;
         const cpp_container& compile(void);
 };

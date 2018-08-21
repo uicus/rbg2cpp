@@ -1,7 +1,7 @@
 #include"state.hpp"
-
-#include<cassert>
+#include"compiler_options.hpp"
 #include"cpp_container.hpp"
+#include<cassert>
 
 uint state::next_free_id = 0;
 
@@ -78,10 +78,11 @@ void state::print_transition_functions(
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
-    const std::vector<state>& local_register)const{
+    const std::vector<state>& local_register,
+    const compiler_options& opts)const{
     if(next_states.size()>1 or outgoing_edges_needed)
         for(const auto& el: next_states)
-            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
+            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register,opts);
 }
 
 void state::print_transition_functions_inside_pattern(
@@ -92,10 +93,11 @@ void state::print_transition_functions_inside_pattern(
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
-    const std::vector<state>& local_register)const{
+    const std::vector<state>& local_register,
+    const compiler_options& opts)const{
     if(next_states.size()>1 or outgoing_edges_needed)
         for(const auto& el: next_states)
-            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register);
+            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register,opts);
 }
 
 void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{

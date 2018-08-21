@@ -9,6 +9,7 @@
 class compiler_options{
         bool show_warnings : 1;
         bool warnings_as_errors : 1;
+        bool shift_tables : 1;
         std::string output_name;
     public:
         compiler_options(void);
@@ -16,6 +17,7 @@ class compiler_options{
 
         bool showing_warnings(void)const;
         bool escalating_warnings(void)const;
+        bool enabled_shift_tables(void)const;
         const std::string& output_file(void)const;
 };
 
