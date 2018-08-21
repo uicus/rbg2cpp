@@ -44,16 +44,14 @@ void random_simulation(){
 }
 
 int main(){
-    while(initial_state.get_current_player() == KEEPER) {// Keeper completion of the initial state
-      reasoner::next_states_iterator it(initial_state, cache);
-      if(it.next()) continue;
+    while(initial_state.get_current_player() == KEEPER){
+        reasoner::next_states_iterator it(initial_state, cache);
+        if(it.next())
+            continue;
     }
-    
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    for(uint i=0;i<NUMBER_OF_SIMULATIONS;++i){
-        //std::cout << "Simulation number: " << i << std::endl;
+    for(uint i=0;i<NUMBER_OF_SIMULATIONS;++i)
         random_simulation();
-    }
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     uint ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
