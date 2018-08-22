@@ -1,7 +1,7 @@
 #include"automaton.hpp"
-
-#include<cassert>
+#include"compiler_options.hpp"
 #include"cpp_container.hpp"
+#include<cassert>
 
 uint automaton::get_start_state(void){
     return start_state;
@@ -66,9 +66,10 @@ void automaton::print_transition_functions(
     const std::map<rbg_parser::token, uint>& pieces_to_id,
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl)const{
+    const rbg_parser::declarations& decl,
+    const compiler_options& opts)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register);
+        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,opts);
 }
 
 void automaton::print_transition_functions_inside_pattern(
@@ -77,9 +78,10 @@ void automaton::print_transition_functions_inside_pattern(
     const std::map<rbg_parser::token, uint>& pieces_to_id,
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl)const{
+    const rbg_parser::declarations& decl,
+    const compiler_options& opts)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register);
+        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,opts);
 }
 
 void automaton::print_transition_table(cpp_container& output, const std::string& table_name, const std::string& functions_prefix)const{

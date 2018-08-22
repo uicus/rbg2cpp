@@ -9,6 +9,7 @@
 class cpp_container;
 class state;
 class actions_compiler;
+class compiler_options;
 
 namespace rbg_parser{
     class game_move;
@@ -47,7 +48,8 @@ class edge{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
-            const std::vector<state>& local_register)const;
+            const std::vector<state>& local_register,
+            const compiler_options& opts)const;
         void print_transition_function_inside_pattern(
             uint from_state,
             uint pattern_index,
@@ -56,7 +58,8 @@ class edge{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
-            const std::vector<state>& local_register)const;
+            const std::vector<state>& local_register,
+            const compiler_options& opts)const;
 };
 
 #endif

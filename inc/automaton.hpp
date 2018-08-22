@@ -7,6 +7,7 @@
 #include"state.hpp"
 
 class cpp_container;
+class compiler_options;
 
 namespace rbg_parser{
     class game_move;
@@ -29,14 +30,16 @@ class automaton{
             const std::map<rbg_parser::token, uint>& pieces_to_id,
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl)const;
+            const rbg_parser::declarations& decl,
+            const compiler_options& opts)const;
         void print_transition_functions_inside_pattern(
             uint pattern_index,
             cpp_container& output,
             const std::map<rbg_parser::token, uint>& pieces_to_id,
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl)const;
+            const rbg_parser::declarations& decl,
+            const compiler_options& opts)const;
         void print_transition_table(cpp_container& output, const std::string& table_name, const std::string& functions_prefix)const;
         void mark_end_as_outgoing_usable(void);
         void mark_start_as_outgoing_usable(void);

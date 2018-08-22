@@ -32,7 +32,7 @@ int main(int argc, const char** argv){
             if(not o.escalating_warnings() or msg.is_empty()){
                 if(not msg.is_empty() and o.showing_warnings())
                     msg.write_as_warnings(std::cout);
-                game_compiler compiler(pg, o.output_file());
+                game_compiler compiler(pg, o);
                 const auto& c = compiler.compile();
                 c.print_files();
             }
