@@ -131,22 +131,22 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
     return result;
 }
 
-automaton edge_automaton(const std::vector<label>& label_list, uint index){
+automaton edge_automaton(const std::vector<label>& label_list){
     automaton result;
     auto result_endpoints = result.prepare_new_endpoints();
-    result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list, index);
+    result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list);
     result.set_endpoints(result_endpoints);
     return result;
 }
 
-automaton edge_automaton(const rbg_parser::game_move* action_label, uint index){
+automaton edge_automaton(const rbg_parser::game_move* action_label){
     std::vector<label> label_list;
     label_list.push_back({action,action_label,0});
-    return edge_automaton(label_list, index);
+    return edge_automaton(label_list);
 }
 
-automaton edge_automaton(uint pattern_automaton_index, bool positive, uint index){
+automaton edge_automaton(uint pattern_automaton_index, bool positive){
     std::vector<label> label_list;
     label_list.push_back({(positive?positive_pattern:negative_pattern),nullptr,pattern_automaton_index});
-    return edge_automaton(label_list, index);
+    return edge_automaton(label_list);
 }

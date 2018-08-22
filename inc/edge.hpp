@@ -30,7 +30,6 @@ struct label{
 class edge{
         uint local_register_endpoint_index;
         std::vector<label> label_list;
-        uint index_after_traversing;
         void handle_labels(cpp_container& output, actions_compiler& ac, const std::string& revert_name, std::string& human_readable_labels)const;
         void visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const;
         void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const;
@@ -38,7 +37,6 @@ class edge{
         edge(uint local_register_endpoint_index);
         void add_another_action(const rbg_parser::game_move* a);
         void add_another_pattern_check(bool positive, uint automaton_index);
-        void set_index(uint index);
         void shift(uint shift_value);
         void inform_abut_state_deletion(uint deleted_index);
         uint get_endpoint(void)const;

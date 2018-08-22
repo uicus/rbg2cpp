@@ -14,23 +14,14 @@ namespace rbg_parser{
 }
 
 class state{
-        uint state_id;
-        static uint next_free_id;
         std::vector<edge> next_states;
         bool outgoing_edges_needed;
         bool doubly_reachable;
     public:
-        state(void);
-        state(const state& rhs);
-        state(state&&)=default;
-        state& operator=(const state&);
-        state& operator=(state&&)=default;
-        ~state(void)=default;
-        uint get_id(void)const;
         void inform_about_being_appended(uint shift_value);
         void inform_about_state_deletion(uint deleted_index);
         void absorb(state&& rhs);
-        void connect_with_state(uint index_in_local_register, const std::vector<label>& label_list=std::vector<label>(), uint index_after_traversing=0);
+        void connect_with_state(uint index_in_local_register, const std::vector<label>& label_list=std::vector<label>());
         void print_transition_functions(
             uint from_state,
             cpp_container& output,

@@ -231,9 +231,11 @@ void game_compiler::generate_game_parameters(void){
 }
 
 void game_compiler::build_game_automaton(void){
-    automaton_builder b(pattern_automata);
+    std::vector<label> block;
+    automaton_builder b(pattern_automata, block);
     input.get_moves()->accept(b);
     game_automaton = b.get_final_result();
+    assert(block.empty());
     game_automaton.mark_start_as_outgoing_usable();
     game_automaton.mark_states_as_double_reachable();
     for(auto& el: pattern_automata){

@@ -35,7 +35,6 @@ class arithmetics_printer : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::player_switch&)override{assert(false);}
         void dispatch(const rbg_parser::keeper_switch&)override{assert(false);}
         void dispatch(const rbg_parser::move_check&)override{assert(false);}
-        void dispatch(const rbg_parser::actions_block&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_comparison&)override{assert(false);}
         void dispatch(const rbg_parser::integer_arithmetic& m)override;
         void dispatch(const rbg_parser::variable_arithmetic& m)override;
