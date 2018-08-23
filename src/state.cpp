@@ -97,3 +97,11 @@ bool state::is_dead_end(void)const{
 bool state::is_no_choicer(void)const{
     return next_states.size() == 1;
 }
+
+void state::push_next_states_to_shift_tables_dfs_stack(
+    uint current_cell,
+    const rbg_parser::graph& board,
+    const std::map<rbg_parser::token, uint>& edges_to_id,
+    std::vector<std::pair<uint,uint>>& dfs_stack,
+    const std::vector<state>& local_register)const{
+}

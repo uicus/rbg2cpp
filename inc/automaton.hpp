@@ -22,7 +22,7 @@ class automaton{
         std::pair<uint,uint> place_side_by_side(automaton&& rhs);
         std::pair<uint,uint> prepare_new_endpoints(void);
         void set_endpoints(const std::pair<uint,uint>& new_endpoints);
-        void mark_connections_to_reachable_states(uint source_cell, const rbg_parser::graph& board, shift_table& table_to_modify)const;
+        void mark_connections_to_reachable_states(uint source_cell, const rbg_parser::graph& board, shift_table& table_to_modify, const std::map<rbg_parser::token, uint>& edges_to_id)const;
     public:
         void concat_automaton(automaton&& concatee);
         void starify_automaton(void);
@@ -47,6 +47,7 @@ class automaton{
         void mark_end_as_outgoing_usable(void);
         void mark_start_as_outgoing_usable(void);
         void mark_states_as_double_reachable(void);
+        shift_table generate_shift_table(const rbg_parser::graph& board, const std::map<rbg_parser::token, uint>& edges_to_id)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list);

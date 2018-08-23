@@ -12,6 +12,7 @@ class compiler_options;
 
 namespace rbg_parser{
     class game_move;
+    class graph;
 }
 
 class state{
@@ -50,6 +51,12 @@ class state{
         const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;
         bool is_no_choicer(void)const;
+        void push_next_states_to_shift_tables_dfs_stack(
+            uint current_cell,
+            const rbg_parser::graph& board,
+            const std::map<rbg_parser::token, uint>& edges_to_id,
+            std::vector<std::pair<uint,uint>>& dfs_stack,
+            const std::vector<state>& local_register)const;
 };
 
 #endif

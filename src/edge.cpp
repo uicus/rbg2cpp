@@ -47,6 +47,12 @@ void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std:
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
+            case always_true:
+                break;
+            case always_false:
+                output.add_source_line(revert_name);
+                output.add_source_line("return;");
+                break;
         }
 }
 

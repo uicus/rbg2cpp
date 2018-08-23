@@ -113,7 +113,7 @@ void automaton::mark_states_as_double_reachable(void){
             local_register[i].mark_as_doubly_reachable();
 }
 
-void automaton::mark_connections_to_reachable_states(uint source_cell, const rbg_parser::graph& board, shift_table& table_to_modify)const{
+void automaton::mark_connections_to_reachable_states(uint source_cell, const rbg_parser::graph& board, shift_table& table_to_modify, const std::map<rbg_parser::token, uint>& edges_to_id)const{
     std::vector<std::vector<bool>> visited(local_register.size());
     for(uint i=0;i<visited.size();++i)
         visited[i].resize(board.get_size());
@@ -124,9 +124,19 @@ void automaton::mark_connections_to_reachable_states(uint source_cell, const rbg
         dfs_stack.pop_back();
         if(not visited[next_node.first][next_node.second]){
             visited[next_node.first][next_node.second] = true;
-            // push next_nodes
+            if(next_node.first == accept_state)
+                table_to_modify.report_connection(source_cell, next_node.second);
+            else
+                local_register[next_node.first].push_next_states_to_shift_tables_dfs_stack(next_node.second,board,edges_to_id,dfs_stack,local_register);
         }
     }
+}
+
+shift_table automaton::generate_shift_table(const rbg_parser::graph& board, const std::map<rbg_parser::token, uint>& edges_to_id)const{
+    shift_table result(board.get_size());
+    for(uint i=0;i<board.get_size();++i)
+        mark_connections_to_reachable_states(i,board,result,edges_to_id);
+    return result;
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){

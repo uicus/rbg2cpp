@@ -20,8 +20,8 @@ enum label_kind{
     action,
     positive_pattern,
     negative_pattern,
-    spattern,
-    stable,
+    s_pattern,
+    s_table,
     always_true,
     always_false
 };
