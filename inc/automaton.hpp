@@ -54,7 +54,5 @@ class automaton{
 automaton sum_of_automatons(std::vector<automaton>&& elements);
 automaton concatenation_of_automatons(std::vector<automaton>&& elements);
 automaton edge_automaton(const std::vector<label>& label_list);
-automaton edge_automaton(const rbg_parser::game_move* action_label);
-automaton edge_automaton(uint pattern_automaton_index, bool positive);
 
 #endif

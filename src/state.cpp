@@ -24,20 +24,7 @@ void state::absorb(state&& rhs){
 }
 
 void state::connect_with_state(uint index_in_local_register, const std::vector<label>& label_list){
-    edge result_edge(index_in_local_register);
-    for(const auto el: label_list)
-        switch(el.k){
-            case action:
-                result_edge.add_another_action(el.a);
-                break;
-            case positive_pattern:
-                result_edge.add_another_pattern_check(true, el.automaton_index);
-                break;
-            case negative_pattern:
-                result_edge.add_another_pattern_check(false, el.automaton_index);
-                break;
-        }
-    next_states.push_back(std::move(result_edge));
+    next_states.push_back(edge(index_in_local_register, label_list));
 }
 
 void state::print_transition_functions(

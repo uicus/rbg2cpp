@@ -6,17 +6,9 @@
 #include"state.hpp"
 #include"compiler_options.hpp"
 
-edge::edge(uint local_register_endpoint_index):
+edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
-label_list(){
-}
-
-void edge::add_another_action(const rbg_parser::game_move* a){
-    label_list.push_back({action,a,0});
-}
-
-void edge::add_another_pattern_check(bool positive, uint automaton_index){
-    label_list.push_back({(positive?positive_pattern:negative_pattern),nullptr,automaton_index});
+label_list(label_list){
 }
 
 void edge::shift(uint shift_value){
@@ -41,16 +33,16 @@ void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std:
                 break;
             case positive_pattern:
                 ac.finallize();
-                output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
-                output.add_source_line("if(not success_to_report"+std::to_string(el.automaton_index)+"){");
+                output.add_source_line("evaluate"+std::to_string(el.structure_index)+"();");
+                output.add_source_line("if(not success_to_report"+std::to_string(el.structure_index)+"){");
                 output.add_source_line(revert_name);
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
             case negative_pattern:
                 ac.finallize();
-                output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
-                output.add_source_line("if(success_to_report"+std::to_string(el.automaton_index)+"){");
+                output.add_source_line("evaluate"+std::to_string(el.structure_index)+"();");
+                output.add_source_line("if(success_to_report"+std::to_string(el.structure_index)+"){");
                 output.add_source_line(revert_name);
                 output.add_source_line("return;");
                 output.add_source_line("}");

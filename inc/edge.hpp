@@ -19,13 +19,17 @@ namespace rbg_parser{
 enum label_kind{
     action,
     positive_pattern,
-    negative_pattern
+    negative_pattern,
+    spattern,
+    stable,
+    always_true,
+    always_false
 };
 
 struct label{
     label_kind k;
     const rbg_parser::game_move* a;
-    uint automaton_index;
+    uint structure_index;
 };
 
 class edge{
@@ -35,9 +39,7 @@ class edge{
         void visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const;
         void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const;
     public:
-        edge(uint local_register_endpoint_index);
-        void add_another_action(const rbg_parser::game_move* a);
-        void add_another_pattern_check(bool positive, uint automaton_index);
+        edge(uint local_register_endpoint_index, const std::vector<label>& label_list);
         void shift(uint shift_value);
         void inform_abut_state_deletion(uint deleted_index);
         uint get_endpoint(void)const;
