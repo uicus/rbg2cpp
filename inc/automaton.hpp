@@ -8,9 +8,11 @@
 
 class cpp_container;
 class compiler_options;
+class shift_table;
 
 namespace rbg_parser{
     class game_move;
+    class graph;
 }
 
 class automaton{
@@ -20,6 +22,7 @@ class automaton{
         std::pair<uint,uint> place_side_by_side(automaton&& rhs);
         std::pair<uint,uint> prepare_new_endpoints(void);
         void set_endpoints(const std::pair<uint,uint>& new_endpoints);
+        void mark_connections_to_reachable_states(uint source_cell, const rbg_parser::graph& board, shift_table& table_to_modify)const;
     public:
         void concat_automaton(automaton&& concatee);
         void starify_automaton(void);
@@ -47,8 +50,6 @@ class automaton{
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list);
-        friend automaton edge_automaton(const rbg_parser::game_move*);
-        friend automaton edge_automaton(uint pattern_automaton_index, bool positive);
 };
 
 automaton sum_of_automatons(std::vector<automaton>&& elements);

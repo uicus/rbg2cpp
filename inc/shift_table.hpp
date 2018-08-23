@@ -16,6 +16,7 @@ class shift_table{
         void report_connection(uint source_cell, uint target_cell);
         precomputed_pattern transform_into_pattern(void)const;
         bool can_be_backtraced(void)const;
+        //TODO: printer_function
 };
 
 #endif

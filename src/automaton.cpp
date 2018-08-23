@@ -1,6 +1,8 @@
 #include"automaton.hpp"
 #include"compiler_options.hpp"
 #include"cpp_container.hpp"
+#include"shift_table.hpp"
+#include"graph.hpp"
 #include<cassert>
 
 uint automaton::get_start_state(void){
@@ -109,6 +111,22 @@ void automaton::mark_states_as_double_reachable(void){
     for(uint i=0;i<reachability.size();++i)
         if(reachability[i]>1)
             local_register[i].mark_as_doubly_reachable();
+}
+
+void automaton::mark_connections_to_reachable_states(uint source_cell, const rbg_parser::graph& board, shift_table& table_to_modify)const{
+    std::vector<std::vector<bool>> visited(local_register.size());
+    for(uint i=0;i<visited.size();++i)
+        visited[i].resize(board.get_size());
+    std::vector<std::pair<uint,uint>> dfs_stack;
+    dfs_stack.emplace_back(start_state,source_cell);
+    while(not dfs_stack.empty()){
+        auto next_node = dfs_stack.back();
+        dfs_stack.pop_back();
+        if(not visited[next_node.first][next_node.second]){
+            visited[next_node.first][next_node.second] = true;
+            // push next_nodes
+        }
+    }
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
