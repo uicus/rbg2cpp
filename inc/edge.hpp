@@ -10,10 +10,12 @@ class cpp_container;
 class state;
 class actions_compiler;
 class compiler_options;
+class precomputed_pattern;
 
 namespace rbg_parser{
     class game_move;
     class declarations;
+    class graph;
 }
 
 enum label_kind{
@@ -62,6 +64,7 @@ class edge{
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register,
             const compiler_options& opts)const;
+        int get_next_cell(uint current_cell, const rbg_parser::graph& board, const std::vector<precomputed_pattern>& pps)const;// -1 = invalid
 };
 
 #endif

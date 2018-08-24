@@ -5,6 +5,9 @@
 #include"declarations.hpp"
 #include"state.hpp"
 #include"compiler_options.hpp"
+#include"graph.hpp"
+#include"precomputed_pattern.hpp"
+#include"shift.hpp"
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
@@ -47,6 +50,9 @@ void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std:
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
+            case s_pattern:
+            case s_table:
+                assert(false);// not yet implemented
             case always_true:
                 break;
             case always_false:
@@ -181,4 +187,36 @@ void edge::print_transition_function_inside_pattern(
     output.add_source_line("// generated from: "+human_readable_labels);
     output.add_source_line("}");
     output.add_source_line("");
+}
+
+int edge::get_next_cell(uint current_cell, const rbg_parser::graph& board, const std::vector<precomputed_pattern>& pps)const{
+    for(const auto& el: label_list)
+        switch(el.k){
+            case action:
+                {
+                    const auto& outgoing_edges = board.get_outgoing_edges(current_cell);
+                    const rbg_parser::shift* s = dynamic_cast<const rbg_parser::shift*>(el.a);
+                    auto it = outgoing_edges.find(s->get_content());
+                    if(it == outgoing_edges.end())
+                        return -1;
+                    current_cell = it->second;
+                }
+                break;
+            case positive_pattern:
+            case negative_pattern:
+                assert(false);
+                break;
+            case s_pattern:
+                if(not pps[el.structure_index].evaluates_to_true(current_cell))
+                    return -1;
+                break;
+            case s_table:
+                assert(false); // no recursive shift tables
+            case always_true:
+                break;
+            case always_false:
+                return -1;
+                break;
+        }
+    return current_cell;
 }

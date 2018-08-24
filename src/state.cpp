@@ -101,7 +101,11 @@ bool state::is_no_choicer(void)const{
 void state::push_next_states_to_shift_tables_dfs_stack(
     uint current_cell,
     const rbg_parser::graph& board,
-    const std::map<rbg_parser::token, uint>& edges_to_id,
     std::vector<std::pair<uint,uint>>& dfs_stack,
-    const std::vector<state>& local_register)const{
+    const std::vector<precomputed_pattern>& pps)const{
+    for(const auto& el: next_states){
+        auto cell = el.get_next_cell(current_cell,board,pps);
+        if(cell>=0)
+            dfs_stack.emplace_back(el.get_endpoint(), uint(cell));
+    }
 }

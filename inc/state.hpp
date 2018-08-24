@@ -9,6 +9,7 @@
 
 class cpp_container;
 class compiler_options;
+class precomputed_pattern;
 
 namespace rbg_parser{
     class game_move;
@@ -54,9 +55,8 @@ class state{
         void push_next_states_to_shift_tables_dfs_stack(
             uint current_cell,
             const rbg_parser::graph& board,
-            const std::map<rbg_parser::token, uint>& edges_to_id,
             std::vector<std::pair<uint,uint>>& dfs_stack,
-            const std::vector<state>& local_register)const;
+            const std::vector<precomputed_pattern>& pps)const;
 };
 
 #endif
