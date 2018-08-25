@@ -8,6 +8,8 @@
 #include"cpp_container.hpp"
 #include"types.hpp"
 #include"automaton.hpp"
+#include"shift_table.hpp"
+#include"precomputed_pattern.hpp"
 
 class compiler_options;
 
@@ -25,8 +27,8 @@ class game_compiler{
         std::map<rbg_parser::token, uint> variables_to_id;
         automaton game_automaton;
         std::vector<automaton> pattern_automata;
-        std::vector<uint> patterns_offsets;
-        uint patterns_size;
+        std::vector<shift_table> shift_tables;
+        std::vector<precomputed_pattern> precomputed_patterns;
         const rbg_parser::parsed_game& input;
         game_compiler(void)=delete;
         void generate_board_cells_decoder(void);

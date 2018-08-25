@@ -21,6 +21,7 @@ std::pair<uint,uint> automaton::place_side_by_side(automaton&& rhs){
     local_register.reserve(local_register.size() + rhs.local_register.size());
     std::move(std::begin(rhs.local_register), std::end(rhs.local_register), std::back_inserter(local_register));
     rhs.local_register.clear();
+    only_shifts = only_shifts and rhs.only_shifts;
     return std::make_pair(appendee_start,appendee_accept);
 }
 
@@ -52,6 +53,7 @@ void automaton::concat_automaton(automaton&& concatee){
     local_register.reserve(local_register.size() + concatee.local_register.size()-1);
     std::move(std::begin(concatee.local_register), std::begin(concatee.local_register)+old_start, std::back_inserter(local_register));
     std::move(std::begin(concatee.local_register)+old_start+1, std::end(concatee.local_register), std::back_inserter(local_register));
+    only_shifts = only_shifts and concatee.only_shifts;
 }
 
 void automaton::starify_automaton(void){
@@ -145,6 +147,10 @@ shift_table automaton::generate_shift_table(
     return result;
 }
 
+bool automaton::shift_tabling_elligible(void)const{
+    return only_shifts;
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);
@@ -167,10 +173,11 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
     return result;
 }
 
-automaton edge_automaton(const std::vector<label>& label_list){
+automaton edge_automaton(const std::vector<label>& label_list, bool non_shift){
     automaton result;
     auto result_endpoints = result.prepare_new_endpoints();
     result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list);
     result.set_endpoints(result_endpoints);
+    result.only_shifts = not non_shift;
     return result;
 }

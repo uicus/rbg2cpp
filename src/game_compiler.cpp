@@ -12,8 +12,8 @@ name(opts.output_file()),
 pieces_to_id(),
 game_automaton(),
 pattern_automata(),
-patterns_offsets(),
-patterns_size(0),
+shift_tables(),
+precomputed_patterns(),
 input(input){
 }
 
@@ -234,17 +234,16 @@ void game_compiler::generate_game_parameters(void){
 
 void game_compiler::build_game_automaton(void){
     std::vector<label> block;
-    automaton_builder b(pattern_automata, block);
+    std::vector<label> shift_block;
+    automaton_builder b(input.get_board(), pattern_automata, shift_tables, precomputed_patterns, block, shift_block, opts);
     input.get_moves()->accept(b);
     game_automaton = b.get_final_result();
-    assert(block.empty());
+    assert(block.empty() and shift_block.empty());
     game_automaton.mark_start_as_outgoing_usable();
     game_automaton.mark_states_as_double_reachable();
     for(auto& el: pattern_automata){
         el.mark_start_as_outgoing_usable();
         el.mark_states_as_double_reachable();
-        patterns_offsets.push_back(patterns_size);
-        patterns_size += el.get_size();
     }
 }
 

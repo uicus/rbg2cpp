@@ -3,32 +3,67 @@
 
 #include"abstract_dispatcher.hpp"
 #include"automaton.hpp"
+#include"shift_table.hpp"
+#include"precomputed_pattern.hpp"
 #include"types.hpp"
 #include<cassert>
 #include<vector>
 
+class compiler_options;
+
 namespace rbg_parser{
     class game_move;
+    class graph;
 }
 
 class automaton_builder : public rbg_parser::abstract_dispatcher{
         automaton local_copy_automaton;
+        automaton local_copy_shift_automaton;
         automaton& currently_modified_automaton;
+        automaton& currently_modified_shift_automaton;
         bool has_automaton;
+        bool has_shift_automaton;
+        const rbg_parser::graph& board;
         std::vector<automaton>& pattern_automata;
+        std::vector<shift_table>& shift_tables;
+        std::vector<precomputed_pattern>& precomputed_patterns;
         std::vector<label>& current_block;
+        std::vector<label>& current_shift_block;
+        const compiler_options& opts;
         void handle_any_switch(const rbg_parser::game_move& m);
-        void build_automaton_from_actions_so_far();
+        void build_automaton_from_actions_so_far(void);
         void concat_automaton_to_result_so_far(automaton&& a);
-        automaton_builder(std::vector<automaton>& pattern_automata, std::vector<label>& current_block, automaton& upper_level_automaton);
+        automaton_builder(
+            const rbg_parser::graph& board,
+            std::vector<automaton>& pattern_automata,
+            std::vector<shift_table>& shift_tables,
+            std::vector<precomputed_pattern>& precomputed_patterns,
+            std::vector<label>& current_block,
+            std::vector<label>& current_shift_block,
+            automaton& upper_level_automaton,
+            automaton& upper_level_shift_automaton,
+            const compiler_options& opts);
         automaton_builder delegate_builder();
+        shift_table gather_shift_so_far_into_table(void);
+        void end_shift_automaton(void);
+        bool only_shifts(void)const;
+        automaton get_only_shifts_final_result(void);
+        void build_shift_automaton_from_actions_so_far(void);
+        void concat_shift_automaton_to_result_so_far(automaton&& a);
     public:
         automaton_builder(const automaton_builder&)=delete;
         automaton_builder(automaton_builder&&)=default;
         automaton_builder& operator=(const automaton_builder&)=delete;
         automaton_builder& operator=(automaton_builder&&)=delete;
         ~automaton_builder(void)override=default;
-        automaton_builder(std::vector<automaton>& pattern_automata, std::vector<label>& current_block);
+        automaton_builder(
+            const rbg_parser::graph& board,
+            std::vector<automaton>& pattern_automata,
+            std::vector<shift_table>& shift_tables,
+            std::vector<precomputed_pattern>& precomputed_patterns,
+            std::vector<label>& current_block,
+            std::vector<label>& current_shift_block,
+            const compiler_options& opts);
         void dispatch(const rbg_parser::sum& m)override;
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;

@@ -20,6 +20,7 @@ class automaton{
         std::vector<state> local_register;
         uint start_state;
         uint accept_state;
+        bool only_shifts = true;
         std::pair<uint,uint> place_side_by_side(automaton&& rhs);
         std::pair<uint,uint> prepare_new_endpoints(void);
         void set_endpoints(const std::pair<uint,uint>& new_endpoints);
@@ -55,13 +56,15 @@ class automaton{
         shift_table generate_shift_table(
             const rbg_parser::graph& board,
             const std::vector<precomputed_pattern>& pps)const;
+        void mark_as_nonshift_content(void);
+        bool shift_tabling_elligible(void)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
-        friend automaton edge_automaton(const std::vector<label>& label_list);
+        friend automaton edge_automaton(const std::vector<label>& label_list, bool non_shift);
 };
 
 automaton sum_of_automatons(std::vector<automaton>&& elements);
 automaton concatenation_of_automatons(std::vector<automaton>&& elements);
-automaton edge_automaton(const std::vector<label>& label_list);
+automaton edge_automaton(const std::vector<label>& label_list, bool non_shift=true);
 
 #endif
