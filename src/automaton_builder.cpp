@@ -105,6 +105,8 @@ void automaton_builder::dispatch(const rbg_parser::move_check& m){
     if(element_builder.only_shifts()){
         auto table = element_builder.gather_shift_so_far_into_table();
         precomputed_patterns.push_back(table.transform_into_pattern());
+        if(m.is_negated())
+            precomputed_patterns.back().negate();
         current_shift_block.push_back({s_pattern,nullptr,uint(precomputed_patterns.size()-1)});
     }
     else{
@@ -157,6 +159,10 @@ void automaton_builder::concat_shift_automaton_to_result_so_far(automaton&& a){
     has_shift_automaton = true;
 }
 
+bool automaton_builder::worth_creating_shift_table(void)const{
+    return has_shift_automaton or current_shift_block.size() >= PATH_SIZE_FOR_SHIFT_TABLE;
+}
+
 shift_table automaton_builder::gather_shift_so_far_into_table(void){
     build_shift_automaton_from_actions_so_far();
     auto result = currently_modified_shift_automaton.generate_shift_table(board, precomputed_patterns);
@@ -165,9 +171,18 @@ shift_table automaton_builder::gather_shift_so_far_into_table(void){
 }
 
 void automaton_builder::end_shift_automaton(void){
-    if(has_shift_automaton or current_shift_block.size() >= PATH_SIZE_FOR_SHIFT_TABLE){
+    if(worth_creating_shift_table()){
         shift_tables.push_back(gather_shift_so_far_into_table());
-        current_block.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
+        if(shift_tables.back().can_be_backtraced()){
+            build_automaton_from_actions_so_far();
+            std::vector<label> shift_label;
+            shift_label.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
+            auto last_edge = edge_automaton(shift_label);
+            last_edge.mark_start_as_outgoing_usable();
+            concat_automaton_to_result_so_far(std::move(last_edge));
+        }
+        else
+            current_block.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
     }
     else{
         if(has_shift_automaton){
@@ -197,7 +212,7 @@ void automaton_builder::dispatch(const rbg_parser::keeper_switch& m){
 
 void automaton_builder::build_shift_automaton_from_actions_so_far(void){
     if(not current_shift_block.empty())
-        concat_shift_automaton_to_result_so_far(edge_automaton(current_shift_block,true));
+        concat_shift_automaton_to_result_so_far(edge_automaton(current_shift_block));
     current_shift_block.clear();
 }
 
@@ -226,17 +241,19 @@ void automaton_builder::dispatch(const rbg_parser::star_move& m){
         concat_shift_automaton_to_result_so_far(std::move(temp_automaton));
     }
     else{
+        end_shift_automaton();
         auto temp_automaton = element_builder.get_final_result();
         temp_automaton.starify_automaton();
         build_automaton_from_actions_so_far();
         concat_automaton_to_result_so_far(std::move(temp_automaton));
     }
-    assert(block.empty());
+    assert(block.empty() and shift_block.empty());
 }
 
 void automaton_builder::dispatch(const rbg_parser::sum& m){
     std::vector<automaton> elements;
     std::vector<automaton> only_shift_elements;
+    bool encountered_worth_shift_automaton = false;
     for(const auto& el: m.get_content()){
         std::vector<label> block;
         std::vector<label> shift_block;
@@ -249,13 +266,17 @@ void automaton_builder::dispatch(const rbg_parser::sum& m){
             shift_block,
             opts);
         el->accept(element_builder);
-        if(element_builder.only_shifts())
+        if(element_builder.only_shifts()){
+            if(element_builder.worth_creating_shift_table() or only_shift_elements.size() >= 1)
+                encountered_worth_shift_automaton = true;
             only_shift_elements.push_back(element_builder.get_only_shifts_final_result());
+        }
         else
             elements.push_back(element_builder.get_final_result());
-        assert(block.empty() and only_shift_elements.empty());
+        assert(block.empty() and shift_block.empty());
     }
     if(only_shift_elements.empty()){
+        end_shift_automaton();
         build_automaton_from_actions_so_far();
         concat_automaton_to_result_so_far(sum_of_automatons(std::move(elements)));
     }
@@ -264,8 +285,20 @@ void automaton_builder::dispatch(const rbg_parser::sum& m){
         concat_shift_automaton_to_result_so_far(sum_of_automatons(std::move(only_shift_elements)));
     }
     else{
-        for(auto& el: only_shift_elements)
-            elements.push_back(std::move(el));
+        end_shift_automaton();
+        if(encountered_worth_shift_automaton){
+            auto shift_automaton = sum_of_automatons(std::move(only_shift_elements));
+            shift_tables.push_back(shift_automaton.generate_shift_table(board,precomputed_patterns));
+            std::vector<label> last_edge;
+            last_edge.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
+            auto e = edge_automaton(last_edge);
+            e.mark_start_as_outgoing_usable();
+            elements.push_back(std::move(e));
+        }
+        else{
+            for(auto& el: only_shift_elements)
+                elements.push_back(std::move(el));
+        }
         build_automaton_from_actions_so_far();
         concat_automaton_to_result_so_far(sum_of_automatons(std::move(elements)));
     }
@@ -280,12 +313,8 @@ void automaton_builder::dispatch(const rbg_parser::concatenation& m){
 }
 
 automaton automaton_builder::get_final_result(void){
-    if(only_shifts()){
-        shift_tables.push_back(gather_shift_so_far_into_table());
-        current_shift_block.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
-        return edge_automaton(current_shift_block);
-    }
-    else if(has_automaton){
+    end_shift_automaton();
+    if(has_automaton){
         if(not current_block.empty())
             currently_modified_automaton.concat_automaton(edge_automaton(current_block));
         current_block.clear();

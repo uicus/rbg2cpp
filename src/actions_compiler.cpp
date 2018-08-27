@@ -211,3 +211,7 @@ void actions_compiler::notify_about_modifier(void){
 bool actions_compiler::is_ready_to_report(void)const{
     return is_finisher;
 }
+
+void actions_compiler::notify_about_cell_change(void){
+    should_check_cell_correctness = true;
+}

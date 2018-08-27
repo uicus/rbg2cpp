@@ -50,6 +50,7 @@ class automaton_builder : public rbg_parser::abstract_dispatcher{
         automaton get_only_shifts_final_result(void);
         void build_shift_automaton_from_actions_so_far(void);
         void concat_shift_automaton_to_result_so_far(automaton&& a);
+        bool worth_creating_shift_table(void)const;
     public:
         automaton_builder(const automaton_builder&)=delete;
         automaton_builder(automaton_builder&&)=default;

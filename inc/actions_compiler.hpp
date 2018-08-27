@@ -60,6 +60,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void finallize(void);
         void check_cell_correctness(void);
         void notify_about_modifier(void);
+        void notify_about_cell_change(void);
         bool is_ready_to_report(void)const;
 };
 

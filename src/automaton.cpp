@@ -21,7 +21,6 @@ std::pair<uint,uint> automaton::place_side_by_side(automaton&& rhs){
     local_register.reserve(local_register.size() + rhs.local_register.size());
     std::move(std::begin(rhs.local_register), std::end(rhs.local_register), std::back_inserter(local_register));
     rhs.local_register.clear();
-    only_shifts = only_shifts and rhs.only_shifts;
     return std::make_pair(appendee_start,appendee_accept);
 }
 
@@ -53,7 +52,6 @@ void automaton::concat_automaton(automaton&& concatee){
     local_register.reserve(local_register.size() + concatee.local_register.size()-1);
     std::move(std::begin(concatee.local_register), std::begin(concatee.local_register)+old_start, std::back_inserter(local_register));
     std::move(std::begin(concatee.local_register)+old_start+1, std::end(concatee.local_register), std::back_inserter(local_register));
-    only_shifts = only_shifts and concatee.only_shifts;
 }
 
 void automaton::starify_automaton(void){
@@ -71,9 +69,11 @@ void automaton::print_transition_functions(
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
     const compiler_options& opts)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,opts);
+        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns,opts);
 }
 
 void automaton::print_transition_functions_inside_pattern(
@@ -83,9 +83,11 @@ void automaton::print_transition_functions_inside_pattern(
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
     const compiler_options& opts)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,opts);
+        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns,opts);
 }
 
 void automaton::print_transition_table(cpp_container& output, const std::string& table_name, const std::string& functions_prefix)const{
@@ -105,11 +107,11 @@ void automaton::mark_start_as_outgoing_usable(void){
     local_register[start_state].mark_explicitly_as_transition_start();
 }
 
-void automaton::mark_states_as_double_reachable(void){
+void automaton::mark_states_as_double_reachable(const std::vector<shift_table>& shift_tables){
     std::vector<uint> reachability;
     reachability.resize(local_register.size());
     for(const auto& el: local_register)
-        el.notify_endpoints_about_being_reachable(reachability);
+        el.notify_endpoints_about_being_reachable(reachability, shift_tables);
     for(uint i=0;i<reachability.size();++i)
         if(reachability[i]>1)
             local_register[i].mark_as_doubly_reachable();
@@ -147,10 +149,6 @@ shift_table automaton::generate_shift_table(
     return result;
 }
 
-bool automaton::shift_tabling_elligible(void)const{
-    return only_shifts;
-}
-
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);
@@ -173,11 +171,10 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
     return result;
 }
 
-automaton edge_automaton(const std::vector<label>& label_list, bool non_shift){
+automaton edge_automaton(const std::vector<label>& label_list){
     automaton result;
     auto result_endpoints = result.prepare_new_endpoints();
     result.local_register[result_endpoints.first].connect_with_state(result_endpoints.second, label_list);
     result.set_endpoints(result_endpoints);
-    result.only_shifts = not non_shift;
     return result;
 }

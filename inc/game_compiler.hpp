@@ -55,6 +55,7 @@ class game_compiler{
         void generate_resettable_bitarray_stack(void);
         void generate_main_dfs(void);
         void generate_dfs_for_pattern(uint pattern_index);
+        void print_all_shift_tables(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);
         game_compiler(const game_compiler&)=delete;

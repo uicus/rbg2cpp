@@ -2,15 +2,21 @@
 #define PRECOMPUTED_PATTERN
 
 #include<set>
+#include<string>
 
 #include"types.hpp"
 
+class cpp_container;
+
 class precomputed_pattern{
         std::set<uint> allowed_cells;
+        uint overall_size;
     public:
+        precomputed_pattern(uint overall_size);
         void add_cell(uint cell);
         bool evaluates_to_true(uint cell)const;
-        // TODO: printer function
+        void negate(void);
+        void print_inside_transition(cpp_container& output, const std::string& revert_name)const;
 };
 
 #endif
