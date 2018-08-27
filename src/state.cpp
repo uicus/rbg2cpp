@@ -24,20 +24,7 @@ void state::absorb(state&& rhs){
 }
 
 void state::connect_with_state(uint index_in_local_register, const std::vector<label>& label_list){
-    edge result_edge(index_in_local_register);
-    for(const auto el: label_list)
-        switch(el.k){
-            case action:
-                result_edge.add_another_action(el.a);
-                break;
-            case positive_pattern:
-                result_edge.add_another_pattern_check(true, el.automaton_index);
-                break;
-            case negative_pattern:
-                result_edge.add_another_pattern_check(false, el.automaton_index);
-                break;
-        }
-    next_states.push_back(std::move(result_edge));
+    next_states.push_back(edge(index_in_local_register, label_list));
 }
 
 void state::print_transition_functions(
@@ -48,10 +35,12 @@ void state::print_transition_functions(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
     const compiler_options& opts)const{
     if(next_states.size()>1 or outgoing_edges_needed)
         for(const auto& el: next_states)
-            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register,opts);
+            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register, shift_tables, precomputed_patterns,opts);
 }
 
 void state::print_transition_functions_inside_pattern(
@@ -63,10 +52,12 @@ void state::print_transition_functions_inside_pattern(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
     const compiler_options& opts)const{
     if(next_states.size()>1 or outgoing_edges_needed)
         for(const auto& el: next_states)
-            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register,opts);
+            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register, shift_tables, precomputed_patterns,opts);
 }
 
 void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
@@ -81,9 +72,12 @@ void state::print_outgoing_transitions(uint from_state, cpp_container& output, c
     output.add_source_line(resulting_line);
 }
 
-void state::notify_endpoints_about_being_reachable(std::vector<uint>& reachability)const{
-    for(const auto& el: next_states)
+void state::notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const{
+    for(const auto& el: next_states){
+        if(el.is_shift_table_with_multiple_choices(shift_tables))
+            ++reachability[el.get_endpoint()];
         ++reachability[el.get_endpoint()];
+    }
 }
 
 void state::mark_as_doubly_reachable(void){
@@ -99,7 +93,6 @@ void state::mark_explicitly_as_transition_start(void){
 }
 
 const edge& state::get_only_exit(void)const{
-    assert(is_no_choicer());
     return next_states[0];
 }
 
@@ -107,6 +100,18 @@ bool state::is_dead_end(void)const{
     return next_states.empty();
 }
 
-bool state::is_no_choicer(void)const{
-    return next_states.size() == 1;
+bool state::is_no_choicer(const std::vector<shift_table>& shift_tables)const{
+    return next_states.size() == 1 and not next_states.back().is_shift_table_with_multiple_choices(shift_tables);
+}
+
+void state::push_next_states_to_shift_tables_dfs_stack(
+    uint current_cell,
+    const rbg_parser::graph& board,
+    std::vector<std::pair<uint,uint>>& dfs_stack,
+    const std::vector<precomputed_pattern>& pps)const{
+    for(const auto& el: next_states){
+        auto cell = el.get_next_cell(current_cell,board,pps);
+        if(cell>=0)
+            dfs_stack.emplace_back(el.get_endpoint(), uint(cell));
+    }
 }

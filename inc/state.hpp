@@ -9,9 +9,11 @@
 
 class cpp_container;
 class compiler_options;
+class precomputed_pattern;
 
 namespace rbg_parser{
     class game_move;
+    class graph;
 }
 
 class state{
@@ -31,6 +33,8 @@ class state{
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register,
+            const std::vector<shift_table>& shift_tables,
+            const std::vector<precomputed_pattern>& precomputed_patterns,
             const compiler_options& opts)const;
         void print_transition_functions_inside_pattern(
             uint from_state,
@@ -41,15 +45,22 @@ class state{
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register,
+            const std::vector<shift_table>& shift_tables,
+            const std::vector<precomputed_pattern>& precomputed_patterns,
             const compiler_options& opts)const;
         void print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
-        void notify_endpoints_about_being_reachable(std::vector<uint>& reachability)const;
+        void notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const;
         void mark_as_doubly_reachable(void);
         bool can_be_checked_for_visit(void)const;
         void mark_explicitly_as_transition_start(void);
         const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;
-        bool is_no_choicer(void)const;
+        bool is_no_choicer(const std::vector<shift_table>& shift_tables)const;
+        void push_next_states_to_shift_tables_dfs_stack(
+            uint current_cell,
+            const rbg_parser::graph& board,
+            std::vector<std::pair<uint,uint>>& dfs_stack,
+            const std::vector<precomputed_pattern>& pps)const;
 };
 
 #endif

@@ -5,18 +5,14 @@
 #include"declarations.hpp"
 #include"state.hpp"
 #include"compiler_options.hpp"
+#include"graph.hpp"
+#include"precomputed_pattern.hpp"
+#include"shift_table.hpp"
+#include"shift.hpp"
 
-edge::edge(uint local_register_endpoint_index):
+edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
-label_list(){
-}
-
-void edge::add_another_action(const rbg_parser::game_move* a){
-    label_list.push_back({action,a,0});
-}
-
-void edge::add_another_pattern_check(bool positive, uint automaton_index){
-    label_list.push_back({(positive?positive_pattern:negative_pattern),nullptr,automaton_index});
+label_list(label_list){
 }
 
 void edge::shift(uint shift_value){
@@ -32,7 +28,14 @@ uint edge::get_endpoint(void)const{
     return local_register_endpoint_index;
 }
 
-void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std::string& revert_name, std::string& human_readable_labels)const{
+void edge::handle_labels(
+    cpp_container& output,
+    actions_compiler& ac,
+    const std::string& revert_name,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
+    const std::string& decision_stack_name,
+    std::string& human_readable_labels)const{
     for(const auto& el: label_list)
         switch(el.k){
             case action:
@@ -41,19 +44,45 @@ void edge::handle_labels(cpp_container& output, actions_compiler& ac, const std:
                 break;
             case positive_pattern:
                 ac.finallize();
-                output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
-                output.add_source_line("if(not success_to_report"+std::to_string(el.automaton_index)+"){");
+                output.add_source_line("evaluate"+std::to_string(el.structure_index)+"();");
+                output.add_source_line("if(not success_to_report"+std::to_string(el.structure_index)+"){");
                 output.add_source_line(revert_name);
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
             case negative_pattern:
                 ac.finallize();
-                output.add_source_line("evaluate"+std::to_string(el.automaton_index)+"();");
-                output.add_source_line("if(success_to_report"+std::to_string(el.automaton_index)+"){");
+                output.add_source_line("evaluate"+std::to_string(el.structure_index)+"();");
+                output.add_source_line("if(success_to_report"+std::to_string(el.structure_index)+"){");
                 output.add_source_line(revert_name);
                 output.add_source_line("return;");
                 output.add_source_line("}");
+                break;
+            case s_pattern:
+                precomputed_patterns[el.structure_index].print_inside_transition(output, revert_name);
+                break;
+            case s_table:
+                if(shift_tables[el.structure_index].can_be_backtraced()){
+                    output.add_source_line("if("+decision_stack_name+".back().current_shift_table_branch == shift_table"+std::to_string(el.structure_index)+"[state_to_change.current_cell].size()){");
+                    output.add_source_line(decision_stack_name+".back().current_shift_table_branch = 0;");
+                    output.add_source_line(revert_name);
+                    output.add_source_line("return;");
+                    output.add_source_line("}");
+                    output.add_source_line("else{");
+                    output.add_source_line("--"+decision_stack_name+".back().current_branch;");
+                    output.add_source_line("}");
+                    output.add_source_line("state_to_change.current_cell = shift_table"+std::to_string(el.structure_index)+"[state_to_change.current_cell]["+decision_stack_name+".back().current_shift_table_branch++];");
+                }
+                else{
+                    output.add_source_line("state_to_change.current_cell = shift_table"+std::to_string(el.structure_index)+"[state_to_change.current_cell];");
+                    ac.notify_about_cell_change();
+                }
+                break;
+            case always_true:
+                break;
+            case always_false:
+                output.add_source_line(revert_name);
+                output.add_source_line("return;");
                 break;
         }
 }
@@ -84,6 +113,8 @@ void edge::print_transition_function(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
     const compiler_options& opts)const{
     output.add_header_line("void transition_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);");
     output.add_source_line("void next_states_iterator::transition_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void){");
@@ -91,14 +122,17 @@ void edge::print_transition_function(
         output.add_source_line("revert_to_last_choice();");
     }
     else{
+        //output.add_source_include("iostream");
+        //output.add_source_line("std::cout<<\"Wchodze void transition_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);...\"<<std::endl;");
         std::string revert = "revert_to_last_choice();";
         std::string pusher = "push()";
+        std::string decision_stack = "decision_points";
         actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,pusher,true);
         int last_state_to_check = -1;
         std::string human_readable_labels;
-        handle_labels(output,ac,revert,human_readable_labels);
+        handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
         uint current_state = local_register_endpoint_index;
-        while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer()){
+        while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer(shift_tables)){
             if(local_register[current_state].can_be_checked_for_visit()){
                 if(local_register[current_state].get_only_exit().label_list.empty())
                     last_state_to_check = current_state;
@@ -111,7 +145,7 @@ void edge::print_transition_function(
                 visit_node(output,last_state_to_check,ac);
                 last_state_to_check = -1;
             }
-            local_register[current_state].get_only_exit().handle_labels(output,ac,revert,human_readable_labels);
+            local_register[current_state].get_only_exit().handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
             current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
         }
         if(local_register[current_state].can_be_checked_for_visit())
@@ -141,6 +175,8 @@ void edge::print_transition_function_inside_pattern(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
     const compiler_options& opts)const{
     output.add_header_line("void pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);");
     output.add_source_line("void next_states_iterator::pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void){");
@@ -148,10 +184,11 @@ void edge::print_transition_function_inside_pattern(
     std::string pusher = "pattern_push"+std::to_string(pattern_index)+"()";
     actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,pusher,false);
     std::string human_readable_labels;
+    std::string decision_stack = "pattern_decision_points"+std::to_string(pattern_index);
     int last_state_to_check = -1;
-    handle_labels(output,ac,revert,human_readable_labels);
+    handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
     uint current_state = local_register_endpoint_index;
-    while(local_register[current_state].is_no_choicer()){
+    while(local_register[current_state].is_no_choicer(shift_tables)){
         if(local_register[current_state].can_be_checked_for_visit()){
             if(local_register[current_state].get_only_exit().label_list.empty())
                 last_state_to_check = current_state;
@@ -164,7 +201,7 @@ void edge::print_transition_function_inside_pattern(
             visit_node_in_pattern(output,last_state_to_check,pattern_index,ac);
             last_state_to_check = -1;
         }
-        local_register[current_state].get_only_exit().handle_labels(output,ac,revert,human_readable_labels);
+        local_register[current_state].get_only_exit().handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
     if(local_register[current_state].can_be_checked_for_visit())
@@ -183,4 +220,40 @@ void edge::print_transition_function_inside_pattern(
     output.add_source_line("// generated from: "+human_readable_labels);
     output.add_source_line("}");
     output.add_source_line("");
+}
+
+int edge::get_next_cell(uint current_cell, const rbg_parser::graph& board, const std::vector<precomputed_pattern>& pps)const{
+    for(const auto& el: label_list)
+        switch(el.k){
+            case action:
+                {
+                    const auto& outgoing_edges = board.get_outgoing_edges(current_cell);
+                    const rbg_parser::shift* s = dynamic_cast<const rbg_parser::shift*>(el.a);
+                    auto it = outgoing_edges.find(s->get_content());
+                    if(it == outgoing_edges.end())
+                        return -1;
+                    current_cell = it->second;
+                }
+                break;
+            case positive_pattern:
+            case negative_pattern:
+                assert(false);
+                break;
+            case s_pattern:
+                if(not pps[el.structure_index].evaluates_to_true(current_cell))
+                    return -1;
+                break;
+            case s_table:
+                assert(false); // no recursive shift tables
+            case always_true:
+                break;
+            case always_false:
+                return -1;
+                break;
+        }
+    return current_cell;
+}
+
+bool edge::is_shift_table_with_multiple_choices(const std::vector<shift_table>& shift_tables)const{
+    return label_list.size() == 1 and label_list[0].k == s_table and shift_tables[label_list[0].structure_index].can_be_backtraced();
 }

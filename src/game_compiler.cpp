@@ -12,8 +12,8 @@ name(opts.output_file()),
 pieces_to_id(),
 game_automaton(),
 pattern_automata(),
-patterns_offsets(),
-patterns_size(0),
+shift_tables(),
+precomputed_patterns(),
 input(input){
 }
 
@@ -234,17 +234,16 @@ void game_compiler::generate_game_parameters(void){
 
 void game_compiler::build_game_automaton(void){
     std::vector<label> block;
-    automaton_builder b(pattern_automata, block);
+    std::vector<label> shift_block;
+    automaton_builder b(input.get_board(), pattern_automata, shift_tables, precomputed_patterns, block, shift_block, opts);
     input.get_moves()->accept(b);
     game_automaton = b.get_final_result();
-    assert(block.empty());
+    assert(block.empty() and shift_block.empty());
     game_automaton.mark_start_as_outgoing_usable();
-    game_automaton.mark_states_as_double_reachable();
+    game_automaton.mark_states_as_double_reachable(shift_tables);
     for(auto& el: pattern_automata){
         el.mark_start_as_outgoing_usable();
-        el.mark_states_as_double_reachable();
-        patterns_offsets.push_back(patterns_size);
-        patterns_size += el.get_size();
+        el.mark_states_as_double_reachable(shift_tables);
     }
 }
 
@@ -458,10 +457,10 @@ void game_compiler::generate_states_iterator(void){
         pattern_automata[i].print_transition_table(output, "pattern_transitions"+std::to_string(i),"pattern_transition"+std::to_string(i));
     }
     output.add_header_line("");
-    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),opts);
+    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables,precomputed_patterns,opts);
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("");
-        pattern_automata[i].print_transition_functions_inside_pattern(i,output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),opts);
+        pattern_automata[i].print_transition_functions_inside_pattern(i,output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables, precomputed_patterns,opts);
     }
     output.add_header_line("");
     output.add_header_line("game_state& state_to_change;");
@@ -642,6 +641,11 @@ void game_compiler::generate_move_class(void){
     output.add_header_line("};");
 }
 
+void game_compiler::print_all_shift_tables(void){
+    for(uint i=0;i<shift_tables.size();++i)
+        shift_tables[i].print_array(output,i);
+}
+
 const cpp_container& game_compiler::compile(void){
     build_game_automaton();
     output.add_header_line("namespace "+name+"{");
@@ -654,6 +658,7 @@ const cpp_container& game_compiler::compile(void){
     fill_edges_map();
     generate_board_structure();
     generate_variables_bounds();
+    print_all_shift_tables();
     output.add_header_line("");
     generate_iterator_helper_structures();
     generate_move_class();
