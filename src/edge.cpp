@@ -31,7 +31,6 @@ uint edge::get_endpoint(void)const{
 void edge::handle_labels(
     cpp_container& output,
     actions_compiler& ac,
-    const std::string& revert_name,
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
     const std::string& decision_stack_name,
@@ -46,7 +45,7 @@ void edge::handle_labels(
                 ac.finallize();
                 output.add_source_line("evaluate"+std::to_string(el.structure_index)+"();");
                 output.add_source_line("if(not success_to_report"+std::to_string(el.structure_index)+"){");
-                output.add_source_line(revert_name);
+                ac.insert_reverting_sequence(output);
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
@@ -54,18 +53,18 @@ void edge::handle_labels(
                 ac.finallize();
                 output.add_source_line("evaluate"+std::to_string(el.structure_index)+"();");
                 output.add_source_line("if(success_to_report"+std::to_string(el.structure_index)+"){");
-                output.add_source_line(revert_name);
+                ac.insert_reverting_sequence(output);
                 output.add_source_line("return;");
                 output.add_source_line("}");
                 break;
             case s_pattern:
-                precomputed_patterns[el.structure_index].print_inside_transition(output, revert_name);
+                precomputed_patterns[el.structure_index].print_inside_transition(output, ac);
                 break;
             case s_table:
                 if(shift_tables[el.structure_index].can_be_backtraced()){
                     output.add_source_line("if("+decision_stack_name+".back().current_shift_table_branch == shift_table"+std::to_string(el.structure_index)+"[state_to_change.current_cell].size()){");
                     output.add_source_line(decision_stack_name+".back().current_shift_table_branch = 0;");
-                    output.add_source_line(revert_name);
+                    ac.insert_reverting_sequence(output);
                     output.add_source_line("return;");
                     output.add_source_line("}");
                     output.add_source_line("else{");
@@ -81,7 +80,7 @@ void edge::handle_labels(
             case always_true:
                 break;
             case always_false:
-                output.add_source_line(revert_name);
+                ac.insert_reverting_sequence(output);
                 output.add_source_line("return;");
                 break;
         }
@@ -90,7 +89,7 @@ void edge::handle_labels(
 void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const{
     ac.finallize();
     output.add_source_line("if(cache.is_set("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
-    output.add_source_line("revert_to_last_choice();");
+    ac.insert_reverting_sequence(output);
     output.add_source_line("return;");
     output.add_source_line("}");
     output.add_source_line("cache.set("+std::to_string(current_state)+", state_to_change.current_cell-1);");
@@ -99,7 +98,7 @@ void edge::visit_node(cpp_container& output, uint current_state, actions_compile
 void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const{
     ac.finallize();
     output.add_source_line("if(cache.pattern_is_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1)){");
-    output.add_source_line("revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+",&resettable_bitarray_stack::pattern_revert_to_level"+std::to_string(pattern_index)+");");
+    ac.insert_reverting_sequence(output);
     output.add_source_line("return;");
     output.add_source_line("}");
     output.add_source_line("cache.pattern_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", state_to_change.current_cell-1);");
@@ -122,15 +121,14 @@ void edge::print_transition_function(
         output.add_source_line("revert_to_last_choice();");
     }
     else{
-        //output.add_source_include("iostream");
-        //output.add_source_line("std::cout<<\"Wchodze void transition_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);...\"<<std::endl;");
-        std::string revert = "revert_to_last_choice();";
         std::string pusher = "push()";
+        std::string level_getter = "get_level()";
+        std::string level_reverter = "revert_to_level";
         std::string decision_stack = "decision_points";
-        actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,pusher,true);
+        actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,pusher,level_getter,level_reverter,false);
         int last_state_to_check = -1;
         std::string human_readable_labels;
-        handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
+        handle_labels(output,ac,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
         uint current_state = local_register_endpoint_index;
         while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer(shift_tables)){
             if(local_register[current_state].can_be_checked_for_visit()){
@@ -145,7 +143,7 @@ void edge::print_transition_function(
                 visit_node(output,last_state_to_check,ac);
                 last_state_to_check = -1;
             }
-            local_register[current_state].get_only_exit().handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
+            local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
             current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
         }
         if(local_register[current_state].can_be_checked_for_visit())
@@ -180,13 +178,14 @@ void edge::print_transition_function_inside_pattern(
     const compiler_options& opts)const{
     output.add_header_line("void pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void);");
     output.add_source_line("void next_states_iterator::pattern_transition"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(local_register_endpoint_index)+"(void){");
-    std::string revert = "revert_to_last_choice_because_failure(&next_states_iterator::pattern_decision_points"+std::to_string(pattern_index)+",pattern_transitions"+std::to_string(pattern_index)+",&resettable_bitarray_stack::pattern_revert_to_level"+std::to_string(pattern_index)+");";
     std::string pusher = "pattern_push"+std::to_string(pattern_index)+"()";
-    actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,revert,pusher,false);
+    std::string level_getter = "pattern_get_level"+std::to_string(pattern_index)+"()";
+    std::string level_reverter = "pattern_revert_to_level"+std::to_string(pattern_index);
+    actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,pusher,level_getter,level_reverter,true);
     std::string human_readable_labels;
     std::string decision_stack = "pattern_decision_points"+std::to_string(pattern_index);
     int last_state_to_check = -1;
-    handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
+    handle_labels(output,ac,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
     uint current_state = local_register_endpoint_index;
     while(local_register[current_state].is_no_choicer(shift_tables)){
         if(local_register[current_state].can_be_checked_for_visit()){
@@ -201,7 +200,7 @@ void edge::print_transition_function_inside_pattern(
             visit_node_in_pattern(output,last_state_to_check,pattern_index,ac);
             last_state_to_check = -1;
         }
-        local_register[current_state].get_only_exit().handle_labels(output,ac,revert,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
+        local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns,decision_stack,human_readable_labels);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
     if(local_register[current_state].can_be_checked_for_visit())
@@ -217,7 +216,6 @@ void edge::print_transition_function_inside_pattern(
     }
     else
         output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+(opts.enabled_shift_tables()?"0,":std::string())+std::to_string(current_state)+",state_to_change.current_cell,cache.pattern_get_level"+std::to_string(pattern_index)+"(),board_change_points.size(),variables_change_points.size());");
-    output.add_source_line("// generated from: "+human_readable_labels);
     output.add_source_line("}");
     output.add_source_line("");
 }

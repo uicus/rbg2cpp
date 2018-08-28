@@ -41,7 +41,6 @@ class edge{
         void handle_labels(
             cpp_container& output,
             actions_compiler& ac,
-            const std::string& revert_name,
             const std::vector<shift_table>& shift_tables,
             const std::vector<precomputed_pattern>& precomputed_patterns,
             const std::string& decision_stack_name,

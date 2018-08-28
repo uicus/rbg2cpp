@@ -16,65 +16,112 @@ actions_compiler::actions_compiler(
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
-    const std::string& reverting_function,
     const std::string& cache_pusher,
-    bool should_build_move):
+    const std::string& cache_level_getter,
+    const std::string& cache_level_reverter,
+    bool inside_pattern):
     output(output),
     pieces_to_id(pieces_to_id),
     edges_to_id(edges_to_id),
     variables_to_id(variables_to_id),
     decl(decl),
-    reverting_function(reverting_function),
     cache_pusher(cache_pusher),
+    cache_level_getter(cache_level_getter),
+    cache_level_reverter(cache_level_reverter),
+    reverting_stack(),
+    encountered_board_change(false),
+    encountered_variable_change(false),
     should_check_cell_correctness(false),
     has_modifier(false),
+    has_saved_cache_level(false),
     is_finisher(false),
-    should_build_move(should_build_move){
+    inside_pattern(inside_pattern){
 }
 
 void actions_compiler::dispatch(const rbg_parser::shift& m){
-    output.add_source_line("state_to_change.current_cell = cell_neighbors[state_to_change.current_cell]["+std::to_string(edges_to_id.at(m.get_content()))+"];");
+    output.add_source_line("current_cell = cell_neighbors[current_cell]["+std::to_string(edges_to_id.at(m.get_content()))+"];");
     should_check_cell_correctness = true;
+}
+
+void actions_compiler::push_changes_on_board_list(cpp_container& output, const std::string& piece_id){
+    if(not inside_pattern){
+        if(not encountered_board_change)
+            output.add_source_line("const auto previous_board_changes_list = board_list;");
+        output.add_source_line("board_list = std::make_shared<board_appliers>(current_cell,"+piece_id+",board_list);");
+        encountered_board_change = true;
+    }
+}
+
+void actions_compiler::save_board_change_for_later_revert(cpp_container& output, uint piece_id){
+    output.add_source_line("int board_change"+std::to_string(reverting_stack.size())+"_cell = current_cell;");
+    output.add_source_line("int board_change"+std::to_string(reverting_stack.size())+"_piece = state_to_change.pieces[current_cell];");
+    if(reverting_stack.empty())
+        output.add_source_line("unsigned int previous_cache_level = cache."+cache_level_getter+";");
+    reverting_stack.push_back({board_change,piece_id});
+}
+
+void actions_compiler::revert_board_change(cpp_container& output, uint piece_id, uint stack_position)const{
+    output.add_source_line("--state_to_change.pieces_count["+std::to_string(piece_id)+"];");
+    output.add_source_line("++state_to_change.pieces_count[board_change"+std::to_string(stack_position)+"_piece];");
+    output.add_source_line("state_to_change.pieces[board_change"+std::to_string(stack_position)+"_cell] = iboard_change"+std::to_string(stack_position)+"_piece;");
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
     check_cell_correctness();
-    output.add_source_line("board_change_points.emplace_back(state_to_change.current_cell, state_to_change.pieces[state_to_change.current_cell]);");
-    output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[state_to_change.current_cell]];");
+    save_board_change_for_later_revert(output,pieces_to_id.at(m.get_piece()));
+    push_changes_on_board_list(output, std::to_string(pieces_to_id.at(m.get_piece())));
+    output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[current_cell]];");
     output.add_source_line("++state_to_change.pieces_count["+std::to_string(pieces_to_id.at(m.get_piece()))+"];");
-    output.add_source_line("state_to_change.pieces[state_to_change.current_cell] = "+std::to_string(pieces_to_id.at(m.get_piece()))+";");
-    if(should_build_move)
-        output.add_source_line("board_list = std::make_shared<board_appliers>(state_to_change.current_cell,"+std::to_string(pieces_to_id.at(m.get_piece()))+",board_list);");
+    output.add_source_line("state_to_change.pieces[current_cell] = "+std::to_string(pieces_to_id.at(m.get_piece()))+";");
     has_modifier = true;
 }
 
 void actions_compiler::dispatch(const rbg_parser::ons& m){
     if(m.get_legal_ons().size() == 0){
-        output.add_source_line(reverting_function);
+        insert_reverting_sequence(output);
         output.add_source_line("return;");
     }
     else if(m.get_legal_ons().size() < pieces_to_id.size()){
         check_cell_correctness();
-        output.add_source_line("switch(state_to_change.pieces[state_to_change.current_cell]){");
+        output.add_source_line("switch(state_to_change.pieces[current_cell]){");
         if(m.get_legal_ons().size() < pieces_to_id.size()/2+1){
             for(const auto& el: m.get_legal_ons())
                 output.add_source_line("case "+std::to_string(pieces_to_id.at(el))+":");
             output.add_source_line("break;");
             output.add_source_line("default:");
-            output.add_source_line(reverting_function);
+            insert_reverting_sequence(output);
             output.add_source_line("return;");
         }
         else{
             for(const auto& el: pieces_to_id)
                 if(not m.get_legal_ons().count(el.first))
                     output.add_source_line("case "+std::to_string(el.second)+":");
-            output.add_source_line(reverting_function);
+            insert_reverting_sequence(output);
             output.add_source_line("return;");
             output.add_source_line("default:");
             output.add_source_line("break;");
         }
         output.add_source_line("}");
     }
+}
+
+void actions_compiler::push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value){
+    if(not inside_pattern){
+        if(not encountered_variable_change)
+            output.add_source_line("const auto previous_variables_changes_list = variables_list;");
+        output.add_source_line("variables_list = std::make_shared<variables_appliers>("+variable_id+","+value+",variables_list);");
+        encountered_variable_change = true;
+    }
+}
+
+void actions_compiler::save_variable_change_for_later_revert(cpp_container& output, uint variable_id){
+    output.add_source_line("int variable_change_"+std::to_string(reverting_stack.size())+" = state_to_change.variables["+std::to_string(variable_id)+"]");
+    if(reverting_stack.empty())
+    reverting_stack.push_back({variable_change,variable_id});
+}
+
+void actions_compiler::revert_variable_change(cpp_container& output, uint variable_id, uint stack_position)const{
+    output.add_source_line("state_to_change.variables["+std::to_string(variable_id)+"] = variable_change"+std::to_string(stack_position)+";");
 }
 
 void actions_compiler::dispatch(const rbg_parser::assignment& m){
@@ -88,37 +135,41 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
         if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound)){
-            output.add_source_line(reverting_function);
+            insert_reverting_sequence(output);
             output.add_source_line("return;");
         }
         else{
-            output.add_source_line("variables_change_points.emplace_back("+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]);");
-            if(should_build_move)
-                output.add_source_line("variables_list = std::make_shared<variables_appliers>("+std::to_string(variables_to_id.at(left_side))+","+std::to_string(right_side_printer.precomputed_value())+",variables_list);");
+            save_variable_change_for_later_revert(output, variables_to_id.at(left_side));
+            push_changes_on_variables_list(output, std::to_string(variables_to_id.at(left_side)), std::to_string(right_side_printer.precomputed_value()));
             output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+std::to_string(right_side_printer.precomputed_value())+";");
         }
     }
     else{
-            output.add_source_line("variables_change_points.emplace_back("+std::to_string(variables_to_id.at(left_side))+", state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]);");
-            std::string final_result = right_side_printer.get_final_result();
-            if(should_build_move)
-                output.add_source_line("variables_list = std::make_shared<variables_appliers>("+std::to_string(variables_to_id.at(left_side))+","+final_result+",variables_list);");
-            output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+final_result+";");
-            output.add_source_line("if(state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] > bounds["+std::to_string(variables_to_id.at(left_side))+"] or state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"]<0){");
-            output.add_source_line(reverting_function);
-            output.add_source_line("return;");
-            output.add_source_line("}");
+        std::string final_result = right_side_printer.get_final_result();
+        output.add_source_line("if("+final_result+" > bounds["+std::to_string(variables_to_id.at(left_side))+"] or "+final_result+" <0){");
+        insert_reverting_sequence(output);
+        output.add_source_line("return;");
+        output.add_source_line("}");
+        save_variable_change_for_later_revert(output, variables_to_id.at(left_side));
+        push_changes_on_variables_list(output, std::to_string(variables_to_id.at(left_side)), final_result);
+        output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+final_result+";");
     }
     has_modifier = true;
 }
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
+    assert(not inside_pattern);
     output.add_source_line("state_to_change.current_player = "+std::to_string(variables_to_id.at(m.get_player())+1)+";");
+    insert_reverting_sequence(output);
+    //TODO: actually add move
     is_finisher = true;
 }
 
 void actions_compiler::dispatch(const rbg_parser::keeper_switch&){
+    assert(not inside_pattern);
     output.add_source_line("state_to_change.current_player = 0;");
+    insert_reverting_sequence(output);
+    //TODO: actually add move
     is_finisher = true;
 }
 
@@ -152,7 +203,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         if(not can_pass_through){
-            output.add_source_line(reverting_function);
+            insert_reverting_sequence(output);
             output.add_source_line("return;");
         }
     }
@@ -181,10 +232,30 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         output.add_source_line("if("+left_side_printer.get_final_result()+" "+operation_character+" "+right_side_printer.get_final_result()+"){");
-        output.add_source_line(reverting_function);
+        insert_reverting_sequence(output);
         output.add_source_line("return;");
         output.add_source_line("}");
     }
+}
+
+void actions_compiler::insert_reverting_sequence(cpp_container& output)const{
+    if(has_saved_cache_level)
+        output.add_source_line("cache."+cache_level_reverter+"(previous_cache_level);");
+    if(not inside_pattern){
+        if(encountered_board_change)
+            output.add_source_line("board_list = previous_board_changes_list");
+        if(encountered_variable_change)
+            output.add_source_line("variables_list = previous_variables_changes_list");
+    }
+    for(uint i=reverting_stack.size();i>0;--i)
+        switch(reverting_stack[i-1].type){
+            case board_change:
+                revert_board_change(output, reverting_stack[i-1].additional_info, i-1);
+                break;
+            case variable_change:
+                revert_variable_change(output, reverting_stack[i-1].additional_info, i-1);
+                break;
+        }
 }
 
 void actions_compiler::finallize(void){
@@ -195,7 +266,7 @@ void actions_compiler::finallize(void){
 void actions_compiler::check_cell_correctness(void){
     if(should_check_cell_correctness){
         output.add_source_line("if(state_to_change.current_cell == 0){");
-        output.add_source_line(reverting_function);
+        insert_reverting_sequence(output);
         output.add_source_line("return;");
         output.add_source_line("}");
     }
@@ -203,8 +274,12 @@ void actions_compiler::check_cell_correctness(void){
 }
 
 void actions_compiler::notify_about_modifier(void){
-    if(has_modifier)
+    if(has_modifier){
+        if(not has_saved_cache_level)
+            output.add_source_line("unsigned int previous_cache_level = cache."+cache_level_getter+";");
+        has_saved_cache_level = true;
         output.add_source_line("cache."+cache_pusher+";");
+    }
     has_modifier = false;
 }
 

@@ -1,5 +1,6 @@
 #include"precomputed_pattern.hpp"
 #include"cpp_container.hpp"
+#include"actions_compiler.hpp"
 
 precomputed_pattern::precomputed_pattern(uint overall_size):
 allowed_cells(),
@@ -22,14 +23,14 @@ void precomputed_pattern::negate(void){
     std::swap(new_allowed, allowed_cells);
 }
 
-void precomputed_pattern::print_inside_transition(cpp_container& output, const std::string& revert_name)const{
+void precomputed_pattern::print_inside_transition(cpp_container& output, const actions_compiler& ac)const{
     if(allowed_cells.size()<overall_size/2+1){
         output.add_source_line("switch(state_to_change.current_cell){");
         for(const auto& el: allowed_cells)
             output.add_source_line("case "+std::to_string(el+1)+":");
         output.add_source_line("break;");
         output.add_source_line("default:");
-        output.add_source_line(revert_name);
+        ac.insert_reverting_sequence(output);
         output.add_source_line("return;");
         output.add_source_line("}");
     }
@@ -38,7 +39,7 @@ void precomputed_pattern::print_inside_transition(cpp_container& output, const s
         for(uint i=0;i<overall_size;++i)
             if(not allowed_cells.count(i))
                 output.add_source_line("case "+std::to_string(i+1)+":");
-        output.add_source_line(revert_name);
+        ac.insert_reverting_sequence(output);
         output.add_source_line("return;");
         output.add_source_line("default:");
         output.add_source_line("break;");

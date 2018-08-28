@@ -15,18 +15,39 @@ namespace rbg_parser{
     class declarations;
 }
 
+enum application_type{
+    board_change,
+    variable_change,
+};
+
+struct application{
+    application_type type;
+    uint additional_info;
+};
+
 class actions_compiler : public rbg_parser::abstract_dispatcher{
         cpp_container& output;
         const std::map<rbg_parser::token, uint>& pieces_to_id;
         const std::map<rbg_parser::token, uint>& edges_to_id;
         const std::map<rbg_parser::token, uint>& variables_to_id;
         const rbg_parser::declarations& decl;
-        const std::string& reverting_function;
         const std::string& cache_pusher;
+        const std::string& cache_level_getter;
+        const std::string& cache_level_reverter;
+        std::vector<application> reverting_stack;
+        bool encountered_board_change;
+        bool encountered_variable_change;
         bool should_check_cell_correctness;
         bool has_modifier;
+        bool has_saved_cache_level;
         bool is_finisher;
-        bool should_build_move;
+        bool inside_pattern;
+        void push_changes_on_board_list(cpp_container& output, const std::string& piece_id);
+        void save_board_change_for_later_revert(cpp_container& output, uint piece_id);
+        void push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value);
+        void save_variable_change_for_later_revert(cpp_container& output, uint variable_id);
+        void revert_board_change(cpp_container& output, uint piece_id, uint stack_position)const;
+        void revert_variable_change(cpp_container& output, uint variable_id, uint stack_position)const;
     public:
         actions_compiler(void)=delete;
         actions_compiler(const actions_compiler&)=delete;
@@ -40,9 +61,10 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
             const std::map<rbg_parser::token, uint>& edges_to_id,
             const std::map<rbg_parser::token, uint>& variables_to_id,
             const rbg_parser::declarations& decl,
-            const std::string& reverting_function,
             const std::string& cache_pusher,
-            bool should_build_move);
+            const std::string& cache_level_getter,
+            const std::string& cache_level_reverter,
+            bool inside_pattern);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
@@ -57,6 +79,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::integer_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);}
+        void insert_reverting_sequence(cpp_container& output)const;
         void finallize(void);
         void check_cell_correctness(void);
         void notify_about_modifier(void);
