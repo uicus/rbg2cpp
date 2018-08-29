@@ -71,9 +71,9 @@ void automaton::print_transition_functions(
     const rbg_parser::declarations& decl,
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
-    const compiler_options& opts)const{
+    bool stop_after_first)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns,opts);
+        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns,stop_after_first);
 }
 
 void automaton::print_transition_functions_inside_pattern(
@@ -84,16 +84,20 @@ void automaton::print_transition_functions_inside_pattern(
     const std::map<rbg_parser::token, uint>& variables_to_id,
     const rbg_parser::declarations& decl,
     const std::vector<shift_table>& shift_tables,
-    const std::vector<precomputed_pattern>& precomputed_patterns,
-    const compiler_options& opts)const{
+    const std::vector<precomputed_pattern>& precomputed_patterns)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns,opts);
+        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns);
 }
 
-void automaton::print_transition_table(cpp_container& output, const std::string& table_name, const std::string& functions_prefix)const{
+void automaton::print_transition_table(
+    cpp_container& output,
+    const std::string& table_name,
+    const std::string& functions_prefix,
+    const std::string& return_type)const{
     output.add_header_include("vector");
-    output.add_header_line("const static std::vector<transition_function> "+table_name+"["+std::to_string(local_register.size())+"];");
-    output.add_source_line("const std::vector<next_states_iterator::transition_function> next_states_iterator::"+table_name+"["+std::to_string(local_register.size())+"] = {");
+    output.add_header_line("typedef "+return_type+"(next_states_iterator::*"+table_name+"_type)(int);");
+    output.add_header_line("const static std::vector<"+table_name+"_type> "+table_name+"["+std::to_string(local_register.size())+"];");
+    output.add_source_line("const std::vector<next_states_iterator::"+table_name+"_type> next_states_iterator::"+table_name+"["+std::to_string(local_register.size())+"] = {");
     for(uint i=0;i<local_register.size();++i)
         local_register[i].print_outgoing_transitions(i,output, functions_prefix);
     output.add_source_line("};");
@@ -147,6 +151,10 @@ shift_table automaton::generate_shift_table(
     for(uint i=0;i<board.get_size();++i)
         mark_connections_to_reachable_states(i,board,result,pps);
     return result;
+}
+
+void automaton::print_recursive_calls_for_pattern_in_start_state(cpp_container& output, const actions_compiler& ac, uint pattern_index)const{
+    local_register[start_state].print_recursive_calls_for_pattern(start_state,output,ac,pattern_index);
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){

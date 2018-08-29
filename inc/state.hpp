@@ -10,6 +10,7 @@
 class cpp_container;
 class compiler_options;
 class precomputed_pattern;
+class actions_compiler;
 
 namespace rbg_parser{
     class game_move;
@@ -35,7 +36,7 @@ class state{
             const std::vector<state>& local_register,
             const std::vector<shift_table>& shift_tables,
             const std::vector<precomputed_pattern>& precomputed_patterns,
-            const compiler_options& opts)const;
+            bool stop_after_first)const;
         void print_transition_functions_inside_pattern(
             uint from_state,
             uint pattern_index,
@@ -46,8 +47,7 @@ class state{
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register,
             const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns,
-            const compiler_options& opts)const;
+            const std::vector<precomputed_pattern>& precomputed_patterns)const;
         void print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
         void notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const;
         void mark_as_doubly_reachable(void);
@@ -61,6 +61,9 @@ class state{
             const rbg_parser::graph& board,
             std::vector<std::pair<uint,uint>>& dfs_stack,
             const std::vector<precomputed_pattern>& pps)const;
+        void print_recursive_calls_for_all_getter(uint from_state, cpp_container& output)const;
+        void print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac)const;
+        void print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index)const;
 };
 
 #endif

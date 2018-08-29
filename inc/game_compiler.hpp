@@ -48,13 +48,10 @@ class game_compiler{
         void build_game_automaton(void);
         void generate_states_iterator(void);
         void generate_iterator_helper_structures(void);
-        void generate_iterator_revert_methods(void);
-        void generate_move_getter(void);
-        void generate_resetter(void);
         void generate_resettable_bitarray(void);
         void generate_resettable_bitarray_stack(void);
-        void generate_main_dfs(void);
-        void generate_dfs_for_pattern(uint pattern_index);
+        void generate_main_next_getters(void);
+        void generate_pattern_evaluator(uint pattern_index);
         void print_all_shift_tables(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);

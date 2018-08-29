@@ -19,6 +19,7 @@ actions_compiler::actions_compiler(
     const std::string& cache_pusher,
     const std::string& cache_level_getter,
     const std::string& cache_level_reverter,
+    const std::string& final_action,
     bool inside_pattern):
     output(output),
     pieces_to_id(pieces_to_id),
@@ -28,13 +29,14 @@ actions_compiler::actions_compiler(
     cache_pusher(cache_pusher),
     cache_level_getter(cache_level_getter),
     cache_level_reverter(cache_level_reverter),
+    final_action(final_action),
     reverting_stack(),
     encountered_board_change(false),
     encountered_variable_change(false),
     should_check_cell_correctness(false),
     has_modifier(false),
     has_saved_cache_level(false),
-    is_finisher(false),
+    next_player(-1),
     inside_pattern(inside_pattern){
 }
 
@@ -55,15 +57,13 @@ void actions_compiler::push_changes_on_board_list(cpp_container& output, const s
 void actions_compiler::save_board_change_for_later_revert(cpp_container& output, uint piece_id){
     output.add_source_line("int board_change"+std::to_string(reverting_stack.size())+"_cell = current_cell;");
     output.add_source_line("int board_change"+std::to_string(reverting_stack.size())+"_piece = state_to_change.pieces[current_cell];");
-    if(reverting_stack.empty())
-        output.add_source_line("unsigned int previous_cache_level = cache."+cache_level_getter+";");
     reverting_stack.push_back({board_change,piece_id});
 }
 
 void actions_compiler::revert_board_change(cpp_container& output, uint piece_id, uint stack_position)const{
     output.add_source_line("--state_to_change.pieces_count["+std::to_string(piece_id)+"];");
     output.add_source_line("++state_to_change.pieces_count[board_change"+std::to_string(stack_position)+"_piece];");
-    output.add_source_line("state_to_change.pieces[board_change"+std::to_string(stack_position)+"_cell] = iboard_change"+std::to_string(stack_position)+"_piece;");
+    output.add_source_line("state_to_change.pieces[board_change"+std::to_string(stack_position)+"_cell] = board_change"+std::to_string(stack_position)+"_piece;");
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
@@ -77,10 +77,8 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::ons& m){
-    if(m.get_legal_ons().size() == 0){
+    if(m.get_legal_ons().size() == 0)
         insert_reverting_sequence(output);
-        output.add_source_line("return;");
-    }
     else if(m.get_legal_ons().size() < pieces_to_id.size()){
         check_cell_correctness();
         output.add_source_line("switch(state_to_change.pieces[current_cell]){");
@@ -90,14 +88,12 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
             output.add_source_line("break;");
             output.add_source_line("default:");
             insert_reverting_sequence(output);
-            output.add_source_line("return;");
         }
         else{
             for(const auto& el: pieces_to_id)
                 if(not m.get_legal_ons().count(el.first))
                     output.add_source_line("case "+std::to_string(el.second)+":");
             insert_reverting_sequence(output);
-            output.add_source_line("return;");
             output.add_source_line("default:");
             output.add_source_line("break;");
         }
@@ -115,8 +111,7 @@ void actions_compiler::push_changes_on_variables_list(cpp_container& output, con
 }
 
 void actions_compiler::save_variable_change_for_later_revert(cpp_container& output, uint variable_id){
-    output.add_source_line("int variable_change_"+std::to_string(reverting_stack.size())+" = state_to_change.variables["+std::to_string(variable_id)+"]");
-    if(reverting_stack.empty())
+    output.add_source_line("int variable_change"+std::to_string(reverting_stack.size())+" = state_to_change.variables["+std::to_string(variable_id)+"];");
     reverting_stack.push_back({variable_change,variable_id});
 }
 
@@ -134,10 +129,8 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
     arithmetics_printer right_side_printer(pieces_to_id, variables_to_id);
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
-        if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound)){
+        if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound))
             insert_reverting_sequence(output);
-            output.add_source_line("return;");
-        }
         else{
             save_variable_change_for_later_revert(output, variables_to_id.at(left_side));
             push_changes_on_variables_list(output, std::to_string(variables_to_id.at(left_side)), std::to_string(right_side_printer.precomputed_value()));
@@ -148,7 +141,6 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
         std::string final_result = right_side_printer.get_final_result();
         output.add_source_line("if("+final_result+" > bounds["+std::to_string(variables_to_id.at(left_side))+"] or "+final_result+" <0){");
         insert_reverting_sequence(output);
-        output.add_source_line("return;");
         output.add_source_line("}");
         save_variable_change_for_later_revert(output, variables_to_id.at(left_side));
         push_changes_on_variables_list(output, std::to_string(variables_to_id.at(left_side)), final_result);
@@ -158,19 +150,11 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
-    assert(not inside_pattern);
-    output.add_source_line("state_to_change.current_player = "+std::to_string(variables_to_id.at(m.get_player())+1)+";");
-    insert_reverting_sequence(output);
-    //TODO: actually add move
-    is_finisher = true;
+    next_player = variables_to_id.at(m.get_player())+1;
 }
 
 void actions_compiler::dispatch(const rbg_parser::keeper_switch&){
-    assert(not inside_pattern);
-    output.add_source_line("state_to_change.current_player = 0;");
-    insert_reverting_sequence(output);
-    //TODO: actually add move
-    is_finisher = true;
+    next_player = 0;
 }
 
 void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
@@ -202,10 +186,8 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
             default:
                 break;
         }
-        if(not can_pass_through){
+        if(not can_pass_through)
             insert_reverting_sequence(output);
-            output.add_source_line("return;");
-        }
     }
     else{
         std::string operation_character = "";
@@ -233,19 +215,18 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
         }
         output.add_source_line("if("+left_side_printer.get_final_result()+" "+operation_character+" "+right_side_printer.get_final_result()+"){");
         insert_reverting_sequence(output);
-        output.add_source_line("return;");
         output.add_source_line("}");
     }
 }
 
-void actions_compiler::insert_reverting_sequence(cpp_container& output)const{
+void actions_compiler::insert_unended_reverting_sequence(cpp_container& output)const{
     if(has_saved_cache_level)
         output.add_source_line("cache."+cache_level_reverter+"(previous_cache_level);");
     if(not inside_pattern){
         if(encountered_board_change)
-            output.add_source_line("board_list = previous_board_changes_list");
+            output.add_source_line("board_list = previous_board_changes_list;");
         if(encountered_variable_change)
-            output.add_source_line("variables_list = previous_variables_changes_list");
+            output.add_source_line("variables_list = previous_variables_changes_list;");
     }
     for(uint i=reverting_stack.size();i>0;--i)
         switch(reverting_stack[i-1].type){
@@ -258,6 +239,11 @@ void actions_compiler::insert_reverting_sequence(cpp_container& output)const{
         }
 }
 
+void actions_compiler::insert_reverting_sequence(cpp_container& output)const{
+    insert_unended_reverting_sequence(output);
+    output.add_source_line(final_action);
+}
+
 void actions_compiler::finallize(void){
     check_cell_correctness();
     notify_about_modifier();
@@ -265,9 +251,8 @@ void actions_compiler::finallize(void){
 
 void actions_compiler::check_cell_correctness(void){
     if(should_check_cell_correctness){
-        output.add_source_line("if(state_to_change.current_cell == 0){");
+        output.add_source_line("if(current_cell == 0){");
         insert_reverting_sequence(output);
-        output.add_source_line("return;");
         output.add_source_line("}");
     }
     should_check_cell_correctness = false;
@@ -284,9 +269,14 @@ void actions_compiler::notify_about_modifier(void){
 }
 
 bool actions_compiler::is_ready_to_report(void)const{
-    return is_finisher;
+    return next_player >= 0;
 }
 
 void actions_compiler::notify_about_cell_change(void){
     should_check_cell_correctness = true;
+}
+
+int actions_compiler::get_next_player(void)const{
+    assert(is_ready_to_report());
+    return next_player;
 }

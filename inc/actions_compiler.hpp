@@ -34,12 +34,14 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         const std::string& cache_pusher;
         const std::string& cache_level_getter;
         const std::string& cache_level_reverter;
+        const std::string& final_action;
         std::vector<application> reverting_stack;
         bool encountered_board_change;
         bool encountered_variable_change;
         bool should_check_cell_correctness;
         bool has_modifier;
         bool has_saved_cache_level;
+        int next_player;
         bool is_finisher;
         bool inside_pattern;
         void push_changes_on_board_list(cpp_container& output, const std::string& piece_id);
@@ -64,6 +66,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
             const std::string& cache_pusher,
             const std::string& cache_level_getter,
             const std::string& cache_level_reverter,
+            const std::string& final_action,
             bool inside_pattern);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
@@ -80,11 +83,13 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);}
         void insert_reverting_sequence(cpp_container& output)const;
+        void insert_unended_reverting_sequence(cpp_container& output)const;
         void finallize(void);
         void check_cell_correctness(void);
         void notify_about_modifier(void);
         void notify_about_cell_change(void);
         bool is_ready_to_report(void)const;
+        int get_next_player(void)const;
 };
 
 #endif

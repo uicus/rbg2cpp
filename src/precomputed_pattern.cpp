@@ -31,7 +31,6 @@ void precomputed_pattern::print_inside_transition(cpp_container& output, const a
         output.add_source_line("break;");
         output.add_source_line("default:");
         ac.insert_reverting_sequence(output);
-        output.add_source_line("return;");
         output.add_source_line("}");
     }
     else{
@@ -40,7 +39,6 @@ void precomputed_pattern::print_inside_transition(cpp_container& output, const a
             if(not allowed_cells.count(i))
                 output.add_source_line("case "+std::to_string(i+1)+":");
         ac.insert_reverting_sequence(output);
-        output.add_source_line("return;");
         output.add_source_line("default:");
         output.add_source_line("break;");
         output.add_source_line("}");

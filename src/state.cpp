@@ -1,6 +1,7 @@
 #include"state.hpp"
 #include"compiler_options.hpp"
 #include"cpp_container.hpp"
+#include"actions_compiler.hpp"
 #include<cassert>
 
 void state::inform_about_being_appended(uint shift_value){
@@ -37,10 +38,10 @@ void state::print_transition_functions(
     const std::vector<state>& local_register,
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
-    const compiler_options& opts)const{
+    bool stop_after_first)const{
     if(next_states.size()>1 or outgoing_edges_needed)
         for(const auto& el: next_states)
-            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register, shift_tables, precomputed_patterns,opts);
+            el.print_transition_function(from_state, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register, shift_tables, precomputed_patterns,stop_after_first);
 }
 
 void state::print_transition_functions_inside_pattern(
@@ -53,11 +54,10 @@ void state::print_transition_functions_inside_pattern(
     const rbg_parser::declarations& decl,
     const std::vector<state>& local_register,
     const std::vector<shift_table>& shift_tables,
-    const std::vector<precomputed_pattern>& precomputed_patterns,
-    const compiler_options& opts)const{
+    const std::vector<precomputed_pattern>& precomputed_patterns)const{
     if(next_states.size()>1 or outgoing_edges_needed)
         for(const auto& el: next_states)
-            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register, shift_tables, precomputed_patterns,opts);
+            el.print_transition_function_inside_pattern(from_state, pattern_index, output, pieces_to_id, edges_to_id, variables_to_id, decl, local_register, shift_tables, precomputed_patterns);
 }
 
 void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
@@ -113,5 +113,28 @@ void state::push_next_states_to_shift_tables_dfs_stack(
         auto cell = el.get_next_cell(current_cell,board,pps);
         if(cell>=0)
             dfs_stack.emplace_back(el.get_endpoint(), uint(cell));
+    }
+}
+
+void state::print_recursive_calls_for_all_getter(uint from_state, cpp_container& output)const{
+    for(uint i=0;i<next_states.size();++i)
+        output.add_source_line("get_all_moves_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell);");
+}
+
+void state::print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac)const{
+    for(uint i=0;i<next_states.size();++i){
+        output.add_source_line("if(get_any_move_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell)){");
+        ac.insert_unended_reverting_sequence(output);
+        output.add_source_line("return true;");
+        output.add_source_line("}");
+    }
+}
+
+void state::print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index)const{
+    for(uint i=0;i<next_states.size();++i){
+        output.add_source_line("if(get_pattern_value"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell)){");
+        ac.insert_unended_reverting_sequence(output);
+        output.add_source_line("return true;");
+        output.add_source_line("}");
     }
 }

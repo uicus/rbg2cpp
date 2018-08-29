@@ -43,7 +43,6 @@ class edge{
             actions_compiler& ac,
             const std::vector<shift_table>& shift_tables,
             const std::vector<precomputed_pattern>& precomputed_patterns,
-            const std::string& decision_stack_name,
             std::string& human_readable_labels)const;
         void visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const;
         void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const;
@@ -62,7 +61,7 @@ class edge{
             const std::vector<state>& local_register,
             const std::vector<shift_table>& shift_tables,
             const std::vector<precomputed_pattern>& precomputed_patterns,
-            const compiler_options& opts)const;
+            bool stop_after_first)const;
         void print_transition_function_inside_pattern(
             uint from_state,
             uint pattern_index,
@@ -73,8 +72,7 @@ class edge{
             const rbg_parser::declarations& decl,
             const std::vector<state>& local_register,
             const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns,
-            const compiler_options& opts)const;
+            const std::vector<precomputed_pattern>& precomputed_patterns)const;
         int get_next_cell(uint current_cell, const rbg_parser::graph& board, const std::vector<precomputed_pattern>& pps)const;// -1 = invalid
         bool is_shift_table_with_multiple_choices(const std::vector<shift_table>& shift_tables)const;
 };

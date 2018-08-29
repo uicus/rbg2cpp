@@ -3,6 +3,7 @@
 #include"automaton_builder.hpp"
 #include"parsed_game.hpp"
 #include"types.hpp"
+#include"actions_compiler.hpp"
 #include<algorithm>
 
 game_compiler::game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts):
@@ -189,6 +190,24 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("apply_variables_changes_list(m.variables_list);");
     output.add_source_line("}");
     output.add_source_line("");
+    output.add_header_line("std::vector<move> get_all_moves(resettable_bitarray_stack& cache);");
+    output.add_source_line("std::vector<move> game_state::get_all_moves(resettable_bitarray_stack& cache){");
+    output.add_source_line("std::vector<move> result;");
+    output.add_source_line("next_states_iterator it(*this, cache, result);");
+    output.add_source_line("it.get_all_moves(current_state, current_cell);");
+    output.add_source_line("return result;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("std::pair<bool,move> get_any_move(resettable_bitarray_stack& cache);");
+    output.add_source_line("std::pair<bool,move> game_state::get_any_move(resettable_bitarray_stack& cache){");
+    output.add_source_line("std::vector<move> result;");
+    output.add_source_line("next_states_iterator it(*this, cache, result);");
+    output.add_source_line("if(it.get_any_move(current_state, current_cell)){");
+    output.add_source_line("return std::make_pair(true,std::move(result[0]));");
+    output.add_source_line("}");
+    output.add_source_line("return std::make_pair<bool,move>(false,{});");
+    output.add_source_line("}");
+    output.add_source_line("");
     output.add_header_line("friend class next_states_iterator;");
     output.add_header_line("private:");
     output.add_header_line("void apply_board_changes_list(const std::shared_ptr<board_appliers>& list);");
@@ -269,181 +288,69 @@ void game_compiler::generate_iterator_helper_structures(void){
     output.add_header_line("");
 }
 
-void game_compiler::generate_iterator_revert_methods(void){
-    output.add_header_line("void revert_board_changes(unsigned int to_point);");
-    output.add_source_line("void next_states_iterator::revert_board_changes(unsigned int to_point){");
-    output.add_source_line("for(unsigned int i=board_change_points.size();i>to_point;--i){");
-    output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[board_change_points[i-1].cell]];");
-    output.add_source_line("++state_to_change.pieces_count[board_change_points[i-1].previous_piece];");
-    output.add_source_line("state_to_change.pieces[board_change_points[i-1].cell] = board_change_points[i-1].previous_piece;");
-    output.add_source_line("board_list = board_list->tail;");
+void game_compiler::generate_main_next_getters(void){
+    output.add_header_line("void get_all_moves(int state, int current_cell);");
+    output.add_source_line("void next_states_iterator::get_all_moves(int state, int current_cell){");
+    output.add_source_line("for(unsigned int i=0;i<all_moves_getters[state].size();++i){");
+    output.add_source_line("(this->*all_moves_getters[state][i])(current_cell);");
     output.add_source_line("}");
-    output.add_source_line("board_change_points.resize(to_point);");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("void revert_variables_changes(unsigned int to_point);");
-    output.add_source_line("void next_states_iterator::revert_variables_changes(unsigned int to_point){");
-    output.add_source_line("for(unsigned int i=variables_change_points.size();i>to_point;--i){");
-    output.add_source_line("state_to_change.variables[variables_change_points[i-1].variable] = variables_change_points[i-1].previous_value;");
-    output.add_source_line("variables_list = variables_list->tail;");
-    output.add_source_line("}");
-    output.add_source_line("variables_change_points.resize(to_point);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_board_changes_after_pattern(unsigned int to_point);");
-    output.add_source_line("void next_states_iterator::revert_board_changes_after_pattern(unsigned int to_point){");
-    output.add_source_line("for(unsigned int i=board_change_points.size();i>to_point;--i){");
-    output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[board_change_points[i-1].cell]];");
-    output.add_source_line("++state_to_change.pieces_count[board_change_points[i-1].previous_piece];");
-    output.add_source_line("state_to_change.pieces[board_change_points[i-1].cell] = board_change_points[i-1].previous_piece;");
-    output.add_source_line("}");
-    output.add_source_line("board_change_points.resize(to_point);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_variables_changes_after_pattern(unsigned int to_point);");
-    output.add_source_line("void next_states_iterator::revert_variables_changes_after_pattern(unsigned int to_point){");
-    output.add_source_line("for(unsigned int i=variables_change_points.size();i>to_point;--i){");
-    output.add_source_line("state_to_change.variables[variables_change_points[i-1].variable] = variables_change_points[i-1].previous_value;");
-    output.add_source_line("}");
-    output.add_source_line("variables_change_points.resize(to_point);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_to_point(const backtrace_information& point_to_revert);");
-    output.add_source_line("void next_states_iterator::revert_to_point(const backtrace_information& point_to_revert){");
-    output.add_source_line("state_to_change.current_cell = point_to_revert.current_cell_checkpoint;");
-    output.add_source_line("cache.revert_to_level(point_to_revert.modifiers_depth_checkpoint);");
-    output.add_source_line("revert_board_changes(point_to_revert.board_checkpoint);");
-    output.add_source_line("revert_variables_changes(point_to_revert.variables_checkpoint);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_to_point_after_pattern(const backtrace_information& point_to_revert, void(resettable_bitarray_stack::*cache_reverter)(unsigned int));");
-    output.add_source_line("void next_states_iterator::revert_to_point_after_pattern(const backtrace_information& point_to_revert, void(resettable_bitarray_stack::*cache_reverter)(unsigned int)){");
-    output.add_source_line("state_to_change.current_cell = point_to_revert.current_cell_checkpoint;");
-    output.add_source_line("(cache.*cache_reverter)(point_to_revert.modifiers_depth_checkpoint);");
-    output.add_source_line("revert_board_changes_after_pattern(point_to_revert.board_checkpoint);");
-    output.add_source_line("revert_variables_changes_after_pattern(point_to_revert.variables_checkpoint);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_to_last_choice(void);");
-    output.add_source_line("void next_states_iterator::revert_to_last_choice(void){");
-    output.add_source_line("for(unsigned int i=decision_points.size();i>0;--i){");
-    output.add_source_line("if(decision_points[i-1].current_branch < transitions[decision_points[i-1].state_checkpoint].size()){");
-    output.add_source_line("revert_to_point(decision_points[i-1]);");
-    output.add_source_line("decision_points.resize(i);");
-    output.add_source_line("return;");
+    output.add_header_line("bool get_any_move(int state, int current_cell);");
+    output.add_source_line("bool next_states_iterator::get_any_move(int state, int current_cell){");
+    output.add_source_line("for(unsigned int i=0;i<any_move_getters[state].size();++i){");
+    output.add_source_line("if((this->*any_move_getters[state][i])(current_cell)){");
+    output.add_source_line("return true;");
     output.add_source_line("}");
     output.add_source_line("}");
-    output.add_source_line("state_to_change.current_state = decision_points[0].state_checkpoint;");
-    output.add_source_line("revert_to_point(decision_points[0]);");
-    output.add_source_line("decision_points.clear();");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_to_last_choice_because_failure(std::vector<backtrace_information> next_states_iterator::*decision_stack, const std::vector<transition_function> transition_array[], void(resettable_bitarray_stack::*cache_reverter)(unsigned int));");
-    output.add_source_line("void next_states_iterator::revert_to_last_choice_because_failure(std::vector<backtrace_information> next_states_iterator::*decision_stack, const std::vector<transition_function> transition_array[], void(resettable_bitarray_stack::*cache_reverter)(unsigned int)){");
-    output.add_source_line("for(unsigned int i=(this->*decision_stack).size();i>0;--i){");
-    output.add_source_line("if((this->*decision_stack)[i-1].current_branch < transition_array[(this->*decision_stack)[i-1].state_checkpoint].size()){");
-    output.add_source_line("revert_to_point_after_pattern((this->*decision_stack)[i-1], cache_reverter);");
-    output.add_source_line("(this->*decision_stack).resize(i);");
-    output.add_source_line("return;");
-    output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("revert_to_point_after_pattern((this->*decision_stack)[0], cache_reverter);");
-    output.add_source_line("(this->*decision_stack).clear();");
+    output.add_source_line("return false;");
     output.add_source_line("}");
     output.add_source_line("");
 }
 
-void game_compiler::generate_move_getter(void){
-    output.add_header_line("move get_move(void)const;");
-    output.add_source_line("move next_states_iterator::get_move(void)const{");
-    output.add_source_line("move result;");
-    output.add_source_line("result.board_list = board_list;");
-    output.add_source_line("result.variables_list = variables_list;");
-    output.add_source_line("result.next_cell = state_to_change.current_cell;");
-    output.add_source_line("result.next_player = state_to_change.current_player;");
-    output.add_source_line("result.next_state = state_to_change.current_state;");
-    output.add_source_line("return result;");
-    output.add_source_line("}");
-    output.add_source_line("");
-}
-
-void game_compiler::generate_resetter(void){
-    output.add_header_line("void reset(void);");
-    output.add_source_line("void next_states_iterator::reset(void){");
-    output.add_source_line("state_to_change.current_player = moving_player;");
-    output.add_source_line("state_to_change.current_state = decision_points[0].state_checkpoint;");
-    output.add_source_line("revert_to_point(decision_points[0]);");
-    output.add_source_line("decision_points.resize(1);");
-    output.add_source_line("}");
-    output.add_source_line("");
-}
-
-void game_compiler::generate_main_dfs(void){
-    output.add_header_line("bool next(void);");
-    output.add_source_line("bool next_states_iterator::next(void){");
-    output.add_source_line("ready_to_report = false;");
-    output.add_source_line("state_to_change.current_player = moving_player;");
-    output.add_source_line("revert_to_last_choice();");
-    output.add_source_line("while(not ready_to_report and not decision_points.empty()){");
-    output.add_source_line("(this->*transitions[decision_points.back().state_checkpoint][decision_points.back().current_branch++])();");
-    output.add_source_line("}");
-    output.add_source_line("return not decision_points.empty();");
-    output.add_source_line("}");
-    output.add_source_line("");
-}
-
-void game_compiler::generate_dfs_for_pattern(uint pattern_index){
-    output.add_header_line("void evaluate"+std::to_string(pattern_index)+"(void);");
-    output.add_source_line("void next_states_iterator::evaluate"+std::to_string(pattern_index)+"(void){");
-    output.add_source_line("success_to_report"+std::to_string(pattern_index)+" = false;");
+void game_compiler::generate_pattern_evaluator(uint pattern_index){
+    output.add_header_line("bool evaluate"+std::to_string(pattern_index)+"(int current_cell);");
+    output.add_source_line("bool next_states_iterator::evaluate"+std::to_string(pattern_index)+"(int current_cell){");
     output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
-    output.add_source_line("pattern_decision_points"+std::to_string(pattern_index)+".emplace_back(0,"+(opts.enabled_shift_tables()?"0,":std::string())+std::to_string(pattern_automata[pattern_index].get_start_state())+",state_to_change.current_cell,1,board_change_points.size(),variables_change_points.size());");
-    output.add_source_line("while(not pattern_decision_points"+std::to_string(pattern_index)+".empty()){");
-    output.add_source_line("(this->*pattern_transitions"+std::to_string(pattern_index)+"[pattern_decision_points"+std::to_string(pattern_index)+".back().state_checkpoint][pattern_decision_points"+std::to_string(pattern_index)+".back().current_branch++])();");
-    output.add_source_line("}");
+    actions_compiler dummy(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),"","","","",false);
+    pattern_automata[pattern_index].print_recursive_calls_for_pattern_in_start_state(output,dummy,pattern_index);
+    output.add_source_line("return false;");
     output.add_source_line("}");
     output.add_source_line("");
 }
 
 void game_compiler::generate_states_iterator(void){
-    generate_resettable_bitarray_stack();
     output.add_header_include("vector");
     output.add_header_include("memory");
     output.add_header_line("class next_states_iterator{");
     output.add_header_line("public:");
-    output.add_header_line("next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache);");
-    output.add_source_line("next_states_iterator::next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache)");
+    output.add_header_line("next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>& moves);");
+    output.add_source_line("next_states_iterator::next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>& moves)");
     output.add_source_line(": state_to_change(state_to_change),");
-    output.add_source_line("  cache(cache){");
+    output.add_source_line("  cache(cache),");
+    output.add_source_line("  moves(moves){");
     output.add_source_line("cache.reset();");
     output.add_source_line("}");
     output.add_source_line("");
-    generate_main_dfs();
-    generate_move_getter();
-    generate_resetter();
+    generate_main_next_getters();
     output.add_header_line("private:");
-    output.add_header_line("typedef void(next_states_iterator::*transition_function)(void);");
-    for(uint i=0;i<pattern_automata.size();++i){
-        generate_dfs_for_pattern(i);
-        output.add_header_line("");
-    }
-    generate_iterator_revert_methods();
-    game_automaton.print_transition_table(output, "transitions","transition");
-    for(uint i=0;i<pattern_automata.size();++i){
-        output.add_header_line("");
-        pattern_automata[i].print_transition_table(output, "pattern_transitions"+std::to_string(i),"pattern_transition"+std::to_string(i));
-    }
+    for(uint i=0;i<pattern_automata.size();++i)
+        generate_pattern_evaluator(i);
+    game_automaton.print_transition_table(output, "all_moves_getters","get_all_moves","void");
+    game_automaton.print_transition_table(output, "any_move_getters","get_any_move","bool");
     output.add_header_line("");
-    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables,precomputed_patterns,opts);
+    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables,precomputed_patterns,true);
+    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables,precomputed_patterns,false);
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("");
-        pattern_automata[i].print_transition_functions_inside_pattern(i,output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables, precomputed_patterns,opts);
+        pattern_automata[i].print_transition_functions_inside_pattern(i,output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables, precomputed_patterns);
     }
     output.add_header_line("");
     output.add_header_line("game_state& state_to_change;");
     output.add_header_line("resettable_bitarray_stack& cache;");
     output.add_header_line("std::shared_ptr<board_appliers> board_list;");
     output.add_header_line("std::shared_ptr<variables_appliers> variables_list;");
+    output.add_header_line("std::vector<move>& moves;");
     output.add_header_line("};");
 }
 
@@ -598,7 +505,6 @@ void game_compiler::generate_move_class(void){
     output.add_header_include("memory");
     generate_appliers_lists();
     output.add_header_line("class move{");
-    output.add_header_line("private:");
     output.add_header_line("std::shared_ptr<board_appliers> board_list;");
     output.add_header_line("std::shared_ptr<variables_appliers> variables_list;");
     output.add_header_line("int next_player;");
@@ -606,6 +512,15 @@ void game_compiler::generate_move_class(void){
     output.add_header_line("int next_state;");
     output.add_header_line("friend class next_states_iterator;");
     output.add_header_line("friend class game_state;");
+    output.add_header_line("public:");
+    output.add_header_line("move(void) = default;");
+    output.add_header_line("move(const std::shared_ptr<board_appliers>& board_list, const std::shared_ptr<variables_appliers>& variables_list, int next_player, int next_cell, int next_state)");
+    output.add_header_line(": board_list(board_list),");
+    output.add_header_line("  variables_list(variables_list),");
+    output.add_header_line("  next_player(next_player),");
+    output.add_header_line("  next_cell(next_cell),");
+    output.add_header_line("  next_state(next_state){");
+    output.add_header_line("}");
     output.add_header_line("};");
 }
 
@@ -628,6 +543,7 @@ const cpp_container& game_compiler::compile(void){
     generate_variables_bounds();
     print_all_shift_tables();
     output.add_header_line("");
+    generate_resettable_bitarray_stack();
     generate_iterator_helper_structures();
     generate_move_class();
     generate_game_state_class();
