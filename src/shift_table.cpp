@@ -8,6 +8,15 @@ next_cells(board_size),
 there_are_some_choices(false){
 }
 
+bool shift_table::operator==(const shift_table& rhs)const{
+    assert(rhs.next_cells.size() == next_cells.size());
+    for(uint i=0;i<next_cells.size();++i){
+        if(next_cells[i] != rhs.next_cells[i])
+            return false;
+    }
+    return true;
+}
+
 void shift_table::report_connection(uint source_cell, uint target_cell){
     next_cells[source_cell].insert(target_cell);
     if(next_cells[source_cell].size()>1)
@@ -55,4 +64,12 @@ void shift_table::print_array(cpp_container& output, uint index)const{
         output.add_source_line("};");
         output.add_source_line("");
     }
+}
+
+uint insert_shift_table(std::vector<shift_table>& shift_tables, shift_table&& st){
+    for(uint i=0;i<shift_tables.size();++i)
+        if(shift_tables[i]==st)
+            return i;
+    shift_tables.push_back(std::move(st));
+    return shift_tables.size()-1;
 }

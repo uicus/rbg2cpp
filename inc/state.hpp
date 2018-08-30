@@ -55,15 +55,15 @@ class state{
         void mark_explicitly_as_transition_start(void);
         const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;
-        bool is_no_choicer(const std::vector<shift_table>& shift_tables)const;
+        bool is_no_choicer(void)const;
         void push_next_states_to_shift_tables_dfs_stack(
             uint current_cell,
             const rbg_parser::graph& board,
             std::vector<std::pair<uint,uint>>& dfs_stack,
             const std::vector<precomputed_pattern>& pps)const;
-        void print_recursive_calls_for_all_getter(uint from_state, cpp_container& output)const;
-        void print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac)const;
-        void print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index)const;
+        void print_recursive_calls_for_all_getter(uint from_state, cpp_container& output, const std::string& cell="current_cell")const;
+        void print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac, const std::string& cell="current_cell")const;
+        void print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index, const std::string& cell="current_cell")const;
 };
 
 #endif

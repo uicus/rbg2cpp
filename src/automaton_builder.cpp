@@ -172,17 +172,17 @@ shift_table automaton_builder::gather_shift_so_far_into_table(void){
 
 void automaton_builder::end_shift_automaton(void){
     if(worth_creating_shift_table()){
-        shift_tables.push_back(gather_shift_so_far_into_table());
-        if(shift_tables.back().can_be_backtraced()){
+        auto shift_table_index = insert_shift_table(shift_tables, gather_shift_so_far_into_table());
+        if(shift_tables[shift_table_index].can_be_backtraced()){
             build_automaton_from_actions_so_far();
             std::vector<label> shift_label;
-            shift_label.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
+            shift_label.push_back({s_table,nullptr,shift_table_index});
             auto last_edge = edge_automaton(shift_label);
-            last_edge.mark_start_as_outgoing_usable();
+            last_edge.mark_end_as_outgoing_usable();
             concat_automaton_to_result_so_far(std::move(last_edge));
         }
         else
-            current_block.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
+            current_block.push_back({s_table,nullptr,shift_table_index});
     }
     else{
         if(has_shift_automaton){
@@ -288,11 +288,11 @@ void automaton_builder::dispatch(const rbg_parser::sum& m){
         end_shift_automaton();
         if(encountered_worth_shift_automaton){
             auto shift_automaton = sum_of_automatons(std::move(only_shift_elements));
-            shift_tables.push_back(shift_automaton.generate_shift_table(board,precomputed_patterns));
+            auto shift_table_index = insert_shift_table(shift_tables, shift_automaton.generate_shift_table(board,precomputed_patterns));
             std::vector<label> last_edge;
-            last_edge.push_back({s_table,nullptr,uint(shift_tables.size()-1)});
+            last_edge.push_back({s_table,nullptr,shift_table_index});
             auto e = edge_automaton(last_edge);
-            e.mark_start_as_outgoing_usable();
+            e.mark_end_as_outgoing_usable();
             elements.push_back(std::move(e));
         }
         else{

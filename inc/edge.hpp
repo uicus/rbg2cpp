@@ -38,14 +38,13 @@ struct label{
 class edge{
         uint local_register_endpoint_index;
         std::vector<label> label_list;
-        void handle_labels(
+        int handle_labels(
             cpp_container& output,
             actions_compiler& ac,
             const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns,
-            std::string& human_readable_labels)const;
-        void visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const;
-        void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const;
+            const std::vector<precomputed_pattern>& precomputed_patterns)const;
+        void visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell="current_cell")const;
+        void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell="current_cell")const;
     public:
         edge(uint local_register_endpoint_index, const std::vector<label>& label_list);
         void shift(uint shift_value);

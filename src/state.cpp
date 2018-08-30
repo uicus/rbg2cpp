@@ -100,8 +100,8 @@ bool state::is_dead_end(void)const{
     return next_states.empty();
 }
 
-bool state::is_no_choicer(const std::vector<shift_table>& shift_tables)const{
-    return next_states.size() == 1 and not next_states.back().is_shift_table_with_multiple_choices(shift_tables);
+bool state::is_no_choicer(void)const{
+    return next_states.size() == 1;
 }
 
 void state::push_next_states_to_shift_tables_dfs_stack(
@@ -116,23 +116,23 @@ void state::push_next_states_to_shift_tables_dfs_stack(
     }
 }
 
-void state::print_recursive_calls_for_all_getter(uint from_state, cpp_container& output)const{
+void state::print_recursive_calls_for_all_getter(uint from_state, cpp_container& output, const std::string& cell)const{
     for(uint i=0;i<next_states.size();++i)
-        output.add_source_line("get_all_moves_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell);");
+        output.add_source_line("get_all_moves_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+");");
 }
 
-void state::print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac)const{
+void state::print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac, const std::string& cell)const{
     for(uint i=0;i<next_states.size();++i){
-        output.add_source_line("if(get_any_move_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell)){");
+        output.add_source_line("if(get_any_move_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
         ac.insert_unended_reverting_sequence(output);
         output.add_source_line("return true;");
         output.add_source_line("}");
     }
 }
 
-void state::print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index)const{
+void state::print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index, const std::string& cell)const{
     for(uint i=0;i<next_states.size();++i){
-        output.add_source_line("if(get_pattern_value"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell)){");
+        output.add_source_line("if(get_pattern_value"+std::to_string(pattern_index)+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
         ac.insert_unended_reverting_sequence(output);
         output.add_source_line("return true;");
         output.add_source_line("}");

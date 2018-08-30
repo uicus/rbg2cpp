@@ -28,16 +28,15 @@ uint edge::get_endpoint(void)const{
     return local_register_endpoint_index;
 }
 
-void edge::handle_labels(
+int edge::handle_labels(
     cpp_container& output,
     actions_compiler& ac,
     const std::vector<shift_table>& shift_tables,
-    const std::vector<precomputed_pattern>& precomputed_patterns,
-    std::string& human_readable_labels)const{
-    for(const auto& el: label_list)
+    const std::vector<precomputed_pattern>& precomputed_patterns)const{
+    for(uint i=0;i<label_list.size();++i){
+        const auto& el = label_list[i];
         switch(el.k){
             case action:
-                human_readable_labels += el.a->to_rbg();
                 el.a->accept(ac);
                 break;
             case positive_pattern:
@@ -57,7 +56,8 @@ void edge::handle_labels(
                 break;
             case s_table:
                 if(shift_tables[el.structure_index].can_be_backtraced()){
-                    assert(false); // TODO: needs the last state to be marked as outgoing usable
+                    assert(i==label_list.size()-1);
+                    return el.structure_index;
                 }
                 else{
                     output.add_source_line("current_cell = shift_table"+std::to_string(el.structure_index)+"[current_cell];");
@@ -70,22 +70,24 @@ void edge::handle_labels(
                 ac.insert_reverting_sequence(output);
                 break;
         }
+    }
+    return -1;
 }
 
-void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac)const{
+void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell)const{
     ac.finallize();
-    output.add_source_line("if(cache.is_set("+std::to_string(current_state)+", current_cell-1)){");
+    output.add_source_line("if(cache.is_set("+std::to_string(current_state)+", "+cell+"-1)){");
     ac.insert_reverting_sequence(output);
     output.add_source_line("}");
-    output.add_source_line("cache.set("+std::to_string(current_state)+", current_cell-1);");
+    output.add_source_line("cache.set("+std::to_string(current_state)+", "+cell+"-1);");
 }
 
-void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac)const{
+void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell)const{
     ac.finallize();
-    output.add_source_line("if(cache.pattern_is_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", current_cell-1)){");
+    output.add_source_line("if(cache.pattern_is_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", "+cell+"-1)){");
     ac.insert_reverting_sequence(output);
     output.add_source_line("}");
-    output.add_source_line("cache.pattern_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", current_cell-1);");
+    output.add_source_line("cache.pattern_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", "+cell+"-1);");
 }
 
 void edge::print_transition_function(
@@ -114,10 +116,9 @@ void edge::print_transition_function(
     std::string decision_stack = "decision_points";
     actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,pusher,level_getter,level_reverter,final_action,false);
     int last_state_to_check = -1;
-    std::string human_readable_labels;
-    handle_labels(output,ac,shift_tables,precomputed_patterns,human_readable_labels);
+    int encountered_multi_shift_table = handle_labels(output,ac,shift_tables,precomputed_patterns);
     uint current_state = local_register_endpoint_index;
-    while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer(shift_tables)){
+    while(not ac.is_ready_to_report() and local_register[current_state].is_no_choicer() and encountered_multi_shift_table == -1){
         if(local_register[current_state].can_be_checked_for_visit()){
             if(local_register[current_state].get_only_exit().label_list.empty())
                 last_state_to_check = current_state;
@@ -130,8 +131,22 @@ void edge::print_transition_function(
             visit_node(output,last_state_to_check,ac);
             last_state_to_check = -1;
         }
-        local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns,human_readable_labels);
+        encountered_multi_shift_table = local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
+    }
+    if(encountered_multi_shift_table >= 0){
+        ac.notify_about_modifier();
+        output.add_source_line("for(const auto el: shift_table"+std::to_string(encountered_multi_shift_table)+"[current_cell]){");
+        visit_node(output, current_state, ac, "el");
+        if(stop_after_first)
+            local_register[current_state].print_recursive_calls_for_any_getter(current_state,output,ac,"el");
+        else
+            local_register[current_state].print_recursive_calls_for_all_getter(current_state,output,"el");
+        output.add_source_line("}");
+        ac.insert_reverting_sequence(output);
+        output.add_source_line("}");
+        output.add_source_line("");
+        return;
     }
     if(local_register[current_state].can_be_checked_for_visit())
         last_state_to_check = current_state;
@@ -153,7 +168,6 @@ void edge::print_transition_function(
             local_register[current_state].print_recursive_calls_for_all_getter(current_state,output);
         ac.insert_reverting_sequence(output);
     }
-    output.add_source_line("// generated from: "+human_readable_labels);
     output.add_source_line("}");
     output.add_source_line("");
 }
@@ -176,12 +190,11 @@ void edge::print_transition_function_inside_pattern(
     std::string level_reverter = "pattern_revert_to_level"+std::to_string(pattern_index);
     std::string final_action = "return false;";
     actions_compiler ac(output,pieces_to_id,edges_to_id,variables_to_id,decl,pusher,level_getter,level_reverter,final_action,true);
-    std::string human_readable_labels;
     std::string decision_stack = "pattern_decision_points"+std::to_string(pattern_index);
     int last_state_to_check = -1;
-    handle_labels(output,ac,shift_tables,precomputed_patterns,human_readable_labels);
+    int encountered_multi_shift_table = handle_labels(output,ac,shift_tables,precomputed_patterns);
     uint current_state = local_register_endpoint_index;
-    while(local_register[current_state].is_no_choicer(shift_tables)){
+    while(local_register[current_state].is_no_choicer() and encountered_multi_shift_table == -1){
         if(local_register[current_state].can_be_checked_for_visit()){
             if(local_register[current_state].get_only_exit().label_list.empty())
                 last_state_to_check = current_state;
@@ -194,8 +207,19 @@ void edge::print_transition_function_inside_pattern(
             visit_node_in_pattern(output,last_state_to_check,pattern_index,ac);
             last_state_to_check = -1;
         }
-        local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns,human_readable_labels);
+        encountered_multi_shift_table = local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
+    }
+    if(encountered_multi_shift_table >= 0){
+        ac.notify_about_modifier();
+        output.add_source_line("for(const auto el: shift_table"+std::to_string(encountered_multi_shift_table)+"[current_cell]){");
+        visit_node_in_pattern(output, current_state, pattern_index, ac, "el");
+        local_register[current_state].print_recursive_calls_for_pattern(current_state,output,ac,pattern_index,"el");
+        output.add_source_line("}");
+        ac.insert_reverting_sequence(output);
+        output.add_source_line("}");
+        output.add_source_line("");
+        return;
     }
     if(local_register[current_state].can_be_checked_for_visit())
         last_state_to_check = current_state;

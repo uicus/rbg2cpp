@@ -3,7 +3,7 @@
 
 typedef unsigned int uint;
 constexpr int KEEPER = 0;
-constexpr uint DEPTH = 3;
+constexpr uint DEPTH = 4;
 
 reasoner::resettable_bitarray_stack cache;
 
