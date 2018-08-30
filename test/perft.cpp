@@ -4,36 +4,31 @@
 typedef unsigned int uint;
 constexpr int KEEPER = 0;
 constexpr uint DEPTH = 3;
-constexpr uint CACHE_SIZE = DEPTH*4; // not enough for some games
 
-reasoner::resettable_bitarray_stack cache[CACHE_SIZE];
+reasoner::resettable_bitarray_stack cache;
 
-uint perft_state_at_depth(reasoner::game_state& state, uint depth, uint cache_depth){
+// crude solution, just for checking correctness
+uint perft_state_at_depth(const reasoner::game_state& state, uint depth){
     if(depth == 0 and state.get_current_player() != KEEPER)
         return 1;
     else{
+        auto copy_state = state;
         if(state.get_current_player() == KEEPER){
-            if(CACHE_SIZE <= cache_depth)
-                std::cout<<"Too small cache! Test is going to crash..."<<std::endl;
-            reasoner::next_states_iterator it(state, cache[cache_depth]);
-            if(it.next()){
-                uint result = perft_state_at_depth(state,depth,cache_depth+1);
-                it.reset();
-                return result;
+            auto any_move = copy_state.get_any_move(cache);
+            if(any_move.first){
+                copy_state.apply_move(any_move.second);
+                return perft_state_at_depth(copy_state, depth);
             }
-            else{
+            else
                 return 0;
-            }
         }
         else{
-            if(CACHE_SIZE <= cache_depth)
-                std::cout<<"Too small cache! Test is going to crash..."<<std::endl;
-            std::vector<reasoner::move> legal_moves;
-            reasoner::next_states_iterator it(state, cache[cache_depth]);
+            auto legal_moves = copy_state.get_all_moves(cache);
             uint result = 0;
-            while(it.next()){
-                legal_moves.push_back(it.get_move());
-                result += perft_state_at_depth(state,depth-1,cache_depth+1);
+            for(const auto& el: legal_moves){
+                auto temp_state = copy_state;
+                temp_state.apply_move(el);
+                result += perft_state_at_depth(temp_state,depth-1);
             }
             return result;
         }
@@ -42,7 +37,7 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth, uint cache_de
 
 uint perft(void){
     reasoner::game_state state;
-    return perft_state_at_depth(state,DEPTH,0);
+    return perft_state_at_depth(state,DEPTH);
 }
 
 int main() {

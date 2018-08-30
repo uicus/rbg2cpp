@@ -63,7 +63,7 @@ simulate_old:
 perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	rm -rf $(TEST_DIR)/reasoner.*
 	rm -rf $(TEST_DIR)/test
-	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -o reasoner $<
+	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -fno-shift-tables -o reasoner $<
 	mv reasoner.hpp $(TEST_DIR)/
 	mv reasoner.cpp $(TEST_DIR)/
 	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp
