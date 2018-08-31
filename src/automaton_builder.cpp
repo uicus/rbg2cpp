@@ -110,6 +110,7 @@ void automaton_builder::dispatch(const rbg_parser::move_check& m){
         current_shift_block.push_back({s_pattern,nullptr,uint(precomputed_patterns.size()-1)});
     }
     else{
+        end_shift_automaton();
         pattern_automata.push_back(element_builder.get_final_result());
         current_block.push_back({(m.is_negated()?negative_pattern:positive_pattern),nullptr,uint(pattern_automata.size()-1)});
     }
