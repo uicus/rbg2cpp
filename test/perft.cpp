@@ -11,23 +11,23 @@ reasoner::resettable_bitarray_stack cache;
 uint states_count;
 
 // crude solution, just for checking correctness
-uint perft_state_at_depth(const reasoner::game_state& state, uint depth){
+uint perft_state_at_depth(reasoner::game_state& state, uint depth){
     if(depth == 0 and state.get_current_player() != KEEPER){
         ++states_count;
         return 1;
     }
     else{
-        auto copy_state = state;
         if(state.get_current_player() == KEEPER){
-            auto any_move = copy_state.get_any_move(cache);
+            auto any_move = state.get_any_move(cache);
             if(any_move.first){
-                copy_state.apply_move(any_move.second);
-                return perft_state_at_depth(copy_state, depth);
+                state.apply_move(any_move.second);
+                return perft_state_at_depth(state, depth);
             }
             else
                 return 0;
         }
         else{
+            auto copy_state = state;
             ++states_count;
             auto legal_moves = copy_state.get_all_moves(cache);
             uint result = 0;
