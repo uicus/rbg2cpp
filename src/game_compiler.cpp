@@ -6,6 +6,8 @@
 #include"actions_compiler.hpp"
 #include<algorithm>
 
+constexpr uint SMALL_VECTOR_SIZE = 3;
+
 game_compiler::game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts):
 output(opts.output_file()),
 opts(opts),
@@ -210,21 +212,19 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("");
     output.add_header_line("friend class next_states_iterator;");
     output.add_header_line("private:");
-    output.add_header_line("void apply_board_changes_list(const std::shared_ptr<board_appliers>& list);");
-    output.add_source_line("void game_state::apply_board_changes_list(const std::shared_ptr<board_appliers>& list){");
-    output.add_source_line("if(list){");
-    output.add_source_line("apply_board_changes_list(list->tail);");
-    output.add_source_line("--pieces_count[pieces[list->head.cell]];");
-    output.add_source_line("++pieces_count[list->head.previous_piece];");
-    output.add_source_line("pieces[list->head.cell] = list->head.previous_piece;");
+    output.add_header_line("void apply_board_changes_list(const board_appliers& list);");
+    output.add_source_line("void game_state::apply_board_changes_list(const board_appliers& list){");
+    output.add_source_line("for(const auto& el: list){");
+    output.add_source_line("--pieces_count[pieces[el.cell]];");
+    output.add_source_line("++pieces_count[el.previous_piece];");
+    output.add_source_line("pieces[el.cell] = el.previous_piece;");
     output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("void apply_variables_changes_list(const std::shared_ptr<variables_appliers>& list);");
-    output.add_source_line("void game_state::apply_variables_changes_list(const std::shared_ptr<variables_appliers>& list){");
-    output.add_source_line("if(list){");
-    output.add_source_line("apply_variables_changes_list(list->tail);");
-    output.add_source_line("variables[list->head.variable] = list->head.previous_value;");
+    output.add_header_line("void apply_variables_changes_list(const variables_appliers& list);");
+    output.add_source_line("void game_state::apply_variables_changes_list(const variables_appliers& list){");
+    output.add_source_line("for(const auto& el: list){");
+    output.add_source_line("variables[el.variable] = el.previous_value;");
     output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("");
@@ -321,7 +321,6 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
 
 void game_compiler::generate_states_iterator(void){
     output.add_header_include("vector");
-    output.add_header_include("memory");
     output.add_header_line("class next_states_iterator{");
     output.add_header_line("public:");
     output.add_header_line("next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>& moves);");
@@ -348,8 +347,8 @@ void game_compiler::generate_states_iterator(void){
     output.add_header_line("");
     output.add_header_line("game_state& state_to_change;");
     output.add_header_line("resettable_bitarray_stack& cache;");
-    output.add_header_line("std::shared_ptr<board_appliers> board_list;");
-    output.add_header_line("std::shared_ptr<variables_appliers> variables_list;");
+    output.add_header_line("board_appliers board_list;");
+    output.add_header_line("variables_appliers variables_list;");
     output.add_header_line("std::vector<move>& moves;");
     output.add_header_line("};");
 }
@@ -481,32 +480,16 @@ void game_compiler::generate_resettable_bitarray_stack(void){
 }
 
 void game_compiler::generate_appliers_lists(void){
-    output.add_header_include("memory");
-    output.add_header_line("struct board_appliers{");
-    output.add_header_line("board_changes_information head;");
-    output.add_header_line("std::shared_ptr<board_appliers> tail;");
-    output.add_header_line("board_appliers(int cell,int piece,const std::shared_ptr<board_appliers>& tail)");
-    output.add_header_line(": head(cell,piece),");
-    output.add_header_line("  tail(tail){");
-    output.add_header_line("}");
-    output.add_header_line("};");
-    output.add_header_line("struct variables_appliers{");
-    output.add_header_line("variable_changes_information head;");
-    output.add_header_line("std::shared_ptr<variables_appliers> tail;");
-    output.add_header_line("variables_appliers(int variable,int value,const std::shared_ptr<variables_appliers>& tail)");
-    output.add_header_line(": head(variable,value),");
-    output.add_header_line("  tail(tail){");
-    output.add_header_line("}");
-    output.add_header_line("};");
-    output.add_header_line("");
+    output.add_header_include("boost/container/small_vector.hpp");
+    output.add_header_line("typedef boost::container::small_vector<board_changes_information, "+std::to_string(SMALL_VECTOR_SIZE)+"> board_appliers;");
+    output.add_header_line("typedef boost::container::small_vector<variable_changes_information, "+std::to_string(SMALL_VECTOR_SIZE)+"> variables_appliers;");
 }
 
 void game_compiler::generate_move_class(void){
-    output.add_header_include("memory");
     generate_appliers_lists();
     output.add_header_line("class move{");
-    output.add_header_line("std::shared_ptr<board_appliers> board_list;");
-    output.add_header_line("std::shared_ptr<variables_appliers> variables_list;");
+    output.add_header_line("board_appliers board_list;");
+    output.add_header_line("variables_appliers variables_list;");
     output.add_header_line("int next_player;");
     output.add_header_line("int next_cell;");
     output.add_header_line("int next_state;");
@@ -514,7 +497,7 @@ void game_compiler::generate_move_class(void){
     output.add_header_line("friend class game_state;");
     output.add_header_line("public:");
     output.add_header_line("move(void) = default;");
-    output.add_header_line("move(const std::shared_ptr<board_appliers>& board_list, const std::shared_ptr<variables_appliers>& variables_list, int next_player, int next_cell, int next_state)");
+    output.add_header_line("move(const board_appliers& board_list, const variables_appliers& variables_list, int next_player, int next_cell, int next_state)");
     output.add_header_line(": board_list(board_list),");
     output.add_header_line("  variables_list(variables_list),");
     output.add_header_line("  next_player(next_player),");

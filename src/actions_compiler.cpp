@@ -48,8 +48,8 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 void actions_compiler::push_changes_on_board_list(cpp_container& output, const std::string& piece_id){
     if(not inside_pattern){
         if(not encountered_board_change)
-            output.add_source_line("const auto previous_board_changes_list = board_list;");
-        output.add_source_line("board_list = std::make_shared<board_appliers>(current_cell,"+piece_id+",board_list);");
+            output.add_source_line("const auto previous_board_changes_list = board_list.size();");
+        output.add_source_line("board_list.emplace_back(current_cell,"+piece_id+");");
         encountered_board_change = true;
     }
 }
@@ -104,8 +104,8 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
 void actions_compiler::push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value){
     if(not inside_pattern){
         if(not encountered_variable_change)
-            output.add_source_line("const auto previous_variables_changes_list = variables_list;");
-        output.add_source_line("variables_list = std::make_shared<variables_appliers>("+variable_id+","+value+",variables_list);");
+            output.add_source_line("const auto previous_variables_changes_list = variables_list.size();");
+        output.add_source_line("variables_list.emplace_back("+variable_id+","+value+");");
         encountered_variable_change = true;
     }
 }
@@ -224,9 +224,9 @@ void actions_compiler::insert_unended_reverting_sequence(cpp_container& output)c
         output.add_source_line("cache."+cache_level_reverter+"(previous_cache_level);");
     if(not inside_pattern){
         if(encountered_board_change)
-            output.add_source_line("board_list = previous_board_changes_list;");
+            output.add_source_line("board_list.resize(previous_board_changes_list);");
         if(encountered_variable_change)
-            output.add_source_line("variables_list = previous_variables_changes_list;");
+            output.add_source_line("variables_list.resize(previous_variables_changes_list);");
     }
     for(uint i=reverting_stack.size();i>0;--i)
         switch(reverting_stack[i-1].type){
