@@ -6,7 +6,7 @@
 #include"actions_compiler.hpp"
 #include<algorithm>
 
-constexpr uint SMALL_VECTOR_SIZE = 3;
+constexpr uint SMALL_VECTOR_SIZE = 8;
 
 game_compiler::game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts):
 output(opts.output_file()),

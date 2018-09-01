@@ -24,7 +24,7 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth){
                 return perft_state_at_depth(state, depth);
             }
             else
-                return 0;
+                return 1;
         }
         else{
             auto copy_state = state;
