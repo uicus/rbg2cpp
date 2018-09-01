@@ -195,6 +195,7 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("std::vector<move> get_all_moves(resettable_bitarray_stack& cache);");
     output.add_source_line("std::vector<move> game_state::get_all_moves(resettable_bitarray_stack& cache){");
     output.add_source_line("std::vector<move> result;");
+    output.add_source_line("result.reserve(100);");
     output.add_source_line("next_states_iterator it(*this, cache, result);");
     output.add_source_line("it.get_all_moves(current_state, current_cell);");
     output.add_source_line("return result;");
