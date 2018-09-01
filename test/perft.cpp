@@ -8,6 +8,7 @@ constexpr int KEEPER = 0;
 constexpr uint DEPTH = 4;
 
 reasoner::resettable_bitarray_stack cache;
+reasoner::game_state initial_state;
 uint states_count;
 
 // crude solution, just for checking correctness
@@ -42,12 +43,17 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth){
 }
 
 uint perft(void){
-    reasoner::game_state state;
-    return perft_state_at_depth(state,DEPTH);
+    return perft_state_at_depth(initial_state,DEPTH);
 }
 
 int main() {
- std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
+    while(initial_state.get_current_player() == KEEPER){
+        auto any_move = initial_state.get_any_move(cache);
+        if(any_move.first)
+            initial_state.apply_move(any_move.second);
+    }
+
+    std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
     auto p = perft();
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
