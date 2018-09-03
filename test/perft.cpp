@@ -5,7 +5,6 @@
 
 typedef unsigned int uint;
 constexpr int KEEPER = 0;
-constexpr uint DEPTH = 4;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
@@ -42,19 +41,24 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth){
     }
 }
 
-uint perft(void){
-    return perft_state_at_depth(initial_state,DEPTH);
+uint perft(uint depth){
+    return perft_state_at_depth(initial_state,depth);
 }
 
-int main() {
+int main(int argv, char** argc){
+    if(argv != 2){
+        std::cout << "Perft depth unspecified. Exitting..." << std::endl;
+        return 1;
+    }
     while(initial_state.get_current_player() == KEEPER){
         auto any_move = initial_state.get_any_move(cache);
         if(any_move.first)
             initial_state.apply_move(any_move.second);
     }
 
+    uint depth = std::stoi(argc[1]);
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    auto p = perft();
+    auto p = perft(depth);
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     uint ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();

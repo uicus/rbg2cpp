@@ -18,6 +18,10 @@ INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
 COMMON_CFLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -flto -std=c++11
 CFLAGS := $(COMMON_CFLAGS) -s $(INCLUDE)
 
+SIMULATIONS := 100
+DEPTH := 3
+MEMORY := 2000000
+
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
 
@@ -47,28 +51,32 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 simulate_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	rm -rf $(TEST_DIR)/reasoner.*
-	rm -rf $(TEST_DIR)/test
-	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -o reasoner $<
-	mv reasoner.hpp $(TEST_DIR)/
-	mv reasoner.cpp $(TEST_DIR)/
-	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp
-	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp
-	ulimit -Sv 500000 && $(TEST_DIR)/test
+	@rm -rf $(TEST_DIR)/reasoner.*
+	@rm -rf $(TEST_DIR)/test
+	@echo "Running $(TARGET)..."
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -o reasoner $<
+	@mv reasoner.hpp $(TEST_DIR)/
+	@mv reasoner.cpp $(TEST_DIR)/
+	@echo "Running $(C)..."
+	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
+	@echo "Running simulation..."
+	@ulimit -Sv $(MEMORY) && taskset -c 0 $(TEST_DIR)/test $(SIMULATIONS)
 
-simulate_old:
-	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp
-	ulimit -Sv 500000 && $(TEST_DIR)/test
+#simulate_old:
+#	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp
+#	ulimit -Sv $(MEMORY) && $(TEST_DIR)/test
 
 perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	rm -rf $(TEST_DIR)/reasoner.*
-	rm -rf $(TEST_DIR)/test
-	ulimit -Sv 500000 && $(BIN_DIR)/$(TARGET) -o reasoner $<
-	mv reasoner.hpp $(TEST_DIR)/
-	mv reasoner.cpp $(TEST_DIR)/
-	$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp
-	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp
-	ulimit -Sv 500000 && $(TEST_DIR)/test
+	@rm -rf $(TEST_DIR)/reasoner.*
+	@rm -rf $(TEST_DIR)/test
+	@echo "Running $(TARGET)..."
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -o reasoner $<
+	@mv reasoner.hpp $(TEST_DIR)/
+	@mv reasoner.cpp $(TEST_DIR)/
+	@echo "Running $(C)..."
+	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp"
+	@echo "Running perft..."
+	@ulimit -Sv $(MEMORY) && taskset -c 0 $(TEST_DIR)/test $(DEPTH)
 
 clean:
 	cd $(RBG_PARSER_DIR); make clean; cd ..
