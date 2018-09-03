@@ -6,7 +6,7 @@
 #include"actions_compiler.hpp"
 #include<algorithm>
 
-constexpr uint SMALL_VECTOR_SIZE = 3;
+constexpr int MAXIMAL_GAME_DEPENDENT_STAIGHTNESS = 10;
 
 game_compiler::game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts):
 output(opts.output_file()),
@@ -482,8 +482,9 @@ void game_compiler::generate_resettable_bitarray_stack(void){
 
 void game_compiler::generate_appliers_lists(void){
     output.add_header_include("boost/container/small_vector.hpp");
-    output.add_header_line("typedef boost::container::small_vector<board_changes_information, "+std::to_string(SMALL_VECTOR_SIZE)+"> board_appliers;");
-    output.add_header_line("typedef boost::container::small_vector<variable_changes_information, "+std::to_string(SMALL_VECTOR_SIZE)+"> variables_appliers;");
+    int straightness = input.get_moves()->compute_k_straightness().final_result();
+    output.add_header_line("typedef boost::container::small_vector<board_changes_information, "+std::to_string(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0?straightness:MAXIMAL_GAME_DEPENDENT_STAIGHTNESS)+"> board_appliers;");
+    output.add_header_line("typedef boost::container::small_vector<variable_changes_information, "+std::to_string(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0?straightness:MAXIMAL_GAME_DEPENDENT_STAIGHTNESS)+"> variables_appliers;");
 }
 
 void game_compiler::generate_move_class(void){
