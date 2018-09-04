@@ -43,8 +43,8 @@ class edge{
             actions_compiler& ac,
             const std::vector<shift_table>& shift_tables,
             const std::vector<precomputed_pattern>& precomputed_patterns)const;
-        void visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell="current_cell")const;
-        void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell="current_cell")const;
+        void visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell="current_cell", const std::string& kind_of_return="return;")const;
+        void visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell="current_cell", const std::string& kind_of_return="return false;")const;
     public:
         edge(uint local_register_endpoint_index, const std::vector<label>& label_list);
         void shift(uint shift_value);

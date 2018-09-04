@@ -74,18 +74,20 @@ int edge::handle_labels(
     return -1;
 }
 
-void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell)const{
+void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell, const std::string& kind_of_return)const{
     ac.finallize();
     output.add_source_line("if(cache.is_set("+std::to_string(current_state)+", "+cell+"-1)){");
-    ac.insert_reverting_sequence(output);
+    ac.insert_unended_reverting_sequence(output);
+    output.add_source_line(kind_of_return);
     output.add_source_line("}");
     output.add_source_line("cache.set("+std::to_string(current_state)+", "+cell+"-1);");
 }
 
-void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell)const{
+void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell, const std::string& kind_of_return)const{
     ac.finallize();
     output.add_source_line("if(cache.pattern_is_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", "+cell+"-1)){");
-    ac.insert_reverting_sequence(output);
+    ac.insert_unended_reverting_sequence(output);
+    output.add_source_line(kind_of_return);
     output.add_source_line("}");
     output.add_source_line("cache.pattern_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", "+cell+"-1);");
 }
@@ -123,12 +125,12 @@ void edge::print_transition_function(
             if(local_register[current_state].get_only_exit().label_list.empty())
                 last_state_to_check = current_state;
             else{
-                visit_node(output, current_state,ac);
+                visit_node(output, current_state,ac,"current_cell",final_action);
                 last_state_to_check = -1;
             }
         }
         else if(not local_register[current_state].get_only_exit().label_list.empty() and last_state_to_check >= 0){
-            visit_node(output,last_state_to_check,ac);
+            visit_node(output,last_state_to_check,ac,"current_cell",final_action);
             last_state_to_check = -1;
         }
         encountered_multi_shift_table = local_register[current_state].get_only_exit().handle_labels(output,ac,shift_tables,precomputed_patterns);
@@ -137,7 +139,7 @@ void edge::print_transition_function(
     if(encountered_multi_shift_table >= 0){
         ac.notify_about_modifier();
         output.add_source_line("for(const auto el: shift_table"+std::to_string(encountered_multi_shift_table)+"[current_cell]){");
-        visit_node(output, current_state, ac, "el");
+        visit_node(output, current_state, ac, "el","continue;");
         if(stop_after_first)
             local_register[current_state].print_recursive_calls_for_any_getter(current_state,output,ac,"el");
         else
@@ -151,7 +153,7 @@ void edge::print_transition_function(
     if(local_register[current_state].can_be_checked_for_visit())
         last_state_to_check = current_state;
     if(last_state_to_check >= 0)
-        visit_node(output, last_state_to_check,ac);
+        visit_node(output, last_state_to_check,ac,"current_cell",final_action);
     ac.finallize();
     if(ac.is_ready_to_report()){
         output.add_source_line("moves.emplace_back(board_list,variables_list,"+std::to_string(ac.get_next_player())+",current_cell,"+std::to_string(current_state)+");");
@@ -213,7 +215,7 @@ void edge::print_transition_function_inside_pattern(
     if(encountered_multi_shift_table >= 0){
         ac.notify_about_modifier();
         output.add_source_line("for(const auto el: shift_table"+std::to_string(encountered_multi_shift_table)+"[current_cell]){");
-        visit_node_in_pattern(output, current_state, pattern_index, ac, "el");
+        visit_node_in_pattern(output, current_state, pattern_index, ac, "el","continue;");
         local_register[current_state].print_recursive_calls_for_pattern(current_state,output,ac,pattern_index,"el");
         output.add_source_line("}");
         ac.insert_reverting_sequence(output);
