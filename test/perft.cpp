@@ -10,7 +10,6 @@ reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 uint states_count;
 
-// crude solution, just for checking correctness
 uint perft_state_at_depth(reasoner::game_state& state, uint depth){
     if(depth == 0 and state.get_current_player() != KEEPER){
         ++states_count;
@@ -23,12 +22,15 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth){
                 state.apply_move(any_move.second);
                 return perft_state_at_depth(state, depth);
             }
-            else
-                return 1;
+            else {
+              ++states_count;
+              if (depth == 0) return 1;
+              return 0;
+            }
         }
         else{
-            auto copy_state = state;
             ++states_count;
+            auto copy_state = state;
             auto legal_moves = copy_state.get_all_moves(cache);
             uint result = 0;
             for(const auto& el: legal_moves){
