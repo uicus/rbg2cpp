@@ -22,10 +22,11 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth){
                 state.apply_move(any_move.second);
                 return perft_state_at_depth(state, depth);
             }
-            else {
-              ++states_count;
-              if (depth == 0) return 1;
-              return 0;
+            else{
+                ++states_count;
+                if(depth == 0)
+                    return 1;
+                return 0;
             }
         }
         else{
