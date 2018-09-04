@@ -74,19 +74,21 @@ int edge::handle_labels(
     return -1;
 }
 
-void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell, const std::string& kind_of_return)const{
+void edge::visit_node(cpp_container& output, uint current_state, actions_compiler& ac, const std::string& cell, const std::string& kind_of_return, bool revert_if_encountered)const{
     ac.finallize();
     output.add_source_line("if(cache.is_set("+std::to_string(current_state)+", "+cell+"-1)){");
-    ac.insert_unended_reverting_sequence(output);
+    if(revert_if_encountered)
+        ac.insert_unended_reverting_sequence(output);
     output.add_source_line(kind_of_return);
     output.add_source_line("}");
     output.add_source_line("cache.set("+std::to_string(current_state)+", "+cell+"-1);");
 }
 
-void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell, const std::string& kind_of_return)const{
+void edge::visit_node_in_pattern(cpp_container& output, uint current_state, uint pattern_index, actions_compiler& ac, const std::string& cell, const std::string& kind_of_return, bool revert_if_encountered)const{
     ac.finallize();
     output.add_source_line("if(cache.pattern_is_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", "+cell+"-1)){");
-    ac.insert_unended_reverting_sequence(output);
+    if(revert_if_encountered)
+        ac.insert_unended_reverting_sequence(output);
     output.add_source_line(kind_of_return);
     output.add_source_line("}");
     output.add_source_line("cache.pattern_set"+std::to_string(pattern_index)+"("+std::to_string(current_state)+", "+cell+"-1);");
@@ -139,7 +141,7 @@ void edge::print_transition_function(
     if(encountered_multi_shift_table >= 0){
         ac.notify_about_modifier();
         output.add_source_line("for(const auto el: shift_table"+std::to_string(encountered_multi_shift_table)+"[current_cell]){");
-        visit_node(output, current_state, ac, "el","continue;");
+        visit_node(output, current_state, ac, "el","continue;",false);
         if(stop_after_first)
             local_register[current_state].print_recursive_calls_for_any_getter(current_state,output,ac,"el");
         else
@@ -215,7 +217,7 @@ void edge::print_transition_function_inside_pattern(
     if(encountered_multi_shift_table >= 0){
         ac.notify_about_modifier();
         output.add_source_line("for(const auto el: shift_table"+std::to_string(encountered_multi_shift_table)+"[current_cell]){");
-        visit_node_in_pattern(output, current_state, pattern_index, ac, "el","continue;");
+        visit_node_in_pattern(output, current_state, pattern_index, ac, "el","continue;",false);
         local_register[current_state].print_recursive_calls_for_pattern(current_state,output,ac,pattern_index,"el");
         output.add_source_line("}");
         ac.insert_reverting_sequence(output);
