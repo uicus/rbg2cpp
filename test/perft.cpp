@@ -4,16 +4,18 @@
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
+typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-uint states_count;
+ulong states_count, leaves_count;
 
-uint perft_state_at_depth(reasoner::game_state& state, uint depth){
+void perft_state_at_depth(reasoner::game_state& state, uint depth){
     if(depth == 0 and state.get_current_player() != KEEPER){
         ++states_count;
-        return 1;
+        ++leaves_count;
+        return;
     }
     else{
         if(state.get_current_player() == KEEPER){
@@ -25,27 +27,24 @@ uint perft_state_at_depth(reasoner::game_state& state, uint depth){
             else{
                 ++states_count;
                 if(depth == 0)
-                    return 1;
-                return 0;
+                    ++leaves_count;
+                return;
             }
         }
         else{
             ++states_count;
-            auto copy_state = state;
-            auto legal_moves = copy_state.get_all_moves(cache);
-            uint result = 0;
+            auto legal_moves = state.get_all_moves(cache);
             for(const auto& el: legal_moves){
-                auto temp_state = copy_state;
+                auto temp_state = state;
                 temp_state.apply_move(el);
-                result += perft_state_at_depth(temp_state,depth-1);
+                perft_state_at_depth(temp_state,depth-1);
             }
-            return result;
         }
     }
 }
 
-uint perft(uint depth){
-    return perft_state_at_depth(initial_state,depth);
+void perft(uint depth){
+    perft_state_at_depth(initial_state,depth);
 }
 
 int main(int argv, char** argc){
@@ -61,11 +60,11 @@ int main(int argv, char** argc){
 
     uint depth = std::stoi(argc[1]);
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    auto p = perft(depth);
+    perft(depth);
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     uint ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout<<"perft: "<<p<<std::endl;
+    std::cout<<"perft: "<<leaves_count<<std::endl;
     std::cout<<"took: "<<ms<<" ms"<<std::endl;
     std::cout<<"visited: "<<states_count<<" states"<<std::endl;
     std::cout << std::fixed << static_cast<double>(states_count)/static_cast<double>(ms)*1000.0 << " states/sec" << std::endl;
