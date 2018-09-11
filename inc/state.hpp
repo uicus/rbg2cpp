@@ -11,6 +11,7 @@ class cpp_container;
 class compiler_options;
 class precomputed_pattern;
 class actions_compiler;
+struct static_transition_data;
 
 namespace rbg_parser{
     class game_move;
@@ -29,25 +30,13 @@ class state{
         void print_transition_functions(
             uint from_state,
             cpp_container& output,
-            const std::map<rbg_parser::token, uint>& pieces_to_id,
-            const std::map<rbg_parser::token, uint>& edges_to_id,
-            const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl,
-            const std::vector<state>& local_register,
-            const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns,
-            bool stop_after_first)const;
+            const static_transition_data& static_data,
+            const std::vector<state>& local_register)const;
         void print_transition_functions_inside_pattern(
             uint from_state,
-            uint pattern_index,
             cpp_container& output,
-            const std::map<rbg_parser::token, uint>& pieces_to_id,
-            const std::map<rbg_parser::token, uint>& edges_to_id,
-            const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl,
-            const std::vector<state>& local_register,
-            const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns)const;
+            const static_transition_data& static_data,
+            const std::vector<state>& local_register)const;
         void print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
         void notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const;
         void mark_as_doubly_reachable(void);
@@ -61,9 +50,12 @@ class state{
             const rbg_parser::graph& board,
             std::vector<std::pair<uint,uint>>& dfs_stack,
             const std::vector<precomputed_pattern>& pps)const;
-        void print_recursive_calls_for_all_getter(uint from_state, cpp_container& output, const std::string& cell="current_cell")const;
-        void print_recursive_calls_for_any_getter(uint from_state, cpp_container& output, const actions_compiler& ac, const std::string& cell="current_cell")const;
-        void print_recursive_calls_for_pattern(uint from_state, cpp_container& output, const actions_compiler& ac, uint pattern_index, const std::string& cell="current_cell")const;
+        void print_recursive_calls(
+            uint from_state,
+            cpp_container& output,
+            const static_transition_data& static_data,
+            const actions_compiler& ac,
+            const std::string& cell="current_cell")const;
 };
 
 #endif

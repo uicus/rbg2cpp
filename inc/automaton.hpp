@@ -11,6 +11,7 @@ class compiler_options;
 class shift_table;
 class precomputed_pattern;
 class actions_compiler;
+struct static_transition_data;
 
 namespace rbg_parser{
     class game_move;
@@ -36,22 +37,10 @@ class automaton{
         uint get_size(void);
         void print_transition_functions(
             cpp_container& output,
-            const std::map<rbg_parser::token, uint>& pieces_to_id,
-            const std::map<rbg_parser::token, uint>& edges_to_id,
-            const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl,
-            const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns,
-            bool stop_after_first)const;
+            const static_transition_data& static_data)const;
         void print_transition_functions_inside_pattern(
-            uint pattern_index,
             cpp_container& output,
-            const std::map<rbg_parser::token, uint>& pieces_to_id,
-            const std::map<rbg_parser::token, uint>& edges_to_id,
-            const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl,
-            const std::vector<shift_table>& shift_tables,
-            const std::vector<precomputed_pattern>& precomputed_patterns)const;
+            const static_transition_data& static_data)const;
         void print_transition_table(
             cpp_container& output,
             const std::string& table_name,
@@ -63,7 +52,10 @@ class automaton{
         shift_table generate_shift_table(
             const rbg_parser::graph& board,
             const std::vector<precomputed_pattern>& pps)const;
-        void print_recursive_calls_for_pattern_in_start_state(cpp_container& output, const actions_compiler& ac, uint pattern_index)const;
+        void print_recursive_calls_for_pattern_in_start_state(
+            cpp_container& output,
+            const static_transition_data& static_data,
+            const actions_compiler& ac)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list);

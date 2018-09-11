@@ -9,6 +9,7 @@
 #include<string>
 
 class cpp_container;
+struct static_transition_data;
 
 namespace rbg_parser{
     class game_move;
@@ -27,14 +28,7 @@ struct application{
 
 class actions_compiler : public rbg_parser::abstract_dispatcher{
         cpp_container& output;
-        const std::map<rbg_parser::token, uint>& pieces_to_id;
-        const std::map<rbg_parser::token, uint>& edges_to_id;
-        const std::map<rbg_parser::token, uint>& variables_to_id;
-        const rbg_parser::declarations& decl;
-        const std::string& cache_pusher;
-        const std::string& cache_level_getter;
-        const std::string& cache_level_reverter;
-        const std::string& final_action;
+        const static_transition_data& static_data;
         std::vector<application> reverting_stack;
         bool encountered_board_change;
         bool encountered_variable_change;
@@ -43,7 +37,6 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         bool has_saved_cache_level;
         int next_player;
         bool is_finisher;
-        bool inside_pattern;
         void push_changes_on_board_list(cpp_container& output, const std::string& piece_id);
         void save_board_change_for_later_revert(cpp_container& output, uint piece_id);
         void push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value);
@@ -59,15 +52,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         ~actions_compiler(void)override=default;
         actions_compiler(
             cpp_container& output,
-            const std::map<rbg_parser::token, uint>& pieces_to_id,
-            const std::map<rbg_parser::token, uint>& edges_to_id,
-            const std::map<rbg_parser::token, uint>& variables_to_id,
-            const rbg_parser::declarations& decl,
-            const std::string& cache_pusher,
-            const std::string& cache_level_getter,
-            const std::string& cache_level_reverter,
-            const std::string& final_action,
-            bool inside_pattern);
+            const static_transition_data& static_data);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
@@ -82,8 +67,9 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::integer_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);}
-        void insert_reverting_sequence(cpp_container& output)const;
-        void insert_unended_reverting_sequence(cpp_container& output)const;
+        void insert_reverting_sequence_after_fail(void)const;
+        void insert_reverting_sequence_after_success(void)const;
+        void insert_unended_reverting_sequence(void)const;
         void finallize(void);
         void check_cell_correctness(void);
         void notify_about_modifier(void);

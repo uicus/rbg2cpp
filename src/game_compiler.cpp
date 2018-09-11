@@ -4,6 +4,7 @@
 #include"parsed_game.hpp"
 #include"types.hpp"
 #include"actions_compiler.hpp"
+#include"transition_data.hpp"
 #include<algorithm>
 
 constexpr int MAXIMAL_GAME_DEPENDENT_STAIGHTNESS = 10;
@@ -313,8 +314,26 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
     output.add_header_line("bool evaluate"+std::to_string(pattern_index)+"(int current_cell);");
     output.add_source_line("bool next_states_iterator::evaluate"+std::to_string(pattern_index)+"(int current_cell){");
     output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
-    actions_compiler dummy(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),"","","","",false);
-    pattern_automata[pattern_index].print_recursive_calls_for_pattern_in_start_state(output,dummy,pattern_index);
+    static_transition_data static_data(
+        pieces_to_id,
+        edges_to_id,
+        variables_to_id,
+        input.get_declarations(),
+        shift_tables,
+        precomputed_patterns,
+        "get_pattern_value"+std::to_string(pattern_index)+"_",
+        "cache.pattern_get_level"+std::to_string(pattern_index)+"();",
+        "cache.pattern_push"+std::to_string(pattern_index)+"();",
+        "cache.pattern_revert_to_level"+std::to_string(pattern_index)+"(previous_cache_level);",
+        "cache.pattern_set"+std::to_string(pattern_index),
+        "cache.pattern_is_set"+std::to_string(pattern_index),
+        inside_pattern);
+    pattern_automata[pattern_index].print_recursive_calls_for_pattern_in_start_state(
+        output,
+        static_data,
+        actions_compiler(
+            output,
+            static_data));
     output.add_source_line("return false;");
     output.add_source_line("}");
     output.add_source_line("");
@@ -339,11 +358,56 @@ void game_compiler::generate_states_iterator(void){
     game_automaton.print_transition_table(output, "all_moves_getters","get_all_moves","void");
     game_automaton.print_transition_table(output, "any_move_getters","get_any_move","bool");
     output.add_header_line("");
-    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables,precomputed_patterns,true);
-    game_automaton.print_transition_functions(output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables,precomputed_patterns,false);
+    game_automaton.print_transition_functions(
+        output,
+        static_transition_data(
+            pieces_to_id,
+            edges_to_id,
+            variables_to_id,
+            input.get_declarations(),
+            shift_tables,
+            precomputed_patterns,
+            "get_any_move_",
+            "cache.get_level();",
+            "cache.push();",
+            "cache.revert_to_level(previous_cache_level);",
+            "cache.set",
+            "cache.is_set",
+            any_getter));
+    game_automaton.print_transition_functions(
+        output,
+        static_transition_data(
+            pieces_to_id,
+            edges_to_id,
+            variables_to_id,
+            input.get_declarations(),
+            shift_tables,
+            precomputed_patterns,
+            "get_all_moves_",
+            "cache.get_level();",
+            "cache.push();",
+            "cache.revert_to_level(previous_cache_level);",
+            "cache.set",
+            "cache.is_set",
+            all_getter));
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("");
-        pattern_automata[i].print_transition_functions_inside_pattern(i,output,pieces_to_id,edges_to_id,variables_to_id,input.get_declarations(),shift_tables, precomputed_patterns);
+        pattern_automata[i].print_transition_functions_inside_pattern(
+            output,
+            static_transition_data(
+                pieces_to_id,
+                edges_to_id,
+                variables_to_id,
+                input.get_declarations(),
+                shift_tables,
+                precomputed_patterns,
+                "get_pattern_value"+std::to_string(i)+"_",
+                "cache.pattern_get_level"+std::to_string(i)+"();",
+                "cache.pattern_push"+std::to_string(i)+"();",
+                "cache.pattern_revert_to_level"+std::to_string(i)+"(previous_cache_level);",
+                "cache.pattern_set"+std::to_string(i),
+                "cache.pattern_is_set"+std::to_string(i),
+                inside_pattern));
     }
     output.add_header_line("");
     output.add_header_line("game_state& state_to_change;");

@@ -9,44 +9,29 @@
 #include"assignments.hpp"
 #include"switch.hpp"
 #include"arithmetic_comparison.hpp"
+#include"transition_data.hpp"
 
 actions_compiler::actions_compiler(
     cpp_container& output,
-    const std::map<rbg_parser::token, uint>& pieces_to_id,
-    const std::map<rbg_parser::token, uint>& edges_to_id,
-    const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl,
-    const std::string& cache_pusher,
-    const std::string& cache_level_getter,
-    const std::string& cache_level_reverter,
-    const std::string& final_action,
-    bool inside_pattern):
+    const static_transition_data& static_data):
     output(output),
-    pieces_to_id(pieces_to_id),
-    edges_to_id(edges_to_id),
-    variables_to_id(variables_to_id),
-    decl(decl),
-    cache_pusher(cache_pusher),
-    cache_level_getter(cache_level_getter),
-    cache_level_reverter(cache_level_reverter),
-    final_action(final_action),
+    static_data(static_data),
     reverting_stack(),
     encountered_board_change(false),
     encountered_variable_change(false),
     should_check_cell_correctness(false),
     has_modifier(false),
     has_saved_cache_level(false),
-    next_player(-1),
-    inside_pattern(inside_pattern){
+    next_player(-1){
 }
 
 void actions_compiler::dispatch(const rbg_parser::shift& m){
-    output.add_source_line("current_cell = cell_neighbors[current_cell]["+std::to_string(edges_to_id.at(m.get_content()))+"];");
+    output.add_source_line("current_cell = cell_neighbors[current_cell]["+std::to_string(static_data.edges_to_id.at(m.get_content()))+"];");
     should_check_cell_correctness = true;
 }
 
 void actions_compiler::push_changes_on_board_list(cpp_container& output, const std::string& piece_id){
-    if(not inside_pattern){
+    if(static_data.kind != inside_pattern){
         if(not encountered_board_change)
             output.add_source_line("const auto previous_board_changes_list = board_list.size();");
         output.add_source_line("board_list.emplace_back(current_cell,"+piece_id+");");
@@ -68,32 +53,32 @@ void actions_compiler::revert_board_change(cpp_container& output, uint piece_id,
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
     check_cell_correctness();
-    save_board_change_for_later_revert(output,pieces_to_id.at(m.get_piece()));
-    push_changes_on_board_list(output, std::to_string(pieces_to_id.at(m.get_piece())));
+    save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
+    push_changes_on_board_list(output, std::to_string(static_data.pieces_to_id.at(m.get_piece())));
     output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[current_cell]];");
-    output.add_source_line("++state_to_change.pieces_count["+std::to_string(pieces_to_id.at(m.get_piece()))+"];");
-    output.add_source_line("state_to_change.pieces[current_cell] = "+std::to_string(pieces_to_id.at(m.get_piece()))+";");
+    output.add_source_line("++state_to_change.pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
+    output.add_source_line("state_to_change.pieces[current_cell] = "+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+";");
     has_modifier = true;
 }
 
 void actions_compiler::dispatch(const rbg_parser::ons& m){
     if(m.get_legal_ons().size() == 0)
-        insert_reverting_sequence(output);
-    else if(m.get_legal_ons().size() < pieces_to_id.size()){
+        insert_reverting_sequence_after_fail();
+    else if(m.get_legal_ons().size() < static_data.pieces_to_id.size()){
         check_cell_correctness();
         output.add_source_line("switch(state_to_change.pieces[current_cell]){");
-        if(m.get_legal_ons().size() < pieces_to_id.size()/2+1){
+        if(m.get_legal_ons().size() < static_data.pieces_to_id.size()/2+1){
             for(const auto& el: m.get_legal_ons())
-                output.add_source_line("case "+std::to_string(pieces_to_id.at(el))+":");
+                output.add_source_line("case "+std::to_string(static_data.pieces_to_id.at(el))+":");
             output.add_source_line("break;");
             output.add_source_line("default:");
-            insert_reverting_sequence(output);
+            insert_reverting_sequence_after_fail();
         }
         else{
-            for(const auto& el: pieces_to_id)
+            for(const auto& el: static_data.pieces_to_id)
                 if(not m.get_legal_ons().count(el.first))
                     output.add_source_line("case "+std::to_string(el.second)+":");
-            insert_reverting_sequence(output);
+            insert_reverting_sequence_after_fail();
             output.add_source_line("default:");
             output.add_source_line("break;");
         }
@@ -102,7 +87,7 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
 }
 
 void actions_compiler::push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value){
-    if(not inside_pattern){
+    if(static_data.kind != inside_pattern){
         if(not encountered_variable_change)
             output.add_source_line("const auto previous_variables_changes_list = variables_list.size();");
         output.add_source_line("variables_list.emplace_back("+variable_id+","+value+");");
@@ -122,35 +107,35 @@ void actions_compiler::revert_variable_change(cpp_container& output, uint variab
 void actions_compiler::dispatch(const rbg_parser::assignment& m){
     const auto& left_side = m.get_left_side();
     uint bound = 0;
-    if(decl.get_legal_variables().count(left_side))
-        bound = decl.get_variable_bound(left_side);
+    if(static_data.decl.get_legal_variables().count(left_side))
+        bound = static_data.decl.get_variable_bound(left_side);
     else
-        bound = decl.get_player_bound(left_side);
-    arithmetics_printer right_side_printer(pieces_to_id, variables_to_id);
+        bound = static_data.decl.get_player_bound(left_side);
+    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id);
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
         if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound))
-            insert_reverting_sequence(output);
+            insert_reverting_sequence_after_fail();
         else{
-            save_variable_change_for_later_revert(output, variables_to_id.at(left_side));
-            push_changes_on_variables_list(output, std::to_string(variables_to_id.at(left_side)), std::to_string(right_side_printer.precomputed_value()));
-            output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+std::to_string(right_side_printer.precomputed_value())+";");
+            save_variable_change_for_later_revert(output, static_data.variables_to_id.at(left_side));
+            push_changes_on_variables_list(output, std::to_string(static_data.variables_to_id.at(left_side)), std::to_string(right_side_printer.precomputed_value()));
+            output.add_source_line("state_to_change.variables["+std::to_string(static_data.variables_to_id.at(left_side))+"] = "+std::to_string(right_side_printer.precomputed_value())+";");
         }
     }
     else{
         std::string final_result = right_side_printer.get_final_result();
-        output.add_source_line("if("+final_result+" > bounds["+std::to_string(variables_to_id.at(left_side))+"] or "+final_result+" <0){");
-        insert_reverting_sequence(output);
+        output.add_source_line("if("+final_result+" > bounds["+std::to_string(static_data.variables_to_id.at(left_side))+"] or "+final_result+" <0){");
+        insert_reverting_sequence_after_fail();
         output.add_source_line("}");
-        save_variable_change_for_later_revert(output, variables_to_id.at(left_side));
-        push_changes_on_variables_list(output, std::to_string(variables_to_id.at(left_side)), final_result);
-        output.add_source_line("state_to_change.variables["+std::to_string(variables_to_id.at(left_side))+"] = "+final_result+";");
+        save_variable_change_for_later_revert(output, static_data.variables_to_id.at(left_side));
+        push_changes_on_variables_list(output, std::to_string(static_data.variables_to_id.at(left_side)), final_result);
+        output.add_source_line("state_to_change.variables["+std::to_string(static_data.variables_to_id.at(left_side))+"] = "+final_result+";");
     }
     has_modifier = true;
 }
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
-    next_player = variables_to_id.at(m.get_player())+1;
+    next_player = static_data.variables_to_id.at(m.get_player())+1;
 }
 
 void actions_compiler::dispatch(const rbg_parser::keeper_switch&){
@@ -158,8 +143,8 @@ void actions_compiler::dispatch(const rbg_parser::keeper_switch&){
 }
 
 void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
-    arithmetics_printer left_side_printer(pieces_to_id, variables_to_id);
-    arithmetics_printer right_side_printer(pieces_to_id, variables_to_id);
+    arithmetics_printer left_side_printer(static_data.pieces_to_id, static_data.variables_to_id);
+    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id);
     m.get_left_side()->accept(left_side_printer);
     m.get_right_side()->accept(right_side_printer);
     if(left_side_printer.can_be_precomputed() and right_side_printer.can_be_precomputed()){
@@ -187,7 +172,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         if(not can_pass_through)
-            insert_reverting_sequence(output);
+            insert_reverting_sequence_after_fail();
     }
     else{
         std::string operation_character = "";
@@ -214,15 +199,15 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
                 break;
         }
         output.add_source_line("if("+left_side_printer.get_final_result()+" "+operation_character+" "+right_side_printer.get_final_result()+"){");
-        insert_reverting_sequence(output);
+        insert_reverting_sequence_after_fail();
         output.add_source_line("}");
     }
 }
 
-void actions_compiler::insert_unended_reverting_sequence(cpp_container& output)const{
+void actions_compiler::insert_unended_reverting_sequence(void)const{
     if(has_saved_cache_level)
-        output.add_source_line("cache."+cache_level_reverter+"(previous_cache_level);");
-    if(not inside_pattern){
+        output.add_source_line(static_data.cache_level_reverter);
+    if(static_data.kind != inside_pattern){
         if(encountered_board_change)
             output.add_source_line("board_list.resize(previous_board_changes_list);");
         if(encountered_variable_change)
@@ -239,9 +224,14 @@ void actions_compiler::insert_unended_reverting_sequence(cpp_container& output)c
         }
 }
 
-void actions_compiler::insert_reverting_sequence(cpp_container& output)const{
-    insert_unended_reverting_sequence(output);
-    output.add_source_line(final_action);
+void actions_compiler::insert_reverting_sequence_after_fail(void)const{
+    insert_unended_reverting_sequence();
+    output.add_source_line(static_data.failure_finish);
+}
+
+void actions_compiler::insert_reverting_sequence_after_success(void)const{
+    insert_unended_reverting_sequence();
+    output.add_source_line(static_data.success_finish);
 }
 
 void actions_compiler::finallize(void){
@@ -252,7 +242,7 @@ void actions_compiler::finallize(void){
 void actions_compiler::check_cell_correctness(void){
     if(should_check_cell_correctness){
         output.add_source_line("if(current_cell == 0){");
-        insert_reverting_sequence(output);
+        insert_reverting_sequence_after_fail();
         output.add_source_line("}");
     }
     should_check_cell_correctness = false;
@@ -261,9 +251,9 @@ void actions_compiler::check_cell_correctness(void){
 void actions_compiler::notify_about_modifier(void){
     if(has_modifier){
         if(not has_saved_cache_level)
-            output.add_source_line("unsigned int previous_cache_level = cache."+cache_level_getter+";");
+            output.add_source_line("unsigned int previous_cache_level = "+static_data.cache_level_getter);
         has_saved_cache_level = true;
-        output.add_source_line("cache."+cache_pusher+";");
+        output.add_source_line(static_data.cache_level_pusher);
     }
     has_modifier = false;
 }

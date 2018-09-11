@@ -65,28 +65,16 @@ void automaton::starify_automaton(void){
 
 void automaton::print_transition_functions(
     cpp_container& output,
-    const std::map<rbg_parser::token, uint>& pieces_to_id,
-    const std::map<rbg_parser::token, uint>& edges_to_id,
-    const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl,
-    const std::vector<shift_table>& shift_tables,
-    const std::vector<precomputed_pattern>& precomputed_patterns,
-    bool stop_after_first)const{
+    const static_transition_data& static_data)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions(i,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns,stop_after_first);
+        local_register[i].print_transition_functions(i,output,static_data,local_register);
 }
 
 void automaton::print_transition_functions_inside_pattern(
-    uint pattern_index,
     cpp_container& output,
-    const std::map<rbg_parser::token, uint>& pieces_to_id,
-    const std::map<rbg_parser::token, uint>& edges_to_id,
-    const std::map<rbg_parser::token, uint>& variables_to_id,
-    const rbg_parser::declarations& decl,
-    const std::vector<shift_table>& shift_tables,
-    const std::vector<precomputed_pattern>& precomputed_patterns)const{
+    const static_transition_data& static_data)const{
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions_inside_pattern(i,pattern_index,output,pieces_to_id,edges_to_id,variables_to_id,decl,local_register,shift_tables,precomputed_patterns);
+        local_register[i].print_transition_functions_inside_pattern(i,output,static_data,local_register);
 }
 
 void automaton::print_transition_table(
@@ -153,8 +141,11 @@ shift_table automaton::generate_shift_table(
     return result;
 }
 
-void automaton::print_recursive_calls_for_pattern_in_start_state(cpp_container& output, const actions_compiler& ac, uint pattern_index)const{
-    local_register[start_state].print_recursive_calls_for_pattern(start_state,output,ac,pattern_index);
+void automaton::print_recursive_calls_for_pattern_in_start_state(
+    cpp_container& output,
+    const static_transition_data& static_data,
+    const actions_compiler& ac)const{
+    local_register[start_state].print_recursive_calls(start_state,output,static_data,ac);
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
