@@ -35,8 +35,10 @@ void state::print_transition_functions(
     const static_transition_data& static_data,
     const std::vector<state>& local_register)const{
     if(next_states.size()>1 or outgoing_edges_needed)
-        for(const auto& el: next_states)
-            el.print_transition_function(from_state, output, static_data, local_register);
+        for(const auto& el: next_states){
+            dynamic_transition_data dynamic_data(static_data,from_state);
+            el.print_transition_function(output, static_data, dynamic_data, local_register);
+        }
 }
 
 void state::print_transition_functions_inside_pattern(
@@ -45,8 +47,10 @@ void state::print_transition_functions_inside_pattern(
     const static_transition_data& static_data,
     const std::vector<state>& local_register)const{
     if(next_states.size()>1 or outgoing_edges_needed)
-        for(const auto& el: next_states)
-            el.print_transition_function_inside_pattern(from_state, output, static_data, local_register);
+        for(const auto& el: next_states){
+            dynamic_transition_data dynamic_data(static_data,from_state);
+            el.print_transition_function_inside_pattern(output, static_data, dynamic_data, local_register);
+        }
 }
 
 void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
@@ -109,18 +113,18 @@ void state::print_recursive_calls(
     uint from_state,
     cpp_container& output,
     const static_transition_data& static_data,
-    const actions_compiler& ac,
     const std::string& cell)const{
+    dynamic_transition_data dynamic_data(static_data,from_state);
     switch(static_data.kind){
         case all_getter:
             for(uint i=0;i<next_states.size();++i)
-                output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+");");
+                output.add_source_line(static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+");");
             break;
         case any_getter:
         case inside_pattern:
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line("if("+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
-                ac.insert_reverting_sequence_after_success();
+                output.add_source_line("if("+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
+                dynamic_data.insert_reverting_sequence_after_success(output);
                 output.add_source_line("}");
             }
             break;

@@ -143,9 +143,8 @@ shift_table automaton::generate_shift_table(
 
 void automaton::print_recursive_calls_for_pattern_in_start_state(
     cpp_container& output,
-    const static_transition_data& static_data,
-    const actions_compiler& ac)const{
-    local_register[start_state].print_recursive_calls(start_state,output,static_data,ac);
+    const static_transition_data& static_data)const{
+    local_register[start_state].print_recursive_calls(start_state,output,static_data);
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){

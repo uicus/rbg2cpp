@@ -54,8 +54,7 @@ class automaton{
             const std::vector<precomputed_pattern>& pps)const;
         void print_recursive_calls_for_pattern_in_start_state(
             cpp_container& output,
-            const static_transition_data& static_data,
-            const actions_compiler& ac)const;
+            const static_transition_data& static_data)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list);

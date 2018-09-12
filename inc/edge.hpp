@@ -13,6 +13,7 @@ class compiler_options;
 class precomputed_pattern;
 class shift_table;
 struct static_transition_data;
+class dynamic_transition_data;
 
 namespace rbg_parser{
     class game_move;
@@ -39,32 +40,24 @@ struct label{
 class edge{
         uint local_register_endpoint_index;
         std::vector<label> label_list;
-        int handle_labels(
-            cpp_container& output,
-            actions_compiler& ac,
-            const static_transition_data& static_data)const;
-        void visit_node(
+        void handle_labels(
             cpp_container& output,
             const static_transition_data& static_data,
-            uint current_state,
-            actions_compiler& ac,
-            const std::string& cell="current_cell",
-            bool custom_fail_instruction=false,
-            const std::string& fail_instruction="")const;
+            dynamic_transition_data& dynamic_data)const;
     public:
         edge(uint local_register_endpoint_index, const std::vector<label>& label_list);
         void shift(uint shift_value);
         void inform_abut_state_deletion(uint deleted_index);
         uint get_endpoint(void)const;
         void print_transition_function(
-            uint from_state,
             cpp_container& output,
             const static_transition_data& static_data,
+            dynamic_transition_data& dynamic_data,
             const std::vector<state>& local_register)const;
         void print_transition_function_inside_pattern(
-            uint from_state,
             cpp_container& output,
             const static_transition_data& static_data,
+            dynamic_transition_data& dynamic_data,
             const std::vector<state>& local_register)const;
         int get_next_cell(uint current_cell, const rbg_parser::graph& board, const std::vector<precomputed_pattern>& pps)const;// -1 = invalid
         bool is_shift_table_with_multiple_choices(const std::vector<shift_table>& shift_tables)const;

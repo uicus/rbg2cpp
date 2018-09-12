@@ -54,7 +54,6 @@ class state{
             uint from_state,
             cpp_container& output,
             const static_transition_data& static_data,
-            const actions_compiler& ac,
             const std::string& cell="current_cell")const;
 };
 

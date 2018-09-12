@@ -7,7 +7,7 @@
 #include"types.hpp"
 
 class cpp_container;
-class actions_compiler;
+class dynamic_transition_data;
 
 class precomputed_pattern{
         std::set<uint> allowed_cells;
@@ -17,7 +17,7 @@ class precomputed_pattern{
         void add_cell(uint cell);
         bool evaluates_to_true(uint cell)const;
         void negate(void);
-        void print_inside_transition(cpp_container& output, const actions_compiler& ac)const;
+        void print_inside_transition(cpp_container& output, const dynamic_transition_data& dynamic_data)const;
 };
 
 #endif
