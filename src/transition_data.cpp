@@ -249,8 +249,24 @@ void dynamic_transition_data::handle_banching_shift_table(cpp_container& output,
     state_at_end.print_recursive_calls(state_index,output,static_data,"el");
     output.add_source_line("}");
     insert_reverting_sequence_after_fail(output);
-    output.add_source_line("}");
-    output.add_source_line("");
+}
+
+void dynamic_transition_data::handle_standard_transition_end(cpp_container& output, const state& state_at_end, uint state_index){
+    if(state_at_end.can_be_checked_for_visit())
+        queue_state_to_check_visited(state_index);
+    if(should_check_for_visited())
+        visit_node(output);
+    finallize(output);
+    if(static_data.kind == inside_pattern and state_at_end.is_dead_end())
+        insert_reverting_sequence_after_success(output);
+    else if(static_data.kind != inside_pattern and is_ready_to_report()){
+        output.add_source_line("moves.emplace_back(board_list,variables_list,"+std::to_string(get_next_player())+",current_cell,"+std::to_string(state_index)+");");
+        insert_reverting_sequence_after_success(output);
+    }
+    else{
+        state_at_end.print_recursive_calls(state_index,output,static_data);
+        insert_reverting_sequence_after_fail(output);
+    }
 }
 
 bool dynamic_transition_data::can_handle_further_labels(void)const{

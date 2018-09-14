@@ -106,6 +106,7 @@ class dynamic_transition_data{
         void queue_branching_shift_table(uint index);
         bool should_handle_branching_shift_table(void)const;
         void handle_banching_shift_table(cpp_container& output, const state& state_at_end, uint state_index);
+        void handle_standard_transition_end(cpp_container& output, const state& state_at_end, uint state_index);
         bool can_handle_further_labels(void)const;
 };
 

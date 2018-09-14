@@ -95,64 +95,10 @@ void edge::print_transition_function(
         local_register[current_state].get_only_exit().handle_labels(output,static_data,dynamic_data);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
-    if(dynamic_data.should_handle_branching_shift_table()){
+    if(dynamic_data.should_handle_branching_shift_table())
         dynamic_data.handle_banching_shift_table(output,local_register[current_state],current_state);
-        return;
-    }
-    if(local_register[current_state].can_be_checked_for_visit())
-        dynamic_data.queue_state_to_check_visited(current_state);
-    if(dynamic_data.should_check_for_visited())
-        dynamic_data.visit_node(output);
-    dynamic_data.finallize(output);
-    if(dynamic_data.is_ready_to_report()){
-        output.add_source_line("moves.emplace_back(board_list,variables_list,"+std::to_string(dynamic_data.get_next_player())+",current_cell,"+std::to_string(current_state)+");");
-        dynamic_data.insert_reverting_sequence_after_success(output);
-    }
-    else{
-        local_register[current_state].print_recursive_calls(current_state,output,static_data);
-        dynamic_data.insert_reverting_sequence_after_fail(output);
-    }
-    output.add_source_line("}");
-    output.add_source_line("");
-}
-
-void edge::print_transition_function_inside_pattern(
-    cpp_container& output,
-    const static_transition_data& static_data,
-    dynamic_transition_data& dynamic_data,
-    const std::vector<state>& local_register)const{
-    output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell);");
-    output.add_source_line(static_data.return_type+" next_states_iterator::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell){");
-    actions_compiler ac(output,static_data,dynamic_data);
-    handle_labels(output,static_data,dynamic_data);
-    uint current_state = local_register_endpoint_index;
-    while(dynamic_data.can_handle_further_labels() and local_register[current_state].is_no_choicer()){
-        if(local_register[current_state].can_be_checked_for_visit()){
-            dynamic_data.queue_state_to_check_visited(current_state);
-            if(not local_register[current_state].get_only_exit().label_list.empty())
-                dynamic_data.visit_node(output);
-        }
-        else if(not local_register[current_state].get_only_exit().label_list.empty() and dynamic_data.should_check_for_visited())
-            dynamic_data.visit_node(output);
-        local_register[current_state].get_only_exit().handle_labels(output,static_data,dynamic_data);
-        current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
-    }
-    if(dynamic_data.should_handle_branching_shift_table()){
-        dynamic_data.handle_banching_shift_table(output,local_register[current_state],current_state);
-        return;
-    }
-    if(local_register[current_state].can_be_checked_for_visit())
-        dynamic_data.queue_state_to_check_visited(current_state);
-    if(dynamic_data.should_check_for_visited())
-        dynamic_data.visit_node(output);
-    dynamic_data.finallize(output);
-    assert(not dynamic_data.is_ready_to_report());
-    if(local_register[current_state].is_dead_end())
-        dynamic_data.insert_reverting_sequence_after_success(output);
-    else{
-        local_register[current_state].print_recursive_calls(current_state, output, static_data);
-        dynamic_data.insert_reverting_sequence_after_fail(output);
-    }
+    else
+        dynamic_data.handle_standard_transition_end(output,local_register[current_state],current_state);
     output.add_source_line("}");
     output.add_source_line("");
 }

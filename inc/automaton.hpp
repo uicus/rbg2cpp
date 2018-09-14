@@ -38,9 +38,6 @@ class automaton{
         void print_transition_functions(
             cpp_container& output,
             const static_transition_data& static_data)const;
-        void print_transition_functions_inside_pattern(
-            cpp_container& output,
-            const static_transition_data& static_data)const;
         void print_transition_table(
             cpp_container& output,
             const std::string& table_name,

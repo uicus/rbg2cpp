@@ -41,18 +41,6 @@ void state::print_transition_functions(
         }
 }
 
-void state::print_transition_functions_inside_pattern(
-    uint from_state,
-    cpp_container& output,
-    const static_transition_data& static_data,
-    const std::vector<state>& local_register)const{
-    if(next_states.size()>1 or outgoing_edges_needed)
-        for(const auto& el: next_states){
-            dynamic_transition_data dynamic_data(static_data,from_state);
-            el.print_transition_function_inside_pattern(output, static_data, dynamic_data, local_register);
-        }
-}
-
 void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
     std::string resulting_line = "{";
     if(next_states.size()>1 or outgoing_edges_needed)

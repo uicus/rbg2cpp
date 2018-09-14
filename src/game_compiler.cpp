@@ -375,7 +375,7 @@ void game_compiler::generate_states_iterator(void){
             all_getter));
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("");
-        pattern_automata[i].print_transition_functions_inside_pattern(
+        pattern_automata[i].print_transition_functions(
             output,
             static_transition_data(
                 pieces_to_id,

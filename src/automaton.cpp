@@ -70,13 +70,6 @@ void automaton::print_transition_functions(
         local_register[i].print_transition_functions(i,output,static_data,local_register);
 }
 
-void automaton::print_transition_functions_inside_pattern(
-    cpp_container& output,
-    const static_transition_data& static_data)const{
-    for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_transition_functions_inside_pattern(i,output,static_data,local_register);
-}
-
 void automaton::print_transition_table(
     cpp_container& output,
     const std::string& table_name,
