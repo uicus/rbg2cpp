@@ -7,6 +7,7 @@ compiler_options::compiler_options(void):
 show_warnings(true),
 warnings_as_errors(false),
 shift_tables(true),
+vectorless_any_squares(true),
 output_name("game"){
 }
 
@@ -14,6 +15,7 @@ compiler_options::compiler_options(uint number_of_args, const char** args):
 show_warnings(true),
 warnings_as_errors(false),
 shift_tables(true),
+vectorless_any_squares(true),
 output_name("game"){
     for(uint i=0;i<number_of_args;++i){
         if(args[i][0] != '-')
@@ -32,6 +34,8 @@ output_name("game"){
                 warnings_as_errors = true;
             else if(!std::strcmp(args[i], "-fno-shift-tables"))
                 shift_tables = false;
+            else if(!std::strcmp(args[i], "-fno-anysquare-opt"))
+                vectorless_any_squares = false;
             else
                 throw std::invalid_argument("Unrecognized flag");
         }
@@ -47,6 +51,10 @@ bool compiler_options::escalating_warnings(void)const{
 
 bool compiler_options::enabled_shift_tables(void)const{
     return shift_tables;
+}
+
+bool compiler_options::enabled_any_square_optimisation(void)const{
+    return vectorless_any_squares;
 }
 
 const std::string& compiler_options::output_file(void)const{

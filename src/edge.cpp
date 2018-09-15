@@ -81,6 +81,7 @@ void edge::print_transition_function(
     const std::vector<state>& local_register)const{
     output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell);");
     output.add_source_line(static_data.return_type+" next_states_iterator::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell){");
+    output.add_source_line("(void)current_cell;");
     actions_compiler ac(output,static_data,dynamic_data);
     handle_labels(output,static_data,dynamic_data);
     uint current_state = local_register_endpoint_index;
@@ -96,7 +97,7 @@ void edge::print_transition_function(
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
     if(dynamic_data.should_handle_branching_shift_table())
-        dynamic_data.handle_banching_shift_table(output,local_register[current_state],current_state);
+        dynamic_data.handle_branching_shift_table(output,local_register[current_state],current_state);
     else
         dynamic_data.handle_standard_transition_end(output,local_register[current_state],current_state);
     output.add_source_line("}");

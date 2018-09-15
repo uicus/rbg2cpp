@@ -240,10 +240,13 @@ bool dynamic_transition_data::should_handle_branching_shift_table(void)const{
     return branching_shift_table_to_handle >= 0;
 }
 
-void dynamic_transition_data::handle_banching_shift_table(cpp_container& output, const state& state_at_end, uint state_index){
+void dynamic_transition_data::handle_branching_shift_table(cpp_container& output, const state& state_at_end, uint state_index){
     assert(should_handle_branching_shift_table());
     handle_waiting_modifier(output);
-    output.add_source_line("for(const auto el: shift_table"+std::to_string(branching_shift_table_to_handle)+"[current_cell]){");
+    if(static_data.shift_tables[branching_shift_table_to_handle].is_any_square())
+        output.add_source_line("for(int el=1;el<"+std::to_string(static_data.shift_tables[branching_shift_table_to_handle].get_size()+1)+";++el){");
+    else
+        output.add_source_line("for(const auto el: shift_table"+std::to_string(branching_shift_table_to_handle)+"[current_cell]){");
     queue_state_to_check_visited(state_index);
     visit_node(output,"el",true,"continue;");
     state_at_end.print_recursive_calls(state_index,output,static_data,"el");

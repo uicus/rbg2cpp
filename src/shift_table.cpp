@@ -5,7 +5,12 @@
 
 shift_table::shift_table(uint board_size):
 next_cells(board_size),
-there_are_some_choices(false){
+there_are_some_choices(false),
+any_square(false){
+}
+
+uint shift_table::get_size(void)const{
+    return next_cells.size();
 }
 
 bool shift_table::operator==(const shift_table& rhs)const{
@@ -36,34 +41,47 @@ bool shift_table::can_be_backtraced(void)const{
 }
 
 void shift_table::print_array(cpp_container& output, uint index)const{
-    if(there_are_some_choices){
-        output.add_source_include("vector");
-        output.add_source_line("static const std::vector<int> shift_table"+std::to_string(index)+"["+std::to_string(next_cells.size()+1)+"] = {");
-        output.add_source_line("{},");
-        for(const auto& el: next_cells){
-            std::string cell_line = "{";
-            for(const auto& set_el: el)
-                cell_line += std::to_string(set_el+1)+",";
-            cell_line += "},";
+    if(not any_square){
+        if(there_are_some_choices){
+            output.add_source_include("vector");
+            output.add_source_line("static const std::vector<int> shift_table"+std::to_string(index)+"["+std::to_string(next_cells.size()+1)+"] = {");
+            output.add_source_line("{},");
+            for(const auto& el: next_cells){
+                std::string cell_line = "{";
+                for(const auto& set_el: el)
+                    cell_line += std::to_string(set_el+1)+",";
+                cell_line += "},";
+                output.add_source_line(cell_line);
+            }
+            output.add_source_line("};");
+            output.add_source_line("");
+        }
+        else{
+            output.add_source_line("static const int shift_table"+std::to_string(index)+"["+std::to_string(next_cells.size()+1)+"] = {");
+            std::string cell_line = "0,";
+            for(const auto& el: next_cells){
+                assert(el.size()<=1);
+                if(el.empty())
+                    cell_line += "0,";
+                else
+                    cell_line += std::to_string((*el.begin())+1)+",";
+            }
             output.add_source_line(cell_line);
+            output.add_source_line("};");
+            output.add_source_line("");
         }
-        output.add_source_line("};");
-        output.add_source_line("");
     }
-    else{
-        output.add_source_line("static const int shift_table"+std::to_string(index)+"["+std::to_string(next_cells.size()+1)+"] = {");
-        std::string cell_line = "0,";
-        for(const auto& el: next_cells){
-            assert(el.size()<=1);
-            if(el.empty())
-                cell_line += "0,";
-            else
-                cell_line += std::to_string((*el.begin())+1)+",";
-        }
-        output.add_source_line(cell_line);
-        output.add_source_line("};");
-        output.add_source_line("");
-    }
+}
+
+bool shift_table::is_any_square(void)const{
+    return any_square;
+}
+
+void shift_table::check_if_any_square(void){
+    for(const auto& el: next_cells)
+        if(el.size() < next_cells.size())
+            return;
+    any_square = true;
 }
 
 uint insert_shift_table(std::vector<shift_table>& shift_tables, shift_table&& st){

@@ -266,6 +266,9 @@ void game_compiler::build_game_automaton(void){
         el.mark_start_as_outgoing_usable();
         el.mark_states_as_double_reachable(shift_tables);
     }
+    if(opts.enabled_any_square_optimisation())
+        for(auto& el: shift_tables)
+            el.check_if_any_square();
 }
 
 void game_compiler::generate_iterator_helper_structures(void){
