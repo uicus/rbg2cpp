@@ -80,8 +80,7 @@ void edge::print_transition_function(
     dynamic_transition_data& dynamic_data,
     const std::vector<state>& local_register)const{
     output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell);");
-    output.add_source_line(static_data.return_type+" next_states_iterator::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell){");
-    output.add_source_line("(void)current_cell;");
+    output.add_source_line(static_data.return_type+" next_states_iterator::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"([[maybe_unused]] int current_cell){");
     actions_compiler ac(output,static_data,dynamic_data);
     handle_labels(output,static_data,dynamic_data);
     uint current_state = local_register_endpoint_index;
