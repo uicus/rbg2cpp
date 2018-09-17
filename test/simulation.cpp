@@ -19,8 +19,8 @@ void random_simulation(){
         std::vector<reasoner::move> legal_moves;
         if(state.get_current_player() == KEEPER){
             auto any_move = state.get_any_move(cache);
-            if(any_move.first)
-                state.apply_move(any_move.second);
+            if(any_move)
+                state.apply_move(*any_move);
             else{
                 for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
                     avg_goals[i] += state.get_player_score(i);
@@ -51,8 +51,8 @@ int main(int argv, char** argc){
     }
     while(initial_state.get_current_player() == KEEPER){
         auto any_move = initial_state.get_any_move(cache);
-        if(any_move.first)
-            initial_state.apply_move(any_move.second);
+        if(any_move)
+            initial_state.apply_move(*any_move);
     }
     uint number_of_simulations = std::stoi(argc[1]);
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());

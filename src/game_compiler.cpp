@@ -109,7 +109,7 @@ void game_compiler::generate_board_structure(void){
     output.add_source_line("");
     output.add_header_line("int get_neighbor(int cell_id, int edge_id);");
     output.add_source_line("int get_neighbor(int cell_id, int edge_id){");
-    output.add_source_line("return cell_neighbors[cell_id][edge_id];");
+    output.add_source_line("return cell_neighbors[cell_id+1][edge_id]-1;");
     output.add_source_line("}");
     output.add_source_line("");
 }
@@ -202,14 +202,15 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("return result;");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("std::pair<bool,move> get_any_move(resettable_bitarray_stack& cache);");
-    output.add_source_line("std::pair<bool,move> game_state::get_any_move(resettable_bitarray_stack& cache){");
+    output.add_header_include("boost/optional.hpp");
+    output.add_header_line("boost::optional<move> get_any_move(resettable_bitarray_stack& cache);");
+    output.add_source_line("boost::optional<move> game_state::get_any_move(resettable_bitarray_stack& cache){");
     output.add_source_line("std::vector<move> result;");
     output.add_source_line("next_states_iterator it(*this, cache, result);");
     output.add_source_line("if(it.get_any_move(current_state, current_cell)){");
-    output.add_source_line("return std::make_pair(true,std::move(result[0]));");
+    output.add_source_line("return boost::optional<move>(std::move(result[0]));");
     output.add_source_line("}");
-    output.add_source_line("return std::make_pair<bool,move>(false,{});");
+    output.add_source_line("return boost::none;");
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("friend class next_states_iterator;");
