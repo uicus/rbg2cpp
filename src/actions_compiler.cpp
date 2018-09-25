@@ -29,8 +29,10 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
     dynamic_data.handle_cell_check(output);
     dynamic_data.save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
     dynamic_data.push_changes_on_board_list(output, std::to_string(static_data.pieces_to_id.at(m.get_piece())));
-    output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[current_cell]];");
-    output.add_source_line("++state_to_change.pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
+    if(static_data.uses_pieces_in_arithmetics){
+        output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[current_cell]];");
+        output.add_source_line("++state_to_change.pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
+    }
     output.add_source_line("state_to_change.pieces[current_cell] = "+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+";");
 }
 

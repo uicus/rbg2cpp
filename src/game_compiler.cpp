@@ -18,6 +18,7 @@ game_automaton(),
 pattern_automata(),
 shift_tables(),
 precomputed_patterns(),
+uses_pieces_in_arithmetics(input.get_moves()->has_piece_as_variable(input.get_declarations().get_legal_pieces())),
 input(input){
 }
 
@@ -141,11 +142,13 @@ void game_compiler::generate_initial_pieces(void){
         ++pieces_count[pieces_to_id[g.get_starting_piece(i)]];
     }
     output.add_header_line("};");
-    std::string pieces_count_generated_array = "int pieces_count["+std::to_string(pieces_to_id.size())+"] = {";
-    for(uint i=0;i<pieces_count.size();++i)
-        pieces_count_generated_array += std::to_string(pieces_count[i]) + (i==pieces_count.size()-1?"":",");
-    pieces_count_generated_array += "};";
-    output.add_header_line(pieces_count_generated_array);
+    if(uses_pieces_in_arithmetics){
+        std::string pieces_count_generated_array = "int pieces_count["+std::to_string(pieces_to_id.size())+"] = {";
+        for(uint i=0;i<pieces_count.size();++i)
+            pieces_count_generated_array += std::to_string(pieces_count[i]) + (i==pieces_count.size()-1?"":",");
+        pieces_count_generated_array += "};";
+        output.add_header_line(pieces_count_generated_array);
+    }
 }
 
 void game_compiler::generate_initial_variables(void){
@@ -218,8 +221,10 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("void apply_board_changes_list(const board_appliers& list);");
     output.add_source_line("void game_state::apply_board_changes_list(const board_appliers& list){");
     output.add_source_line("for(const auto& el: list){");
-    output.add_source_line("--pieces_count[pieces[el.cell]];");
-    output.add_source_line("++pieces_count[el.previous_piece];");
+    if(uses_pieces_in_arithmetics){
+        output.add_source_line("--pieces_count[pieces[el.cell]];");
+        output.add_source_line("++pieces_count[el.previous_piece];");
+    }
     output.add_source_line("pieces[el.cell] = el.previous_piece;");
     output.add_source_line("}");
     output.add_source_line("}");
@@ -325,6 +330,7 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
         input.get_declarations(),
         shift_tables,
         precomputed_patterns,
+        uses_pieces_in_arithmetics,
         "get_pattern_value"+std::to_string(pattern_index)+"_",
         inside_pattern,
         pattern_index);
@@ -364,6 +370,7 @@ void game_compiler::generate_states_iterator(void){
             input.get_declarations(),
             shift_tables,
             precomputed_patterns,
+            uses_pieces_in_arithmetics,
             "get_any_move_",
             any_getter));
     game_automaton.print_transition_functions(
@@ -375,6 +382,7 @@ void game_compiler::generate_states_iterator(void){
             input.get_declarations(),
             shift_tables,
             precomputed_patterns,
+            uses_pieces_in_arithmetics,
             "get_all_moves_",
             all_getter));
     for(uint i=0;i<pattern_automata.size();++i){
@@ -388,6 +396,7 @@ void game_compiler::generate_states_iterator(void){
                 input.get_declarations(),
                 shift_tables,
                 precomputed_patterns,
+                uses_pieces_in_arithmetics,
                 "get_pattern_value"+std::to_string(i)+"_",
                 inside_pattern,
                 i));

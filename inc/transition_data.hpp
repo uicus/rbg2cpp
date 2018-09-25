@@ -29,6 +29,7 @@ struct static_transition_data{
     const rbg_parser::declarations& decl;
     const std::vector<shift_table>& shift_tables;
     const std::vector<precomputed_pattern>& precomputed_patterns;
+    bool uses_pieces_in_arithmetics;
     std::string return_type;
     std::string name_prefix;
     std::string success_finish;
@@ -46,6 +47,7 @@ struct static_transition_data{
         const rbg_parser::declarations& decl,
         const std::vector<shift_table>& shift_tables,
         const std::vector<precomputed_pattern>& precomputed_patterns,
+        bool uses_pieces_in_arithmetics,
         const std::string& name_prefix,
         kind_of_transition kind,
         uint pattern_index=0);

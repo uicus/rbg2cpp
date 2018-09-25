@@ -14,6 +14,7 @@ static_transition_data::static_transition_data(
     const rbg_parser::declarations& decl,
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
+    bool uses_pieces_in_arithmetics,
     const std::string& name_prefix,
     kind_of_transition kind,
     uint pattern_index)
@@ -23,6 +24,7 @@ static_transition_data::static_transition_data(
         decl(decl),
         shift_tables(shift_tables),
         precomputed_patterns(precomputed_patterns),
+        uses_pieces_in_arithmetics(uses_pieces_in_arithmetics),
         return_type(),
         name_prefix(name_prefix),
         success_finish(),
@@ -97,8 +99,10 @@ void dynamic_transition_data::save_variable_change_for_later_revert(cpp_containe
 }
 
 void dynamic_transition_data::revert_board_change(cpp_container& output, uint piece_id, uint stack_position)const{
-    output.add_source_line("--state_to_change.pieces_count["+std::to_string(piece_id)+"];");
-    output.add_source_line("++state_to_change.pieces_count[board_change"+std::to_string(stack_position)+"_piece];");
+    if(static_data.uses_pieces_in_arithmetics){
+        output.add_source_line("--state_to_change.pieces_count["+std::to_string(piece_id)+"];");
+        output.add_source_line("++state_to_change.pieces_count[board_change"+std::to_string(stack_position)+"_piece];");
+    }
     output.add_source_line("state_to_change.pieces[board_change"+std::to_string(stack_position)+"_cell] = board_change"+std::to_string(stack_position)+"_piece;");
 }
 
