@@ -30,6 +30,7 @@ class game_compiler{
         std::vector<shift_table> shift_tables;
         std::vector<precomputed_pattern> precomputed_patterns;
         bool uses_pieces_in_arithmetics;
+        bool injective_board;
         const rbg_parser::parsed_game& input;
         game_compiler(void)=delete;
         void generate_board_cells_decoder(void);

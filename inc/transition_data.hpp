@@ -30,6 +30,7 @@ struct static_transition_data{
     const std::vector<shift_table>& shift_tables;
     const std::vector<precomputed_pattern>& precomputed_patterns;
     bool uses_pieces_in_arithmetics;
+    bool injective_board;
     std::string return_type;
     std::string name_prefix;
     std::string success_finish;
@@ -48,6 +49,7 @@ struct static_transition_data{
         const std::vector<shift_table>& shift_tables,
         const std::vector<precomputed_pattern>& precomputed_patterns,
         bool uses_pieces_in_arithmetics,
+        bool injective_board,
         const std::string& name_prefix,
         kind_of_transition kind,
         uint pattern_index=0);

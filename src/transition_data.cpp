@@ -15,6 +15,7 @@ static_transition_data::static_transition_data(
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
     bool uses_pieces_in_arithmetics,
+    bool injective_board,
     const std::string& name_prefix,
     kind_of_transition kind,
     uint pattern_index)
@@ -25,6 +26,7 @@ static_transition_data::static_transition_data(
         shift_tables(shift_tables),
         precomputed_patterns(precomputed_patterns),
         uses_pieces_in_arithmetics(uses_pieces_in_arithmetics),
+        injective_board(injective_board),
         return_type(),
         name_prefix(name_prefix),
         success_finish(),
@@ -182,6 +184,8 @@ void dynamic_transition_data::handle_waiting_modifier(cpp_container& output){
 
 void dynamic_transition_data::handle_cell_check(cpp_container& output){
     if(should_check_cell_correctness){
+        if(not static_data.injective_board)
+            visit_node(output);
         output.add_source_line("if(current_cell == 0){");
         insert_reverting_sequence_after_fail(output);
         output.add_source_line("}");
@@ -246,7 +250,7 @@ bool dynamic_transition_data::should_handle_branching_shift_table(void)const{
 
 void dynamic_transition_data::handle_branching_shift_table(cpp_container& output, const state& state_at_end, uint state_index){
     assert(should_handle_branching_shift_table());
-    handle_waiting_modifier(output);
+    finallize(output);
     if(static_data.shift_tables[branching_shift_table_to_handle].is_any_square())
         output.add_source_line("for(int el=1;el<"+std::to_string(static_data.shift_tables[branching_shift_table_to_handle].get_size()+1)+";++el){");
     else

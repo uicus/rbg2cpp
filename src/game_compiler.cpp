@@ -19,6 +19,7 @@ pattern_automata(),
 shift_tables(),
 precomputed_patterns(),
 uses_pieces_in_arithmetics(input.get_moves()->has_piece_as_variable(input.get_declarations().get_legal_pieces())),
+injective_board(input.get_board().is_injective()),
 input(input){
 }
 
@@ -331,6 +332,7 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
         shift_tables,
         precomputed_patterns,
         uses_pieces_in_arithmetics,
+        injective_board,
         "get_pattern_value"+std::to_string(pattern_index)+"_",
         inside_pattern,
         pattern_index);
@@ -371,6 +373,7 @@ void game_compiler::generate_states_iterator(void){
             shift_tables,
             precomputed_patterns,
             uses_pieces_in_arithmetics,
+            injective_board,
             "get_any_move_",
             any_getter));
     game_automaton.print_transition_functions(
@@ -383,6 +386,7 @@ void game_compiler::generate_states_iterator(void){
             shift_tables,
             precomputed_patterns,
             uses_pieces_in_arithmetics,
+            injective_board,
             "get_all_moves_",
             all_getter));
     for(uint i=0;i<pattern_automata.size();++i){
@@ -397,6 +401,7 @@ void game_compiler::generate_states_iterator(void){
                 shift_tables,
                 precomputed_patterns,
                 uses_pieces_in_arithmetics,
+                injective_board,
                 "get_pattern_value"+std::to_string(i)+"_",
                 inside_pattern,
                 i));
