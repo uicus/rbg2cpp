@@ -20,11 +20,13 @@ namespace rbg_parser{
 
 class state{
         std::vector<edge> next_states;
+        int state_to_check_before_next_alternatives = -1;
         bool outgoing_edges_needed;
         bool doubly_reachable;
     public:
         void inform_about_being_appended(uint shift_value);
         void inform_about_state_deletion(uint deleted_index);
+        void set_state_to_see_before_continuing(int state_index);
         void absorb(state&& rhs);
         void connect_with_state(uint index_in_local_register, const std::vector<label>& label_list=std::vector<label>());
         void print_transition_functions(

@@ -34,6 +34,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
             const static_transition_data& static_data,
             dynamic_transition_data& dynamic_data);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
+        void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
         void dispatch(const rbg_parser::shift& m)override;

@@ -66,6 +66,7 @@ class automaton_builder : public rbg_parser::abstract_dispatcher{
             std::vector<label>& current_shift_block,
             const compiler_options& opts);
         void dispatch(const rbg_parser::sum& m)override;
+        void dispatch(const rbg_parser::prioritized_sum& m)override;
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;
         void dispatch(const rbg_parser::shift& m)override;

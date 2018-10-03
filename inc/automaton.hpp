@@ -53,11 +53,13 @@ class automaton{
             cpp_container& output,
             const static_transition_data& static_data)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
+        friend automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list);
 };
 
 automaton sum_of_automatons(std::vector<automaton>&& elements);
+automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
 automaton concatenation_of_automatons(std::vector<automaton>&& elements);
 automaton edge_automaton(const std::vector<label>& label_list);
 

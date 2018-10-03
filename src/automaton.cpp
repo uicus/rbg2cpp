@@ -162,6 +162,12 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
     return result;
 }
 
+automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements){
+    automaton result = sum_of_automatons(std::move(elements));
+    result.local_register[result.start_state].set_state_to_see_before_continuing(result.accept_state);
+    return result;
+}
+
 automaton edge_automaton(const std::vector<label>& label_list){
     automaton result;
     auto result_endpoints = result.prepare_new_endpoints();

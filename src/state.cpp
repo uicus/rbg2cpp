@@ -8,17 +8,28 @@
 void state::inform_about_being_appended(uint shift_value){
     for(auto& el: next_states)
         el.shift(shift_value);
+    if(state_to_check_before_next_alternatives >= 0)
+        state_to_check_before_next_alternatives += shift_value;
 }
 
 void state::inform_about_state_deletion(uint deleted_index){
     for(auto& el: next_states)
         el.inform_abut_state_deletion(deleted_index);
+    if(state_to_check_before_next_alternatives > int(deleted_index))
+        --state_to_check_before_next_alternatives;
+}
+
+void state::set_state_to_see_before_continuing(int state_index){
+    assert(state_to_check_before_next_alternatives == -1);
+    state_to_check_before_next_alternatives = state_index;
 }
 
 void state::absorb(state&& rhs){
     assert(next_states.empty());
     if(not rhs.next_states.empty()){
         next_states = std::move(rhs.next_states);
+        assert(state_to_check_before_next_alternatives == -1);
+        state_to_check_before_next_alternatives = rhs.state_to_check_before_next_alternatives;
         outgoing_edges_needed |= rhs.outgoing_edges_needed;
         doubly_reachable |= rhs.doubly_reachable;
         rhs.next_states.clear();

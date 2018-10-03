@@ -12,6 +12,7 @@
 #include"star_move.hpp"
 #include"concatenation.hpp"
 #include"sum.hpp"
+#include"prioritized_sum.hpp"
 #include"compiler_options.hpp"
 #include"graph.hpp"
 
@@ -304,6 +305,29 @@ void automaton_builder::dispatch(const rbg_parser::sum& m){
         concat_automaton_to_result_so_far(sum_of_automatons(std::move(elements)));
     }
 }
+
+void automaton_builder::dispatch(const rbg_parser::prioritized_sum& m){
+    std::vector<automaton> elements;
+    for(const auto& el: m.get_content()){
+        std::vector<label> block;
+        std::vector<label> shift_block;
+        automaton_builder element_builder(
+            board,
+            pattern_automata,
+            shift_tables,
+            precomputed_patterns,
+            block,
+            shift_block,
+            opts);
+        el->accept(element_builder);
+        elements.push_back(element_builder.get_final_result());
+        assert(block.empty() and shift_block.empty());
+    }
+    end_shift_automaton();
+    build_automaton_from_actions_so_far();
+    concat_automaton_to_result_so_far(sum_of_automatons(std::move(elements)));
+}
+
 
 void automaton_builder::dispatch(const rbg_parser::concatenation& m){
     auto b(delegate_builder());
