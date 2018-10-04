@@ -25,6 +25,7 @@ class game_compiler{
         std::map<rbg_parser::token, uint> pieces_to_id;
         std::map<rbg_parser::token, uint> edges_to_id;
         std::map<rbg_parser::token, uint> variables_to_id;
+        std::map<uint,uint> states_to_bool_array;
         automaton game_automaton;
         std::vector<automaton> pattern_automata;
         std::vector<shift_table> shift_tables;

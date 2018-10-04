@@ -24,6 +24,11 @@ void state::set_state_to_see_before_continuing(int state_index){
     state_to_check_before_next_alternatives = state_index;
 }
 
+void state::add_information_about_state_to_see(std::map<uint,uint>& states_to_bool_array)const{
+    if(state_to_check_before_next_alternatives >= 0)
+        states_to_bool_array.insert(std::make_pair(state_to_check_before_next_alternatives,states_to_bool_array.size()));
+}
+
 void state::absorb(state&& rhs){
     assert(next_states.empty());
     if(not rhs.next_states.empty()){

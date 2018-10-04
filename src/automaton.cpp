@@ -140,6 +140,11 @@ void automaton::print_recursive_calls_for_pattern_in_start_state(
     local_register[start_state].print_recursive_calls(start_state,output,static_data);
 }
 
+void automaton::add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const{
+    for(const auto& el: local_register)
+        el.add_information_about_state_to_see(states_to_bool_array);
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

@@ -52,6 +52,7 @@ class automaton{
         void print_recursive_calls_for_pattern_in_start_state(
             cpp_container& output,
             const static_transition_data& static_data)const;
+        void add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
