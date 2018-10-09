@@ -22,6 +22,8 @@ namespace rbg_parser{
 class state{
         std::vector<edge> next_states;
         int state_to_check_before_next_alternatives = -1;
+        bool move_ender = false;
+        std::vector<uint> states_to_mark_after_reaching;
         bool outgoing_edges_needed;
         bool doubly_reachable;
     public:
@@ -41,9 +43,15 @@ class state{
         void mark_as_doubly_reachable(void);
         bool can_be_checked_for_visit(void)const;
         void mark_explicitly_as_transition_start(void);
+        void mark_as_move_ender(void);
         const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;
         bool is_no_choicer(void)const;
+        void run_dfs_to_get_states_to_mark(
+            uint from_state,
+            std::vector<uint>& states_to_mark_if_end,
+            std::vector<bool>& visited_states,
+            std::vector<state>& local_register);
         void push_next_states_to_shift_tables_dfs_stack(
             uint current_cell,
             const rbg_parser::graph& board,

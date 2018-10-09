@@ -44,6 +44,7 @@ class automaton{
             const std::string& functions_prefix,
             const std::string& return_type)const;
         void mark_end_as_outgoing_usable(void);
+        void mark_end_as_move_end(void);
         void mark_start_as_outgoing_usable(void);
         void mark_states_as_double_reachable(const std::vector<shift_table>& shift_tables);
         shift_table generate_shift_table(
@@ -53,6 +54,7 @@ class automaton{
             cpp_container& output,
             const static_transition_data& static_data)const;
         void add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const;
+        void see_what_states_must_be_marked_by_move_enders(void);
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);

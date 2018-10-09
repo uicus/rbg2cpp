@@ -201,7 +201,7 @@ void automaton_builder::handle_any_switch(const rbg_parser::game_move& m){
     end_shift_automaton();
     current_block.push_back({action,&m,0});
     build_automaton_from_actions_so_far();
-    currently_modified_automaton.mark_end_as_outgoing_usable();
+    currently_modified_automaton.mark_end_as_move_end();
 }
 
 void automaton_builder::dispatch(const rbg_parser::player_switch& m){

@@ -89,6 +89,10 @@ void state::mark_explicitly_as_transition_start(void){
     outgoing_edges_needed = true;
 }
 
+void state::mark_as_move_ender(void){
+    move_ender = true;
+}
+
 const edge& state::get_only_exit(void)const{
     return next_states[0];
 }
@@ -99,6 +103,31 @@ bool state::is_dead_end(void)const{
 
 bool state::is_no_choicer(void)const{
     return next_states.size() == 1;
+}
+
+void state::run_dfs_to_get_states_to_mark(
+    uint from_state,
+    std::vector<uint>& states_to_mark_if_end,
+    std::vector<bool>& visited_states,
+    std::vector<state>& local_register){
+    if(visited_states[from_state])
+        return;
+    visited_states[from_state] = true;
+    bool has_to_put_back_state = false;
+    if(not states_to_mark_if_end.empty() and states_to_mark_if_end.back() == from_state){
+        states_to_mark_if_end.pop_back();
+        has_to_put_back_state = true;
+    }
+    if(state_to_check_before_next_alternatives >= 0)
+        states_to_mark_if_end.push_back(state_to_check_before_next_alternatives);
+    if(move_ender)
+        states_to_mark_after_reaching = states_to_mark_if_end;
+    for(auto& el: next_states)
+        local_register[el.get_endpoint()].run_dfs_to_get_states_to_mark(el.get_endpoint(),states_to_mark_if_end,visited_states,local_register);
+    if(state_to_check_before_next_alternatives >= 0)
+        states_to_mark_if_end.pop_back();
+    if(has_to_put_back_state)
+        states_to_mark_if_end.push_back(from_state);
 }
 
 void state::push_next_states_to_shift_tables_dfs_stack(

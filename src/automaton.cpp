@@ -84,6 +84,11 @@ void automaton::print_transition_table(
     output.add_source_line("};");
 }
 
+void automaton::mark_end_as_move_end(void){
+    local_register[accept_state].mark_as_move_ender();
+    mark_end_as_outgoing_usable();
+}
+
 void automaton::mark_end_as_outgoing_usable(void){
     local_register[accept_state].mark_explicitly_as_transition_start();
 }
@@ -143,6 +148,12 @@ void automaton::print_recursive_calls_for_pattern_in_start_state(
 void automaton::add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const{
     for(const auto& el: local_register)
         el.add_information_about_state_to_see(states_to_bool_array);
+}
+
+void automaton::see_what_states_must_be_marked_by_move_enders(void){
+    std::vector<uint> states_to_mark_if_end;
+    std::vector<bool> visited_states(local_register.size(),false);
+    local_register[start_state].run_dfs_to_get_states_to_mark(start_state,states_to_mark_if_end,visited_states,local_register);
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){

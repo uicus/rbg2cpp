@@ -273,10 +273,12 @@ void game_compiler::build_game_automaton(void){
     game_automaton.mark_start_as_outgoing_usable();
     game_automaton.mark_states_as_double_reachable(shift_tables);
     game_automaton.add_information_about_states_to_see(states_to_bool_array);
+    game_automaton.see_what_states_must_be_marked_by_move_enders();
     for(auto& el: pattern_automata){
         el.mark_start_as_outgoing_usable();
         el.mark_states_as_double_reachable(shift_tables);
         el.add_information_about_states_to_see(states_to_bool_array);
+        el.see_what_states_must_be_marked_by_move_enders();
     }
     if(opts.enabled_any_square_optimisation())
         for(auto& el: shift_tables)
