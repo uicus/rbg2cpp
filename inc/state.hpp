@@ -62,6 +62,7 @@ class state{
             cpp_container& output,
             const static_transition_data& static_data,
             const std::string& cell="current_cell")const;
+        void print_marking_for_prioritized_sum(cpp_container& output, const static_transition_data& static_data)const;
 };
 
 #endif

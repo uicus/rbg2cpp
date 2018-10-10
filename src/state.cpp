@@ -37,6 +37,7 @@ void state::absorb(state&& rhs){
         state_to_check_before_next_alternatives = rhs.state_to_check_before_next_alternatives;
         outgoing_edges_needed |= rhs.outgoing_edges_needed;
         doubly_reachable |= rhs.doubly_reachable;
+        move_ender |= rhs.move_ender;
         rhs.next_states.clear();
     }
 }
@@ -118,10 +119,10 @@ void state::run_dfs_to_get_states_to_mark(
         states_to_mark_if_end.pop_back();
         has_to_put_back_state = true;
     }
-    if(state_to_check_before_next_alternatives >= 0)
-        states_to_mark_if_end.push_back(state_to_check_before_next_alternatives);
     if(move_ender)
         states_to_mark_after_reaching = states_to_mark_if_end;
+    if(state_to_check_before_next_alternatives >= 0)
+        states_to_mark_if_end.push_back(state_to_check_before_next_alternatives);
     for(auto& el: next_states)
         local_register[el.get_endpoint()].run_dfs_to_get_states_to_mark(el.get_endpoint(),states_to_mark_if_end,visited_states,local_register);
     if(state_to_check_before_next_alternatives >= 0)
@@ -163,10 +164,15 @@ void state::print_recursive_calls(
         case any_getter:
         case inside_pattern:
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line("if("+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")"+(state_to_check_before_next_alternatives >= 0 and i > 0 ? " or visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"]":"")+"){");
+                output.add_source_line("if("+(state_to_check_before_next_alternatives >= 0 and i > 0 ? "not visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"] and ":"")+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
                 dynamic_data.insert_reverting_sequence_after_success(output);
                 output.add_source_line("}");
             }
             break;
     }
+}
+
+void state::print_marking_for_prioritized_sum(cpp_container& output, const static_transition_data& static_data)const{
+    for(const auto& el: states_to_mark_after_reaching)
+        output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(el))+"] = true;");
 }

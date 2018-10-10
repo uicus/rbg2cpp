@@ -325,6 +325,7 @@ void automaton_builder::dispatch(const rbg_parser::prioritized_sum& m){
     }
     end_shift_automaton();
     build_automaton_from_actions_so_far();
+    concat_automaton_to_result_so_far(edge_automaton({})); // VERY dirty hack; has to stay a while
     concat_automaton_to_result_so_far(prioritized_sum_of_automatons(std::move(elements)));
 }
 
