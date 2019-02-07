@@ -17,6 +17,8 @@ int main(int argc, const char** argv){
         std::cerr<<"\"-o output_file\" - write output to file with given name; defaults to \"game\""<<std::endl;
         std::cerr<<"\"-Whide\" - do not show warnings"<<std::endl;
         std::cerr<<"\"-Werror\" - treat warnings as errors"<<std::endl;
+        std::cerr<<"\"-fno-shift-tables\" - turn off the shift table optimization"<<std::endl;
+        std::cerr<<"\"-fno-anysquare-opt\" - turn off the any square optimization"<<std::endl;
     }
     else{
         rbg_parser::messages_container msg;
