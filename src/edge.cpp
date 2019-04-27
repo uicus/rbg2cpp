@@ -10,6 +10,7 @@
 #include"shift_table.hpp"
 #include"shift.hpp"
 #include"transition_data.hpp"
+#include"unchecked_modifiers_compiler.hpp"
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
@@ -143,4 +144,23 @@ int edge::get_next_cell(uint current_cell, const rbg_parser::graph& board, const
 
 bool edge::is_shift_table_with_multiple_choices(const std::vector<shift_table>& shift_tables)const{
     return label_list.size() == 1 and label_list[0].k == s_table and shift_tables[label_list[0].structure_index].can_be_backtraced();
+}
+
+void edge::print_indices_to_actions_correspondence(
+    cpp_container& output,
+    const static_transition_data& static_data)const{
+    unchecked_modifiers_compiler umc(output,static_data,local_register_endpoint_index);
+    for(const auto& el: label_list)
+        switch(el.k){
+            case action:
+                el.a->accept(umc);
+                break;
+            case positive_pattern:
+            case negative_pattern:
+            case s_pattern:
+            case s_table:
+            case always_true:
+            case always_false:
+                break;
+        }
 }

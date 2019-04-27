@@ -176,3 +176,10 @@ void state::print_marking_for_prioritized_sum(cpp_container& output, const stati
     for(const auto& el: states_to_mark_after_reaching)
         output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(el))+"] = true;");
 }
+
+void state::print_indices_to_actions_correspondence(
+    cpp_container& output,
+    const static_transition_data& static_data)const{
+    for(const auto& el: next_states)
+        el.print_indices_to_actions_correspondence(output, static_data);
+}

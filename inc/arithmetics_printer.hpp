@@ -14,6 +14,7 @@ namespace rbg_parser{
 class arithmetics_printer : public rbg_parser::abstract_dispatcher{
         const std::map<rbg_parser::token, uint>& pieces_to_id;
         const std::map<rbg_parser::token, uint>& variables_to_id;
+        const std::string part_of_structure;
         std::string final_result;
         bool static_content;
         int value;
@@ -24,7 +25,9 @@ class arithmetics_printer : public rbg_parser::abstract_dispatcher{
         arithmetics_printer& operator=(const arithmetics_printer&)=delete;
         arithmetics_printer& operator=(arithmetics_printer&&)=delete;
         ~arithmetics_printer(void)override=default;
-        arithmetics_printer(const std::map<rbg_parser::token, uint>& pieces_to_id, const std::map<rbg_parser::token, uint>& variables_to_id);
+        arithmetics_printer(const std::map<rbg_parser::token, uint>& pieces_to_id,
+                            const std::map<rbg_parser::token, uint>& variables_to_id,
+                            const std::string& part_of_structure);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
         void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}

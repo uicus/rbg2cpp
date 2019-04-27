@@ -193,11 +193,9 @@ void game_compiler::generate_game_state_class(void){
     generate_state_getters();
     output.add_header_line("void apply_move(const move& m);");
     output.add_source_line("void game_state::apply_move(const move& m){");
-    output.add_source_line("current_cell = m.next_cell;");
-    output.add_source_line("current_player = m.next_player;");
-    output.add_source_line("current_state = m.next_state;");
-    output.add_source_line("apply_board_changes_list(m.board_list);");
-    output.add_source_line("apply_variables_changes_list(m.variables_list);");
+    output.add_source_line("for(const auto& el: m.mr){");
+    output.add_source_line("apply_action(el);");
+    output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("std::vector<move> get_all_moves(resettable_bitarray_stack& cache);");
@@ -222,24 +220,7 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("");
     output.add_header_line("friend class next_states_iterator;");
     output.add_header_line("private:");
-    output.add_header_line("void apply_board_changes_list(const board_appliers& list);");
-    output.add_source_line("void game_state::apply_board_changes_list(const board_appliers& list){");
-    output.add_source_line("for(const auto& el: list){");
-    if(uses_pieces_in_arithmetics){
-        output.add_source_line("--pieces_count[pieces[el.cell]];");
-        output.add_source_line("++pieces_count[el.previous_piece];");
-    }
-    output.add_source_line("pieces[el.cell] = el.previous_piece;");
-    output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void apply_variables_changes_list(const variables_appliers& list);");
-    output.add_source_line("void game_state::apply_variables_changes_list(const variables_appliers& list){");
-    output.add_source_line("for(const auto& el: list){");
-    output.add_source_line("variables[el.variable] = el.previous_value;");
-    output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("");
+    generate_actions_applier();
     output.add_header_line("int current_cell = 1;");
     output.add_header_line("int current_player = 0;");
     output.add_header_line("int current_state = "+std::to_string(game_automaton.get_start_state())+";");
@@ -286,22 +267,13 @@ void game_compiler::build_game_automaton(void){
 }
 
 void game_compiler::generate_iterator_helper_structures(void){
-    output.add_header_line("struct board_changes_information{");
+    output.add_header_line("struct action_representation{");
+    output.add_header_line("int index;");
     output.add_header_line("int cell;");
-    output.add_header_line("int previous_piece;");
-    output.add_header_line("board_changes_information(void)=default;");
-    output.add_header_line("board_changes_information(int cell,int previous_piece)");
-    output.add_header_line(": cell(cell),");
-    output.add_header_line("  previous_piece(previous_piece){");
-    output.add_header_line("}");
-    output.add_header_line("};");
-    output.add_header_line("struct variable_changes_information{");
-    output.add_header_line("int variable;");
-    output.add_header_line("int previous_value;");
-    output.add_header_line("variable_changes_information(void)=default;");
-    output.add_header_line("variable_changes_information(int variable,int previous_value)");
-    output.add_header_line(": variable(variable),");
-    output.add_header_line("  previous_value(previous_value){");
+    output.add_header_line("action_representation(void)=default;");
+    output.add_header_line("action_representation(int index,int cell)");
+    output.add_header_line(": index(index),");
+    output.add_header_line("  cell(cell){");
     output.add_header_line("}");
     output.add_header_line("};");
     output.add_header_line("");
@@ -420,8 +392,7 @@ void game_compiler::generate_states_iterator(void){
     output.add_header_line("");
     output.add_header_line("game_state& state_to_change;");
     output.add_header_line("resettable_bitarray_stack& cache;");
-    output.add_header_line("board_appliers board_list;");
-    output.add_header_line("variables_appliers variables_list;");
+    output.add_header_line("move_representation mr;");
     output.add_header_line("std::vector<move>& moves;");
     generate_visited_array_for_prioritized_states();
     output.add_header_line("};");
@@ -556,28 +527,44 @@ void game_compiler::generate_resettable_bitarray_stack(void){
 void game_compiler::generate_appliers_lists(void){
     output.add_header_include("boost/container/small_vector.hpp");
     int straightness = input.get_moves()->compute_k_straightness().final_result();
-    output.add_header_line("typedef boost::container::small_vector<board_changes_information, "+std::to_string(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0?straightness:MAXIMAL_GAME_DEPENDENT_STAIGHTNESS)+"> board_appliers;");
-    output.add_header_line("typedef boost::container::small_vector<variable_changes_information, "+std::to_string(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0?straightness:MAXIMAL_GAME_DEPENDENT_STAIGHTNESS)+"> variables_appliers;");
+    output.add_header_line("typedef boost::container::small_vector<action_representation, "+std::to_string((straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0?straightness:MAXIMAL_GAME_DEPENDENT_STAIGHTNESS)+1)+"> move_representation;");
+}
+
+void game_compiler::generate_actions_applier(void){
+    static_transition_data static_data(
+        pieces_to_id,
+        edges_to_id,
+        variables_to_id,
+        states_to_bool_array,
+        input.get_declarations(),
+        shift_tables,
+        precomputed_patterns,
+        uses_pieces_in_arithmetics,
+        injective_board,
+        "",
+        all_getter);
+
+    output.add_header_line("void apply_action(const action_representation& action);");
+    output.add_source_line("void game_state::apply_action(const action_representation& action){");
+    output.add_source_line("switch(action.index){");
+    game_automaton.print_indices_to_actions_correspondence(output,static_data);
+    output.add_source_line("default:");
+    output.add_source_line("break;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
 }
 
 void game_compiler::generate_move_class(void){
     generate_appliers_lists();
     output.add_header_line("class move{");
-    output.add_header_line("board_appliers board_list;");
-    output.add_header_line("variables_appliers variables_list;");
-    output.add_header_line("int next_player;");
-    output.add_header_line("int next_cell;");
-    output.add_header_line("int next_state;");
+    output.add_header_line("move_representation mr;");
     output.add_header_line("friend class next_states_iterator;");
     output.add_header_line("friend class game_state;");
     output.add_header_line("public:");
     output.add_header_line("move(void) = default;");
-    output.add_header_line("move(const board_appliers& board_list, const variables_appliers& variables_list, int next_player, int next_cell, int next_state)");
-    output.add_header_line(": board_list(board_list),");
-    output.add_header_line("  variables_list(variables_list),");
-    output.add_header_line("  next_player(next_player),");
-    output.add_header_line("  next_cell(next_cell),");
-    output.add_header_line("  next_state(next_state){");
+    output.add_header_line("move(const move_representation& mr)");
+    output.add_header_line(": mr(mr){");
     output.add_header_line("}");
     output.add_header_line("};");
 }

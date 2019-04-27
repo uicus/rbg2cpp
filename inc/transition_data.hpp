@@ -72,6 +72,7 @@ class dynamic_transition_data{
         std::vector<application> reverting_stack;
         bool encountered_board_change;
         bool encountered_variable_change;
+        bool encountered_any_change;
         bool should_check_cell_correctness;
         bool pending_modifier;
         bool has_saved_cache_level;
@@ -91,8 +92,7 @@ class dynamic_transition_data{
         std::string get_current_state(void)const;
         void save_board_change_for_later_revert(cpp_container& output, uint piece_id);
         void save_variable_change_for_later_revert(cpp_container& output, uint variable_id);
-        void push_changes_on_board_list(cpp_container& output, const std::string& piece_id);
-        void push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value);
+        void push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell);
         void insert_reverting_sequence_after_fail(cpp_container& output)const;
         void insert_reverting_sequence_after_success(cpp_container& output)const;
         void handle_waiting_modifier(cpp_container& output);

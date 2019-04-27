@@ -41,6 +41,7 @@ class game_compiler{
         std::string numbers_to_array(const std::vector<int>& numbers)const;
         void generate_board_structure(void);
         void generate_appliers_lists(void);
+        void generate_actions_applier(void);
         void generate_move_class(void);
         void generate_game_state_class(void);
         void generate_initial_pieces(void);

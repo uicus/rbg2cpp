@@ -4,9 +4,12 @@
 #include"variable_arithmetic.hpp"
 #include"arithmetic_operation.hpp"
 
-arithmetics_printer::arithmetics_printer(const std::map<rbg_parser::token, uint>& pieces_to_id, const std::map<rbg_parser::token, uint>& variables_to_id):
+arithmetics_printer::arithmetics_printer(const std::map<rbg_parser::token, uint>& pieces_to_id,
+                                         const std::map<rbg_parser::token, uint>& variables_to_id,
+                                         const std::string& part_of_structure):
 pieces_to_id(pieces_to_id),
 variables_to_id(variables_to_id),
+part_of_structure(part_of_structure),
 final_result(),
 static_content(true),
 value(0){
@@ -21,11 +24,11 @@ void arithmetics_printer::dispatch(const rbg_parser::variable_arithmetic& m){
     const auto& var = m.get_content();
     auto it = pieces_to_id.find(var);
     if(it != pieces_to_id.end())
-        final_result = "state_to_change.pieces_count["+std::to_string(it->second)+"]";
+        final_result = part_of_structure+"pieces_count["+std::to_string(it->second)+"]";
     else{
         auto it = variables_to_id.find(var);
         assert(it != variables_to_id.end());
-        final_result = "state_to_change.variables["+std::to_string(it->second)+"]";
+        final_result = part_of_structure+"variables["+std::to_string(it->second)+"]";
     }
     static_content = false;
 }
@@ -50,7 +53,7 @@ void arithmetics_printer::dispatch(const rbg_parser::arithmetic_operation& m){
             assert(false);
     }
     for(uint i=0;i<elements.size();++i){
-        arithmetics_printer element_printer(pieces_to_id, variables_to_id);
+        arithmetics_printer element_printer(pieces_to_id, variables_to_id, part_of_structure);
         elements[i]->accept(element_printer);
         final_result += "("+element_printer.get_final_result()+")";
         if(i!=elements.size()-1)

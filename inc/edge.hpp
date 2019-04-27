@@ -56,6 +56,9 @@ class edge{
             const std::vector<state>& local_register)const;
         int get_next_cell(uint current_cell, const rbg_parser::graph& board, const std::vector<precomputed_pattern>& pps)const;// -1 = invalid
         bool is_shift_table_with_multiple_choices(const std::vector<shift_table>& shift_tables)const;
+        void print_indices_to_actions_correspondence(
+            cpp_container& output,
+            const static_transition_data& static_data)const;
 };
 
 #endif

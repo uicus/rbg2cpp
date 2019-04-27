@@ -156,6 +156,13 @@ void automaton::see_what_states_must_be_marked_by_move_enders(void){
     local_register[start_state].run_dfs_to_get_states_to_mark(start_state,states_to_mark_if_end,visited_states,local_register);
 }
 
+void automaton::print_indices_to_actions_correspondence(
+    cpp_container& output,
+    const static_transition_data& static_data)const{
+    for(const auto& el: local_register)
+        el.print_indices_to_actions_correspondence(output, static_data);
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

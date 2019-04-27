@@ -21,7 +21,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         cpp_container& output;
         const static_transition_data& static_data;
         dynamic_transition_data& dynamic_data;
-        void print_variable_assignment(uint variable_id, const std::string& rvalue);
+        void print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index);
     public:
         actions_compiler(void)=delete;
         actions_compiler(const actions_compiler&)=delete;
@@ -42,7 +42,7 @@ class actions_compiler : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::off& m)override;
         void dispatch(const rbg_parser::assignment& m)override;
         void dispatch(const rbg_parser::player_switch& m)override;
-        void dispatch(const rbg_parser::keeper_switch&)override;
+        void dispatch(const rbg_parser::keeper_switch& m)override;
         void dispatch(const rbg_parser::move_check&)override{assert(false);}
         void dispatch(const rbg_parser::arithmetic_comparison& m)override;
         void dispatch(const rbg_parser::integer_arithmetic&)override{assert(false);}

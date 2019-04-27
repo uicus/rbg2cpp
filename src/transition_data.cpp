@@ -74,8 +74,7 @@ static_transition_data::static_transition_data(
 dynamic_transition_data::dynamic_transition_data(const static_transition_data& static_data, uint from_state):
 static_data(static_data),
 reverting_stack(),
-encountered_board_change(false),
-encountered_variable_change(false),
+encountered_any_change(false),
 should_check_cell_correctness(false),
 pending_modifier(false),
 has_saved_cache_level(false),
@@ -114,21 +113,12 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
     output.add_source_line("state_to_change.variables["+std::to_string(variable_id)+"] = variable_change"+std::to_string(stack_position)+";");
 }
 
-void dynamic_transition_data::push_changes_on_board_list(cpp_container& output, const std::string& piece_id){
+void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell){
     if(static_data.kind != inside_pattern){
-        if(not encountered_board_change)
-            output.add_source_line("const auto previous_board_changes_list = board_list.size();");
-        output.add_source_line("board_list.emplace_back(current_cell,"+piece_id+");");
-        encountered_board_change = true;
-    }
-}
-
-void dynamic_transition_data::push_changes_on_variables_list(cpp_container& output, const std::string& variable_id, const std::string& value){
-    if(static_data.kind != inside_pattern){
-        if(not encountered_variable_change)
-            output.add_source_line("const auto previous_variables_changes_list = variables_list.size();");
-        output.add_source_line("variables_list.emplace_back("+variable_id+","+value+");");
-        encountered_variable_change = true;
+        if(not encountered_any_change)
+            output.add_source_line("const auto previous_changes_list = mr.size();");
+        output.add_source_line("mr.emplace_back("+index+","+cell+");");
+        encountered_any_change = true;
     }
 }
 
@@ -151,10 +141,8 @@ void dynamic_transition_data::print_cache_level_revert(cpp_container& output)con
 
 void dynamic_transition_data::print_modifiers_list_revert(cpp_container& output)const{
     if(static_data.kind != inside_pattern){
-        if(encountered_board_change)
-            output.add_source_line("board_list.resize(previous_board_changes_list);");
-        if(encountered_variable_change)
-            output.add_source_line("variables_list.resize(previous_variables_changes_list);");
+        if(encountered_any_change)
+            output.add_source_line("mr.resize(previous_changes_list);");
     }
 }
 
@@ -273,7 +261,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
     if(static_data.kind == inside_pattern and state_at_end.is_dead_end())
         insert_reverting_sequence_after_success(output);
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
-        output.add_source_line("moves.emplace_back(board_list,variables_list,"+std::to_string(get_next_player())+",current_cell,"+std::to_string(state_index)+");");
+        output.add_source_line("moves.emplace_back(mr);");
         insert_reverting_sequence_after_success(output);
     }
     else{

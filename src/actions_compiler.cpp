@@ -28,7 +28,7 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 void actions_compiler::dispatch(const rbg_parser::off& m){
     dynamic_data.handle_cell_check(output);
     dynamic_data.save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
-    dynamic_data.push_changes_on_board_list(output, std::to_string(static_data.pieces_to_id.at(m.get_piece())));
+    dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "current_cell");
     if(static_data.uses_pieces_in_arithmetics){
         output.add_source_line("--state_to_change.pieces_count[state_to_change.pieces[current_cell]];");
         output.add_source_line("++state_to_change.pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
@@ -61,9 +61,9 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
     }
 }
 
-void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue){
+void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index){
     dynamic_data.save_variable_change_for_later_revert(output, variable_id);
-    dynamic_data.push_changes_on_variables_list(output, std::to_string(variable_id), rvalue);
+    dynamic_data.push_any_change_on_modifiers_list(output, action_index, "current_cell");
     output.add_source_line("state_to_change.variables["+std::to_string(variable_id)+"] = "+rvalue+";");
 }
 
@@ -74,34 +74,36 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
         bound = static_data.decl.get_variable_bound(left_side);
     else
         bound = static_data.decl.get_player_bound(left_side);
-    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id);
+    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id, "state_to_change.");
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
         if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound))
             dynamic_data.insert_reverting_sequence_after_fail(output);
         else
-            print_variable_assignment(static_data.variables_to_id.at(left_side),std::to_string(right_side_printer.precomputed_value()));
+            print_variable_assignment(static_data.variables_to_id.at(left_side),std::to_string(right_side_printer.precomputed_value()),std::to_string(m.index_in_expression()));
     }
     else{
         std::string final_result = right_side_printer.get_final_result();
         output.add_source_line("if("+final_result+" > bounds["+std::to_string(static_data.variables_to_id.at(left_side))+"] or "+final_result+" <0){");
         dynamic_data.insert_reverting_sequence_after_fail(output);
         output.add_source_line("}");
-        print_variable_assignment(static_data.variables_to_id.at(left_side),final_result);
+        print_variable_assignment(static_data.variables_to_id.at(left_side),final_result, std::to_string(m.index_in_expression()));
     }
 }
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
+    dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "current_cell");
     dynamic_data.set_next_player(static_data.variables_to_id.at(m.get_player())+1);
 }
 
-void actions_compiler::dispatch(const rbg_parser::keeper_switch&){
+void actions_compiler::dispatch(const rbg_parser::keeper_switch& m){
+    dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "current_cell");
     dynamic_data.set_next_player(0);
 }
 
 void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
-    arithmetics_printer left_side_printer(static_data.pieces_to_id, static_data.variables_to_id);
-    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id);
+    arithmetics_printer left_side_printer(static_data.pieces_to_id, static_data.variables_to_id, "state_to_change.");
+    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id, "state_to_change.");
     m.get_left_side()->accept(left_side_printer);
     m.get_right_side()->accept(right_side_printer);
     if(left_side_printer.can_be_precomputed() and right_side_printer.can_be_precomputed()){
