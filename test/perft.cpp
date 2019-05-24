@@ -47,6 +47,8 @@ void perft(uint depth){
     perft_state_at_depth(initial_state,depth);
 }
 
+inline double count_per_sec(unsigned long count, unsigned long ms) {return static_cast<double>(count)/static_cast<double>(ms)*1000.0;}
+
 int main(int argv, char** argc){
     if(argv != 2){
         std::cout << "Perft depth unspecified. Exitting..." << std::endl;
@@ -64,9 +66,8 @@ int main(int argv, char** argc){
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     uint ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout<<"perft: "<<leaves_count<<std::endl;
-    std::cout<<"took: "<<ms<<" ms"<<std::endl;
-    std::cout<<"visited: "<<states_count<<" states"<<std::endl;
-    std::cout << std::fixed << static_cast<double>(states_count)/static_cast<double>(ms)*1000.0 << " states/sec" << std::endl;
+    std::cout << "time: " << ms << std::endl;
+    std::cout << "perft: " << leaves_count << std::endl;
+    std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     return 0;
 }

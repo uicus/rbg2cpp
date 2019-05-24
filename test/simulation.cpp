@@ -44,6 +44,8 @@ void random_simulation(){
     }
 }
 
+inline double count_per_sec(unsigned long count, unsigned long ms) {return static_cast<double>(count)/static_cast<double>(ms)*1000.0;}
+
 int main(int argv, char** argc){
     if(argv != 2){
         std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
@@ -54,17 +56,16 @@ int main(int argv, char** argc){
         if(any_move)
             initial_state.apply_move(*any_move);
     }
-    uint number_of_simulations = std::stoi(argc[1]);
+    unsigned long number_of_simulations = std::stoi(argc[1]);
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    for(uint i=0;i<number_of_simulations;++i)
+    for(unsigned long i = 0; i < number_of_simulations; ++i)
         random_simulation();
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
-    uint ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout << "performed " << number_of_simulations << " plays in " << ms << " ms" << std::endl;
-    std::cout << "average time " << ms/number_of_simulations << " ms" << std::endl;
-    std::cout << "visited " << states_count << " states" << std::endl;
-    std::cout << std::fixed << static_cast<double>(states_count)/static_cast<double>(ms)*1000.0 << " states/sec" << std::endl;
+    unsigned long ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
+    std::cout << "time: " << ms << std::endl;
+    std::cout << "number of plays: " << number_of_simulations << " (" << std::fixed << count_per_sec(number_of_simulations, ms) << ")" << std::endl;
+    std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "average goal of player " << i << ": " << avg_goals[i]/number_of_simulations << std::endl;
     return 0;
