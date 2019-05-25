@@ -19,11 +19,9 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth){
     }
     else{
         if(state.get_current_player() == KEEPER){
-            auto any_move = state.get_any_move(cache);
-            if(any_move){
-                state.apply_move(*any_move);
+            auto any_move = state.apply_any_move(cache);
+            if(any_move)
                 return perft_state_at_depth(state, depth);
-            }
             else{
                 ++states_count;
                 if(depth == 0)
@@ -53,9 +51,9 @@ int main(int argv, char** argc){
         return 1;
     }
     while(initial_state.get_current_player() == KEEPER){
-        auto any_move = initial_state.get_any_move(cache);
-        if(any_move)
-            initial_state.apply_move(*any_move);
+        auto any_move = initial_state.apply_any_move(cache);
+        if(not any_move)
+            return 0;
     }
 
     uint depth = std::stoi(argc[1]);

@@ -89,14 +89,14 @@ const std::string& dynamic_transition_data::get_start_state(void)const{
 }
 
 void dynamic_transition_data::save_board_change_for_later_revert(cpp_container& output, uint piece_id){
-    output.add_source_line("int board_change"+std::to_string(reverting_stack.size())+"_cell = current_cell;");
-    output.add_source_line("int board_change"+std::to_string(reverting_stack.size())+"_piece = state_to_change.pieces[current_cell];");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_cell = current_cell;");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_piece = state_to_change.pieces[current_cell];");
     reverting_stack.push_back({board_change,piece_id});
     pending_modifier = true;
 }
 
 void dynamic_transition_data::save_variable_change_for_later_revert(cpp_container& output, uint variable_id){
-    output.add_source_line("int variable_change"+std::to_string(reverting_stack.size())+" = state_to_change.variables["+std::to_string(variable_id)+"];");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int variable_change"+std::to_string(reverting_stack.size())+" = state_to_change.variables["+std::to_string(variable_id)+"];");
     reverting_stack.push_back({variable_change,variable_id});
     pending_modifier = true;
 }
@@ -114,7 +114,7 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
 }
 
 void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell){
-    if(static_data.kind != inside_pattern){
+    if(static_data.kind == all_getter){
         if(not encountered_any_change)
             output.add_source_line("const auto previous_changes_list = mr.size();");
         output.add_source_line("mr.emplace_back("+index+","+cell+");");
@@ -158,14 +158,15 @@ void dynamic_transition_data::insert_reverting_sequence_after_fail(cpp_container
 }
 
 void dynamic_transition_data::insert_reverting_sequence_after_success(cpp_container& output)const{
-    insert_unended_reverting_sequence(output);
+    if(static_data.kind != any_getter)
+        insert_unended_reverting_sequence(output);
     output.add_source_line(static_data.success_finish);
 }
 
 void dynamic_transition_data::handle_waiting_modifier(cpp_container& output){
     if(pending_modifier){
         if(not has_saved_cache_level)
-            output.add_source_line("unsigned int previous_cache_level = "+static_data.cache_level_getter);
+            output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"unsigned int previous_cache_level = "+static_data.cache_level_getter);
         has_saved_cache_level = true;
         output.add_source_line(static_data.cache_level_pusher);
     }
@@ -174,13 +175,13 @@ void dynamic_transition_data::handle_waiting_modifier(cpp_container& output){
 
 void dynamic_transition_data::handle_cell_check(cpp_container& output){
     if(should_check_cell_correctness){
+        should_check_cell_correctness = false;
         if(not static_data.injective_board)
             visit_node(output);
         output.add_source_line("if(current_cell == 0){");
         insert_reverting_sequence_after_fail(output);
         output.add_source_line("}");
     }
-    should_check_cell_correctness = false;
 }
 
 void dynamic_transition_data::queue_cell_check(void){
@@ -261,7 +262,12 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
     if(static_data.kind == inside_pattern and state_at_end.is_dead_end())
         insert_reverting_sequence_after_success(output);
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
-        output.add_source_line("moves.emplace_back(mr);");
+        if(static_data.kind == all_getter)
+            output.add_source_line("moves.emplace_back(mr);");
+        else{
+            output.add_source_line("state_to_change.current_player = "+std::to_string(next_player)+";");
+            output.add_source_line("state_to_change.current_state = "+std::to_string(state_index)+";");
+        }
         insert_reverting_sequence_after_success(output);
     }
     else{

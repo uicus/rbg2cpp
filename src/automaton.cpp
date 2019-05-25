@@ -70,18 +70,22 @@ void automaton::print_transition_functions(
         local_register[i].print_transition_functions(i,output,static_data,local_register);
 }
 
-void automaton::print_transition_table(
-    cpp_container& output,
-    const std::string& table_name,
-    const std::string& functions_prefix,
-    const std::string& return_type)const{
-    output.add_header_include("vector");
-    output.add_header_line("typedef "+return_type+"(next_states_iterator::*"+table_name+"_type)(int);");
-    output.add_header_line("const static std::vector<"+table_name+"_type> "+table_name+"["+std::to_string(local_register.size())+"];");
-    output.add_source_line("const std::vector<next_states_iterator::"+table_name+"_type> next_states_iterator::"+table_name+"["+std::to_string(local_register.size())+"] = {");
+void automaton::print_all_getters_table(cpp_container& output, const std::string& functions_prefix)const{
+    output.add_source_line("switch(state){");
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_outgoing_transitions(i,output, functions_prefix);
-    output.add_source_line("};");
+        local_register[i].print_outgoing_all_transitions(i,output,functions_prefix);
+    output.add_source_line("default:");
+    output.add_source_line("break;");
+    output.add_source_line("}");
+}
+
+void automaton::print_any_appliers_table(cpp_container& output, const std::string& functions_prefix)const{
+    output.add_source_line("switch(state){");
+    for(uint i=0;i<local_register.size();++i)
+        local_register[i].print_outgoing_any_transitions(i,output,functions_prefix);
+    output.add_source_line("default:");
+    output.add_source_line("return false;");
+    output.add_source_line("}");
 }
 
 void automaton::mark_end_as_move_end(void){

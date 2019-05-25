@@ -15,13 +15,11 @@ reasoner::game_state initial_state;
 
 void random_simulation(){
     reasoner::game_state state = initial_state;
+    std::vector<reasoner::move> legal_moves;
     while(true){
-        std::vector<reasoner::move> legal_moves;
         if(state.get_current_player() == KEEPER){
-            auto any_move = state.get_any_move(cache);
-            if(any_move)
-                state.apply_move(*any_move);
-            else{
+            auto any_move = state.apply_any_move(cache);
+            if(not any_move){
                 for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
                     avg_goals[i] += state.get_player_score(i);
                 return;
@@ -29,7 +27,7 @@ void random_simulation(){
         }
         else{
             states_count++;
-            auto legal_moves = state.get_all_moves(cache);
+            state.get_all_moves(cache, legal_moves);
             if(legal_moves.empty()){
                 for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
                     avg_goals[i] += state.get_player_score(i);
@@ -50,9 +48,9 @@ int main(int argv, char** argc){
         return 1;
     }
     while(initial_state.get_current_player() == KEEPER){
-        auto any_move = initial_state.get_any_move(cache);
-        if(any_move)
-            initial_state.apply_move(*any_move);
+        auto any_move = initial_state.apply_any_move(cache);
+        if(not any_move)
+            return 0;
     }
     uint number_of_simulations = std::stoi(argc[1]);
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());

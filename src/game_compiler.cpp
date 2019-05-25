@@ -202,20 +202,22 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("std::vector<move> game_state::get_all_moves(resettable_bitarray_stack& cache){");
     output.add_source_line("std::vector<move> result;");
     output.add_source_line("result.reserve(100);");
-    output.add_source_line("next_states_iterator it(*this, cache, result);");
-    output.add_source_line("it.get_all_moves(current_state, current_cell);");
+    output.add_source_line("get_all_moves(cache, result);");
     output.add_source_line("return result;");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_include("boost/optional.hpp");
-    output.add_header_line("boost::optional<move> get_any_move(resettable_bitarray_stack& cache);");
-    output.add_source_line("boost::optional<move> game_state::get_any_move(resettable_bitarray_stack& cache){");
-    output.add_source_line("std::vector<move> result;");
+    output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& result);");
+    output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& result){");
+    output.add_source_line("result.clear();");
     output.add_source_line("next_states_iterator it(*this, cache, result);");
-    output.add_source_line("if(it.get_any_move(current_state, current_cell)){");
-    output.add_source_line("return boost::optional<move>(std::move(result[0]));");
+    output.add_source_line("it.get_all_moves(current_state, current_cell);");
     output.add_source_line("}");
-    output.add_source_line("return boost::none;");
+    output.add_source_line("");
+    output.add_header_line("bool apply_any_move(resettable_bitarray_stack& cache);");
+    output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack& cache){");
+    output.add_source_line("std::vector<move> dummy;");
+    output.add_source_line("next_states_iterator it(*this, cache, dummy);");
+    output.add_source_line("return it.apply_any_move(current_state, current_cell);");
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("friend class next_states_iterator;");
@@ -282,19 +284,12 @@ void game_compiler::generate_iterator_helper_structures(void){
 void game_compiler::generate_main_next_getters(void){
     output.add_header_line("void get_all_moves(int state, int current_cell);");
     output.add_source_line("void next_states_iterator::get_all_moves(int state, int current_cell){");
-    output.add_source_line("for(unsigned int i=0;i<all_moves_getters[state].size();++i){");
-    output.add_source_line("(this->*all_moves_getters[state][i])(current_cell);");
-    output.add_source_line("}");
+    game_automaton.print_all_getters_table(output, "get_all_moves");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("bool get_any_move(int state, int current_cell);");
-    output.add_source_line("bool next_states_iterator::get_any_move(int state, int current_cell){");
-    output.add_source_line("for(unsigned int i=0;i<any_move_getters[state].size();++i){");
-    output.add_source_line("if((this->*any_move_getters[state][i])(current_cell)){");
-    output.add_source_line("return true;");
-    output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("return false;");
+    output.add_header_line("bool apply_any_move(int state, int current_cell);");
+    output.add_source_line("bool next_states_iterator::apply_any_move(int state, int current_cell){");
+    game_automaton.print_any_appliers_table(output, "apply_any_move");
     output.add_source_line("}");
     output.add_source_line("");
 }
@@ -340,9 +335,6 @@ void game_compiler::generate_states_iterator(void){
     output.add_header_line("private:");
     for(uint i=0;i<pattern_automata.size();++i)
         generate_pattern_evaluator(i);
-    game_automaton.print_transition_table(output, "all_moves_getters","get_all_moves","void");
-    game_automaton.print_transition_table(output, "any_move_getters","get_any_move","bool");
-    output.add_header_line("");
     game_automaton.print_transition_functions(
         output,
         static_transition_data(
@@ -355,7 +347,7 @@ void game_compiler::generate_states_iterator(void){
             precomputed_patterns,
             uses_pieces_in_arithmetics,
             injective_board,
-            "get_any_move_",
+            "apply_any_move_",
             any_getter));
     game_automaton.print_transition_functions(
         output,

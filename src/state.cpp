@@ -58,16 +58,27 @@ void state::print_transition_functions(
         }
 }
 
-void state::print_outgoing_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
+void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
     std::string resulting_line = "{";
-    if(next_states.size()>1 or outgoing_edges_needed)
+    if(next_states.size()>1 or outgoing_edges_needed){
+        output.add_source_line("case "+std::to_string(from_state)+":");
+        for(uint i=0;i<next_states.size();++i)
+            output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell);");
+        output.add_source_line("break;");
+    }
+}
+
+void state::print_outgoing_any_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
+    std::string resulting_line = "{";
+    if(next_states.size()>1 or outgoing_edges_needed){
+        output.add_source_line("case "+std::to_string(from_state)+":");
         for(uint i=0;i<next_states.size();++i){
-            resulting_line += "&next_states_iterator::"+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint());
-            if(i+1<next_states.size())
-                resulting_line += ',';
+            output.add_source_line("if("+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell)){");
+            output.add_source_line("return true;");
+            output.add_source_line("}");
         }
-    resulting_line += "},";
-    output.add_source_line(resulting_line);
+        output.add_source_line("return false;");
+    }
 }
 
 void state::notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const{
