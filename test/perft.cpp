@@ -45,7 +45,9 @@ void perft(uint depth){
     perft_state_at_depth(initial_state,depth);
 }
 
-inline double count_per_sec(unsigned long count, unsigned long ms) {return static_cast<double>(count)/static_cast<double>(ms)*1000.0;}
+double count_per_sec(ulong count, ulong ms){
+    return static_cast<double>(count)/static_cast<double>(ms)*1000.0;
+}
 
 int main(int argv, char** argc){
     if(argv != 2){

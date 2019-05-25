@@ -4,6 +4,7 @@
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
+typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
@@ -42,7 +43,9 @@ void random_simulation(){
     }
 }
 
-inline double count_per_sec(unsigned long count, unsigned long ms) {return static_cast<double>(count)/static_cast<double>(ms)*1000.0;}
+double count_per_sec(ulong count, ulong ms){
+    return static_cast<double>(count)/static_cast<double>(ms)*1000.0;
+}
 
 int main(int argv, char** argc){
     if(argv != 2){
@@ -54,13 +57,13 @@ int main(int argv, char** argc){
         if(not any_move)
             return 0;
     }
-    unsigned long number_of_simulations = std::stoi(argc[1]);
+    ulong number_of_simulations = std::stoi(argc[1]);
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    for(unsigned long i = 0; i < number_of_simulations; ++i)
+    for(ulong i = 0; i < number_of_simulations; ++i)
         random_simulation();
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
-    unsigned long ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
+    ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
     std::cout << "time: " << ms << std::endl;
     std::cout << "number of plays: " << number_of_simulations << " (" << std::fixed << count_per_sec(number_of_simulations, ms) << ")" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
