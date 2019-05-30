@@ -158,8 +158,8 @@ void state::print_recursive_calls(
     uint from_state,
     cpp_container& output,
     const static_transition_data& static_data,
+    dynamic_transition_data& dynamic_data,
     const std::string& cell)const{
-    dynamic_transition_data dynamic_data(static_data,from_state);
     if(state_to_check_before_next_alternatives >= 0)
         output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"] = false;");
     switch(static_data.kind){
@@ -167,7 +167,7 @@ void state::print_recursive_calls(
             for(uint i=0;i<next_states.size();++i){
                 if(state_to_check_before_next_alternatives >= 0 and i > 0)
                     output.add_source_line("if(not visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"]){");
-                output.add_source_line(static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+");");
+                output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+");");
                 if(state_to_check_before_next_alternatives >= 0 and i > 0)
                     output.add_source_line("}");
             }
@@ -175,7 +175,7 @@ void state::print_recursive_calls(
         case any_getter:
         case inside_pattern:
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line("if("+(state_to_check_before_next_alternatives >= 0 and i > 0 ? "not visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"] and ":"")+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
+                output.add_source_line("if("+(state_to_check_before_next_alternatives >= 0 and i > 0 ? "not visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"] and ":"")+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+")){");
                 dynamic_data.insert_reverting_sequence_after_success(output);
                 output.add_source_line("}");
             }

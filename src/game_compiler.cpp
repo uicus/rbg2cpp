@@ -209,14 +209,13 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& result);");
     output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& result){");
     output.add_source_line("result.clear();");
-    output.add_source_line("next_states_iterator it(*this, cache, result);");
+    output.add_source_line("next_states_iterator it(*this, cache, &result);");
     output.add_source_line("it.get_all_moves(current_state, current_cell);");
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("bool apply_any_move(resettable_bitarray_stack& cache);");
     output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack& cache){");
-    output.add_source_line("std::vector<move> dummy;");
-    output.add_source_line("next_states_iterator it(*this, cache, dummy);");
+    output.add_source_line("next_states_iterator it(*this, cache);");
     output.add_source_line("return it.apply_any_move(current_state, current_cell);");
     output.add_source_line("}");
     output.add_source_line("");
@@ -277,6 +276,10 @@ void game_compiler::generate_iterator_helper_structures(void){
     output.add_header_line(": index(index),");
     output.add_header_line("  cell(cell){");
     output.add_header_line("}");
+    output.add_header_line("bool operator==(const action_representation& rhs) const;");
+    output.add_source_line("bool action_representation::operator==(const action_representation& rhs) const{");
+    output.add_source_line("return index == rhs.index and cell == rhs.cell;");
+    output.add_source_line("}");
     output.add_header_line("};");
     output.add_header_line("");
 }
@@ -323,8 +326,8 @@ void game_compiler::generate_states_iterator(void){
     output.add_header_include("vector");
     output.add_header_line("class next_states_iterator{");
     output.add_header_line("public:");
-    output.add_header_line("next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>& moves);");
-    output.add_source_line("next_states_iterator::next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>& moves)");
+    output.add_header_line("next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>* moves=nullptr);");
+    output.add_source_line("next_states_iterator::next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>* moves)");
     output.add_source_line(": state_to_change(state_to_change),");
     output.add_source_line("  cache(cache),");
     output.add_source_line("  moves(moves){");
@@ -385,7 +388,7 @@ void game_compiler::generate_states_iterator(void){
     output.add_header_line("game_state& state_to_change;");
     output.add_header_line("resettable_bitarray_stack& cache;");
     output.add_header_line("move_representation mr;");
-    output.add_header_line("std::vector<move>& moves;");
+    output.add_header_line("std::vector<move>* moves;");
     generate_visited_array_for_prioritized_states();
     output.add_header_line("};");
 }
@@ -558,6 +561,10 @@ void game_compiler::generate_move_class(void){
     output.add_header_line("move(const move_representation& mr)");
     output.add_header_line(": mr(mr){");
     output.add_header_line("}");
+    output.add_header_line("bool operator==(const move& rhs) const;");
+    output.add_source_line("bool move::operator==(const move& rhs) const{");
+    output.add_source_line("return mr == rhs.mr;");
+    output.add_source_line("}");
     output.add_header_line("};");
 }
 

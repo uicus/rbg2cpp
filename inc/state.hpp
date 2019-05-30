@@ -62,6 +62,7 @@ class state{
             uint from_state,
             cpp_container& output,
             const static_transition_data& static_data,
+            dynamic_transition_data& dynamic_data,
             const std::string& cell="current_cell")const;
         void print_marking_for_prioritized_sum(cpp_container& output, const static_transition_data& static_data)const;
         void print_indices_to_actions_correspondence(

@@ -3,6 +3,7 @@
 #include"cpp_container.hpp"
 #include"shift_table.hpp"
 #include"graph.hpp"
+#include"transition_data.hpp"
 #include<cassert>
 
 uint automaton::get_start_state(void){
@@ -146,7 +147,8 @@ shift_table automaton::generate_shift_table(
 void automaton::print_recursive_calls_for_pattern_in_start_state(
     cpp_container& output,
     const static_transition_data& static_data)const{
-    local_register[start_state].print_recursive_calls(start_state,output,static_data);
+    dynamic_transition_data dynamic_data(static_data,start_state);
+    local_register[start_state].print_recursive_calls(start_state,output,static_data,dynamic_data);
 }
 
 void automaton::add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const{

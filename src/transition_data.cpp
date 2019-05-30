@@ -248,7 +248,7 @@ void dynamic_transition_data::handle_branching_shift_table(cpp_container& output
         output.add_source_line("for(const auto el: shift_table"+std::to_string(branching_shift_table_to_handle)+"[current_cell]){");
     queue_state_to_check_visited(state_index);
     visit_node(output,"el",true,"continue;");
-    state_at_end.print_recursive_calls(state_index,output,static_data,"el");
+    state_at_end.print_recursive_calls(state_index,output,static_data,*this,"el");
     output.add_source_line("}");
     insert_reverting_sequence_after_fail(output);
 }
@@ -258,12 +258,12 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         queue_state_to_check_visited(state_index);
     if(should_check_for_visited())
         visit_node(output);
-    finallize(output);
     if(static_data.kind == inside_pattern and state_at_end.is_dead_end())
         insert_reverting_sequence_after_success(output);
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
+        handle_cell_check(output);
         if(static_data.kind == all_getter)
-            output.add_source_line("moves.emplace_back(mr);");
+            output.add_source_line("moves->emplace_back(mr);");
         else{
             output.add_source_line("state_to_change.current_player = "+std::to_string(next_player)+";");
             output.add_source_line("state_to_change.current_state = "+std::to_string(state_index)+";");
@@ -271,7 +271,8 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         insert_reverting_sequence_after_success(output);
     }
     else{
-        state_at_end.print_recursive_calls(state_index,output,static_data);
+        finallize(output);
+        state_at_end.print_recursive_calls(state_index,output,static_data,*this);
         insert_reverting_sequence_after_fail(output);
     }
 }
