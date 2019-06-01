@@ -72,7 +72,7 @@ void automaton::print_transition_functions(
 }
 
 void automaton::print_all_getters_table(cpp_container& output, const std::string& functions_prefix)const{
-    output.add_source_line("switch(state){");
+    output.add_source_line("switch(current_state){");
     for(uint i=0;i<local_register.size();++i)
         local_register[i].print_outgoing_all_transitions(i,output,functions_prefix);
     output.add_source_line("default:");
@@ -81,7 +81,7 @@ void automaton::print_all_getters_table(cpp_container& output, const std::string
 }
 
 void automaton::print_any_appliers_table(cpp_container& output, const std::string& functions_prefix)const{
-    output.add_source_line("switch(state){");
+    output.add_source_line("switch(current_state){");
     for(uint i=0;i<local_register.size();++i)
         local_register[i].print_outgoing_any_transitions(i,output,functions_prefix);
     output.add_source_line("default:");

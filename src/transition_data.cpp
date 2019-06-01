@@ -89,28 +89,28 @@ const std::string& dynamic_transition_data::get_start_state(void)const{
 }
 
 void dynamic_transition_data::save_board_change_for_later_revert(cpp_container& output, uint piece_id){
-    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_cell = current_cell;");
-    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_piece = state_to_change.pieces[current_cell];");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_cell = cell;");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_piece = pieces[cell];");
     reverting_stack.push_back({board_change,piece_id});
     pending_modifier = true;
 }
 
 void dynamic_transition_data::save_variable_change_for_later_revert(cpp_container& output, uint variable_id){
-    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int variable_change"+std::to_string(reverting_stack.size())+" = state_to_change.variables["+std::to_string(variable_id)+"];");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int variable_change"+std::to_string(reverting_stack.size())+" = variables["+std::to_string(variable_id)+"];");
     reverting_stack.push_back({variable_change,variable_id});
     pending_modifier = true;
 }
 
 void dynamic_transition_data::revert_board_change(cpp_container& output, uint piece_id, uint stack_position)const{
     if(static_data.uses_pieces_in_arithmetics){
-        output.add_source_line("--state_to_change.pieces_count["+std::to_string(piece_id)+"];");
-        output.add_source_line("++state_to_change.pieces_count[board_change"+std::to_string(stack_position)+"_piece];");
+        output.add_source_line("--pieces_count["+std::to_string(piece_id)+"];");
+        output.add_source_line("++pieces_count[board_change"+std::to_string(stack_position)+"_piece];");
     }
-    output.add_source_line("state_to_change.pieces[board_change"+std::to_string(stack_position)+"_cell] = board_change"+std::to_string(stack_position)+"_piece;");
+    output.add_source_line("pieces[board_change"+std::to_string(stack_position)+"_cell] = board_change"+std::to_string(stack_position)+"_piece;");
 }
 
 void dynamic_transition_data::revert_variable_change(cpp_container& output, uint variable_id, uint stack_position)const{
-    output.add_source_line("state_to_change.variables["+std::to_string(variable_id)+"] = variable_change"+std::to_string(stack_position)+";");
+    output.add_source_line("variables["+std::to_string(variable_id)+"] = variable_change"+std::to_string(stack_position)+";");
 }
 
 void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell){
@@ -178,7 +178,7 @@ void dynamic_transition_data::handle_cell_check(cpp_container& output){
         should_check_cell_correctness = false;
         if(not static_data.injective_board)
             visit_node(output);
-        output.add_source_line("if(current_cell == 0){");
+        output.add_source_line("if(cell == 0){");
         insert_reverting_sequence_after_fail(output);
         output.add_source_line("}");
     }
@@ -245,7 +245,7 @@ void dynamic_transition_data::handle_branching_shift_table(cpp_container& output
     if(static_data.shift_tables[branching_shift_table_to_handle].is_any_square())
         output.add_source_line("for(int el=1;el<"+std::to_string(static_data.shift_tables[branching_shift_table_to_handle].get_size()+1)+";++el){");
     else
-        output.add_source_line("for(const auto el: shift_table"+std::to_string(branching_shift_table_to_handle)+"[current_cell]){");
+        output.add_source_line("for(const auto el: shift_table"+std::to_string(branching_shift_table_to_handle)+"[cell]){");
     queue_state_to_check_visited(state_index);
     visit_node(output,"el",true,"continue;");
     state_at_end.print_recursive_calls(state_index,output,static_data,*this,"el");
@@ -263,10 +263,11 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
         handle_cell_check(output);
         if(static_data.kind == all_getter)
-            output.add_source_line("moves->emplace_back(mr);");
+            output.add_source_line("moves.emplace_back(mr);");
         else{
-            output.add_source_line("state_to_change.current_player = "+std::to_string(next_player)+";");
-            output.add_source_line("state_to_change.current_state = "+std::to_string(state_index)+";");
+            output.add_source_line("current_player = "+std::to_string(next_player)+";");
+            output.add_source_line("current_state = "+std::to_string(state_index)+";");
+            output.add_source_line("current_cell = cell;");
         }
         insert_reverting_sequence_after_success(output);
     }

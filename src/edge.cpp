@@ -43,13 +43,13 @@ void edge::handle_labels(
                 break;
             case positive_pattern:
                 dynamic_data.finallize(output);
-                output.add_source_line("if(not evaluate"+std::to_string(el.structure_index)+"(current_cell)){");
+                output.add_source_line("if(not evaluate"+std::to_string(el.structure_index)+"(cell, cache)){");
                 dynamic_data.insert_reverting_sequence_after_fail(output);
                 output.add_source_line("}");
                 break;
             case negative_pattern:
                 dynamic_data.finallize(output);
-                output.add_source_line("if(evaluate"+std::to_string(el.structure_index)+"(current_cell)){");
+                output.add_source_line("if(evaluate"+std::to_string(el.structure_index)+"(cell, cache)){");
                 dynamic_data.insert_reverting_sequence_after_fail(output);
                 output.add_source_line("}");
                 break;
@@ -62,7 +62,7 @@ void edge::handle_labels(
                     dynamic_data.queue_branching_shift_table(el.structure_index);
                 }
                 else{
-                    output.add_source_line("current_cell = shift_table"+std::to_string(el.structure_index)+"[current_cell];");
+                    output.add_source_line("cell = shift_table"+std::to_string(el.structure_index)+"[cell];");
                     dynamic_data.queue_cell_check();
                 }
                 break;
@@ -80,8 +80,11 @@ void edge::print_transition_function(
     const static_transition_data& static_data,
     dynamic_transition_data& dynamic_data,
     const std::vector<state>& local_register)const{
-    output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int current_cell);");
-    output.add_source_line(static_data.return_type+" next_states_iterator::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"([[maybe_unused]] int current_cell){");
+    output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int cell, resettable_bitarray_stack& cache"+(static_data.kind == all_getter ? ", move_representation& mr, std::vector<move>& moves" : "")+");");
+    std::string arguments = "[[maybe_unused]] int cell, [[maybe_unused]] resettable_bitarray_stack& cache";
+    if(static_data.kind == all_getter)
+        arguments += ", [[maybe_unused]] move_representation& mr, [[maybe_unused]] std::vector<move>& moves";
+    output.add_source_line(static_data.return_type+" game_state::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"("+arguments+"){");
     actions_compiler ac(output,static_data,dynamic_data);
     handle_labels(output,static_data,dynamic_data);
     uint current_state = local_register_endpoint_index;

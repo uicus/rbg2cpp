@@ -25,7 +25,7 @@ void precomputed_pattern::negate(void){
 
 void precomputed_pattern::print_inside_transition(cpp_container& output, const dynamic_transition_data& dynamic_data)const{
     if(allowed_cells.size()<overall_size/2+1){
-        output.add_source_line("switch(current_cell){");
+        output.add_source_line("switch(cell){");
         for(const auto& el: allowed_cells)
             output.add_source_line("case "+std::to_string(el+1)+":");
         output.add_source_line("break;");
@@ -34,7 +34,7 @@ void precomputed_pattern::print_inside_transition(cpp_container& output, const d
         output.add_source_line("}");
     }
     else{
-        output.add_source_line("switch(current_cell){");
+        output.add_source_line("switch(cell){");
         for(uint i=0;i<overall_size;++i)
             if(not allowed_cells.count(i))
                 output.add_source_line("case "+std::to_string(i+1)+":");

@@ -206,22 +206,10 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("return result;");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& result);");
-    output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& result){");
-    output.add_source_line("result.clear();");
-    output.add_source_line("next_states_iterator it(*this, cache, &result);");
-    output.add_source_line("it.get_all_moves(current_state, current_cell);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("bool apply_any_move(resettable_bitarray_stack& cache);");
-    output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack& cache){");
-    output.add_source_line("next_states_iterator it(*this, cache);");
-    output.add_source_line("return it.apply_any_move(current_state, current_cell);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("friend class next_states_iterator;");
+    generate_main_next_getters();
     output.add_header_line("private:");
     generate_actions_applier();
+    generate_states_iterator();
     output.add_header_line("int current_cell = 1;");
     output.add_header_line("int current_player = 0;");
     output.add_header_line("int current_state = "+std::to_string(game_automaton.get_start_state())+";");
@@ -285,21 +273,25 @@ void game_compiler::generate_iterator_helper_structures(void){
 }
 
 void game_compiler::generate_main_next_getters(void){
-    output.add_header_line("void get_all_moves(int state, int current_cell);");
-    output.add_source_line("void next_states_iterator::get_all_moves(int state, int current_cell){");
+    output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
+    output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves){");
+    output.add_source_line("cache.reset();");
+    output.add_source_line("moves.clear();");
+    output.add_source_line("move_representation mr;");
     game_automaton.print_all_getters_table(output, "get_all_moves");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("bool apply_any_move(int state, int current_cell);");
-    output.add_source_line("bool next_states_iterator::apply_any_move(int state, int current_cell){");
+    output.add_header_line("bool apply_any_move(resettable_bitarray_stack& cache);");
+    output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack& cache){");
+    output.add_source_line("cache.reset();");
     game_automaton.print_any_appliers_table(output, "apply_any_move");
     output.add_source_line("}");
     output.add_source_line("");
 }
 
 void game_compiler::generate_pattern_evaluator(uint pattern_index){
-    output.add_header_line("bool evaluate"+std::to_string(pattern_index)+"(int current_cell);");
-    output.add_source_line("bool next_states_iterator::evaluate"+std::to_string(pattern_index)+"(int current_cell){");
+    output.add_header_line("bool evaluate"+std::to_string(pattern_index)+"(int cell, resettable_bitarray_stack& cache);");
+    output.add_source_line("bool game_state::evaluate"+std::to_string(pattern_index)+"(int cell, resettable_bitarray_stack& cache){");
     output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
     static_transition_data static_data(
         pieces_to_id,
@@ -324,18 +316,6 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
 
 void game_compiler::generate_states_iterator(void){
     output.add_header_include("vector");
-    output.add_header_line("class next_states_iterator{");
-    output.add_header_line("public:");
-    output.add_header_line("next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>* moves=nullptr);");
-    output.add_source_line("next_states_iterator::next_states_iterator(game_state& state_to_change, resettable_bitarray_stack& cache, std::vector<move>* moves)");
-    output.add_source_line(": state_to_change(state_to_change),");
-    output.add_source_line("  cache(cache),");
-    output.add_source_line("  moves(moves){");
-    output.add_source_line("cache.reset();");
-    output.add_source_line("}");
-    output.add_source_line("");
-    generate_main_next_getters();
-    output.add_header_line("private:");
     for(uint i=0;i<pattern_automata.size();++i)
         generate_pattern_evaluator(i);
     game_automaton.print_transition_functions(
@@ -385,12 +365,7 @@ void game_compiler::generate_states_iterator(void){
                 i));
     }
     output.add_header_line("");
-    output.add_header_line("game_state& state_to_change;");
-    output.add_header_line("resettable_bitarray_stack& cache;");
-    output.add_header_line("move_representation mr;");
-    output.add_header_line("std::vector<move>* moves;");
     generate_visited_array_for_prioritized_states();
-    output.add_header_line("};");
 }
 
 void game_compiler::generate_resettable_bitarray(void){
@@ -520,9 +495,15 @@ void game_compiler::generate_resettable_bitarray_stack(void){
 }
 
 void game_compiler::generate_appliers_lists(void){
-    output.add_header_include("boost/container/small_vector.hpp");
     int straightness = input.get_moves()->compute_k_straightness().final_result();
-    output.add_header_line("typedef boost::container::small_vector<action_representation, "+std::to_string((straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0?straightness:MAXIMAL_GAME_DEPENDENT_STAIGHTNESS)+1)+"> move_representation;");
+    if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
+        output.add_header_include("boost/container/static_vector.hpp");
+        output.add_header_line("typedef boost::container::static_vector<action_representation, "+std::to_string(straightness+1)+"> move_representation;");
+    }
+    else{
+        output.add_header_include("boost/container/small_vector.hpp");
+        output.add_header_line("typedef boost::container::small_vector<action_representation, "+std::to_string(MAXIMAL_GAME_DEPENDENT_STAIGHTNESS+1)+"> move_representation;");
+    }
 }
 
 void game_compiler::generate_actions_applier(void){
@@ -596,7 +577,6 @@ const cpp_container& game_compiler::compile(void){
     generate_iterator_helper_structures();
     generate_move_class();
     generate_game_state_class();
-    generate_states_iterator();
     output.add_header_line("}");
     output.add_source_line("}");
     return output;

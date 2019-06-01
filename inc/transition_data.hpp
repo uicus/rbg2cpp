@@ -106,7 +106,7 @@ class dynamic_transition_data{
         bool should_check_for_visited(void)const;
         void visit_node(
             cpp_container& output,
-            const std::string& cell="current_cell",
+            const std::string& cell="cell",
             bool custom_fail_instruction=false,
             const std::string& fail_instruction="");
         void queue_branching_shift_table(uint index);
