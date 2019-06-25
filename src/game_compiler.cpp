@@ -533,11 +533,8 @@ void game_compiler::generate_actions_applier(void){
 
 void game_compiler::generate_move_class(void){
     generate_appliers_lists();
-    output.add_header_line("class move{");
+    output.add_header_line("struct move{");
     output.add_header_line("move_representation mr;");
-    output.add_header_line("friend class next_states_iterator;");
-    output.add_header_line("friend class game_state;");
-    output.add_header_line("public:");
     output.add_header_line("move(void) = default;");
     output.add_header_line("move(const move_representation& mr)");
     output.add_header_line(": mr(mr){");
