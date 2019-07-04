@@ -59,12 +59,12 @@ simulate_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
 	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
-	@echo "Running simulation..."
+	@echo "******** Running simulation... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
-#simulate_old:
-#	$(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp
-#	ulimit -Sv $(MEMORY) && $(TEST_DIR)/test
+simulate_old:
+	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
 perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@rm -rf $(TEST_DIR)/reasoner.*
@@ -75,7 +75,7 @@ perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
 	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp"
-	@echo "Running perft..."
+	@echo "******** Running perft... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(DEPTH)
 
 clean:
