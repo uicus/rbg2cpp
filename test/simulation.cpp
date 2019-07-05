@@ -71,6 +71,6 @@ int main(int argv, char** argc){
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     std::cout << "number of moves: " << moves_count << " (" << std::fixed << count_per_sec(moves_count, ms) << " moves/sec)" << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
-        std::cout << "average goal of player " << i << ": " << avg_goals[i]/simulations_count << std::endl;
+        std::cout << "average goal of player " << i << ": " << static_cast<double>(avg_goals[i])/simulations_count << std::endl;
     return 0;
 }
