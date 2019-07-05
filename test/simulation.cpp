@@ -35,7 +35,7 @@ void random_simulation(){
                 return;
             }
             else{
-				moves_count += legal_moves.size();
+                moves_count += legal_moves.size();
                 std::uniform_int_distribution<> random_distribution(0,legal_moves.size()-1);
                 uint chosen_move = random_distribution(random_generator);
                 state.apply_move(legal_moves[chosen_move]);
@@ -59,7 +59,7 @@ int main(int argv, char** argc){
             return 0;
     }
     ulong simulations_count = std::stoi(argc[1]);
-    
+
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
     for(ulong i = 0; i < simulations_count; ++i)
         random_simulation();
