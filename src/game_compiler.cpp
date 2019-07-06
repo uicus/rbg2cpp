@@ -374,7 +374,7 @@ void game_compiler::generate_resettable_bitarray(void){
     output.add_header_line("class resettable_bitarray{");
     output.add_header_line("public:");
     output.add_header_line("inline bool is_set(int state, int cell)const{");
-    output.add_header_line("return content[state][cell] >= current_threshold;");
+    output.add_header_line("return content[state][cell] == current_threshold;");
     output.add_header_line("}");
     output.add_header_line("");
     output.add_header_line("inline void set(int state, int cell){");
@@ -382,22 +382,19 @@ void game_compiler::generate_resettable_bitarray(void){
     output.add_header_line("}");
     output.add_header_line("");
     output.add_header_line("inline void reset(void){");
-    output.add_header_line("if(current_threshold == std::numeric_limits<int>::max()){");
+    output.add_header_line("if(++current_threshold == 0){");
+    output.add_header_line("++current_threshold;");
     output.add_header_line("for(unsigned int i=0;i<states;++i){");
     output.add_header_line("for(unsigned int j=0;j<cells;++j){");
-    output.add_header_line("content[i][j] = std::numeric_limits<int>::min();");
+    output.add_header_line("content[i][j] = 0;");
     output.add_header_line("}");
     output.add_header_line("}");
-    output.add_header_line("current_threshold = std::numeric_limits<int>::min()+1;");
-    output.add_header_line("}");
-    output.add_header_line("else{");
-    output.add_header_line("++current_threshold;");
     output.add_header_line("}");
     output.add_header_line("}");
     output.add_header_line("");
     output.add_header_line("private:");
-    output.add_header_line("int content[states][cells] = {};");
-    output.add_header_line("int current_threshold = 1;");
+    output.add_header_line("unsigned int content[states][cells] = {};");
+    output.add_header_line("unsigned int current_threshold = 1;");
     output.add_header_line("};");
     output.add_header_line("");
 }
