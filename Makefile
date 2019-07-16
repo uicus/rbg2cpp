@@ -15,7 +15,7 @@ PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_CFLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -flto -std=c++11
+COMMON_CFLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++11
 CFLAGS := $(COMMON_CFLAGS) -s $(INCLUDE)
 
 SIMULATIONS := 100
@@ -64,6 +64,18 @@ simulate_%: $(RBG_PARSER_DIR)/examples/%.rbg
 
 simulate_old:
 	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
+
+benchmark_%: $(RBG_PARSER_DIR)/examples/%.rbg
+	@rm -rf $(TEST_DIR)/reasoner.*
+	@rm -rf $(TEST_DIR)/test
+	@echo "Running $(TARGET)..."
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -o reasoner $<
+	@mv reasoner.hpp $(TEST_DIR)/
+	@mv reasoner.cpp $(TEST_DIR)/
+	@echo "Running $(C)..."
+	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark-flatmc.cpp"
+	@echo "******** Running benchmark flat MC... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
 perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
