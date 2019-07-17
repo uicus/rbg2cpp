@@ -25,7 +25,7 @@ void random_simulation(){
             states_count++;
             state.get_all_moves(cache, legal_moves);
             if(legal_moves.empty()) return; else {
-				std::uniform_int_distribution<> random_distribution(0,legal_moves.size()-1);
+                std::uniform_int_distribution<> random_distribution(0,legal_moves.size()-1);
                 uint chosen_move = random_distribution(random_generator);
                 state.apply_move(legal_moves[chosen_move]);
             }
