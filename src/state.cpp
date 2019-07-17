@@ -8,36 +8,19 @@
 void state::inform_about_being_appended(uint shift_value){
     for(auto& el: next_states)
         el.shift(shift_value);
-    if(state_to_check_before_next_alternatives >= 0)
-        state_to_check_before_next_alternatives += shift_value;
 }
 
 void state::inform_about_state_deletion(uint deleted_index){
     for(auto& el: next_states)
         el.inform_abut_state_deletion(deleted_index);
-    if(state_to_check_before_next_alternatives > int(deleted_index))
-        --state_to_check_before_next_alternatives;
-}
-
-void state::set_state_to_see_before_continuing(int state_index){
-    assert(state_to_check_before_next_alternatives == -1);
-    state_to_check_before_next_alternatives = state_index;
-}
-
-void state::add_information_about_state_to_see(std::map<uint,uint>& states_to_bool_array)const{
-    if(state_to_check_before_next_alternatives >= 0)
-        states_to_bool_array.insert(std::make_pair(state_to_check_before_next_alternatives,states_to_bool_array.size()));
 }
 
 void state::absorb(state&& rhs){
     assert(next_states.empty());
     if(not rhs.next_states.empty()){
         next_states = std::move(rhs.next_states);
-        assert(state_to_check_before_next_alternatives == -1);
-        state_to_check_before_next_alternatives = rhs.state_to_check_before_next_alternatives;
         outgoing_edges_needed |= rhs.outgoing_edges_needed;
         doubly_reachable |= rhs.doubly_reachable;
-        move_ender |= rhs.move_ender;
         rhs.next_states.clear();
     }
 }
@@ -101,10 +84,6 @@ void state::mark_explicitly_as_transition_start(void){
     outgoing_edges_needed = true;
 }
 
-void state::mark_as_move_ender(void){
-    move_ender = true;
-}
-
 const edge& state::get_only_exit(void)const{
     return next_states[0];
 }
@@ -115,31 +94,6 @@ bool state::is_dead_end(void)const{
 
 bool state::is_no_choicer(void)const{
     return next_states.size() == 1;
-}
-
-void state::run_dfs_to_get_states_to_mark(
-    uint from_state,
-    std::vector<uint>& states_to_mark_if_end,
-    std::vector<bool>& visited_states,
-    std::vector<state>& local_register){
-    if(visited_states[from_state])
-        return;
-    visited_states[from_state] = true;
-    bool has_to_put_back_state = false;
-    if(not states_to_mark_if_end.empty() and states_to_mark_if_end.back() == from_state){
-        states_to_mark_if_end.pop_back();
-        has_to_put_back_state = true;
-    }
-    if(move_ender)
-        states_to_mark_after_reaching = states_to_mark_if_end;
-    if(state_to_check_before_next_alternatives >= 0)
-        states_to_mark_if_end.push_back(state_to_check_before_next_alternatives);
-    for(auto& el: next_states)
-        local_register[el.get_endpoint()].run_dfs_to_get_states_to_mark(el.get_endpoint(),states_to_mark_if_end,visited_states,local_register);
-    if(state_to_check_before_next_alternatives >= 0)
-        states_to_mark_if_end.pop_back();
-    if(has_to_put_back_state)
-        states_to_mark_if_end.push_back(from_state);
 }
 
 void state::push_next_states_to_shift_tables_dfs_stack(
@@ -160,32 +114,21 @@ void state::print_recursive_calls(
     const static_transition_data& static_data,
     dynamic_transition_data& dynamic_data,
     const std::string& cell)const{
-    if(state_to_check_before_next_alternatives >= 0)
-        output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"] = false;");
     switch(static_data.kind){
         case all_getter:
             for(uint i=0;i<next_states.size();++i){
-                if(state_to_check_before_next_alternatives >= 0 and i > 0)
-                    output.add_source_line("if(not visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"]){");
                 output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+", cache, mr, moves);");
-                if(state_to_check_before_next_alternatives >= 0 and i > 0)
-                    output.add_source_line("}");
             }
             break;
         case any_getter:
         case inside_pattern:
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line("if("+(state_to_check_before_next_alternatives >= 0 and i > 0 ? "not visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(state_to_check_before_next_alternatives))+"] and ":"")+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+", cache)){");
+                output.add_source_line("if("+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+", cache)){");
                 dynamic_data.insert_reverting_sequence_after_success(output);
                 output.add_source_line("}");
             }
             break;
     }
-}
-
-void state::print_marking_for_prioritized_sum(cpp_container& output, const static_transition_data& static_data)const{
-    for(const auto& el: states_to_mark_after_reaching)
-        output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(el))+"] = true;");
 }
 
 void state::print_indices_to_actions_correspondence(

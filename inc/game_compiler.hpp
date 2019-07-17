@@ -25,7 +25,6 @@ class game_compiler{
         std::map<rbg_parser::token, uint> pieces_to_id;
         std::map<rbg_parser::token, uint> edges_to_id;
         std::map<rbg_parser::token, uint> variables_to_id;
-        std::map<uint,uint> states_to_bool_array;
         automaton game_automaton;
         std::vector<automaton> pattern_automata;
         std::vector<shift_table> shift_tables;
@@ -57,7 +56,6 @@ class game_compiler{
         void generate_main_next_getters(void);
         void generate_pattern_evaluator(uint pattern_index);
         void print_all_shift_tables(void);
-        void generate_visited_array_for_prioritized_states(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);
         game_compiler(const game_compiler&)=delete;

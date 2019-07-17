@@ -26,7 +26,6 @@ struct static_transition_data{
     const std::map<rbg_parser::token, uint>& pieces_to_id;
     const std::map<rbg_parser::token, uint>& edges_to_id;
     const std::map<rbg_parser::token, uint>& variables_to_id;
-    const std::map<uint,uint>& states_to_bool_array;
     const rbg_parser::declarations& decl;
     const std::vector<shift_table>& shift_tables;
     const std::vector<precomputed_pattern>& precomputed_patterns;
@@ -46,7 +45,6 @@ struct static_transition_data{
         const std::map<rbg_parser::token, uint>& pieces_to_id,
         const std::map<rbg_parser::token, uint>& edges_to_id,
         const std::map<rbg_parser::token, uint>& variables_to_id,
-        const std::map<uint,uint>& states_to_bool_array,
         const rbg_parser::declarations& decl,
         const std::vector<shift_table>& shift_tables,
         const std::vector<precomputed_pattern>& precomputed_patterns,

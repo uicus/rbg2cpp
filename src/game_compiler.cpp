@@ -16,7 +16,6 @@ name(opts.output_file()),
 pieces_to_id(),
 edges_to_id(),
 variables_to_id(),
-states_to_bool_array(),
 game_automaton(),
 pattern_automata(),
 shift_tables(),
@@ -242,13 +241,9 @@ void game_compiler::build_game_automaton(void){
     assert(block.empty() and shift_block.empty());
     game_automaton.mark_start_as_outgoing_usable();
     game_automaton.mark_states_as_double_reachable(shift_tables);
-    game_automaton.add_information_about_states_to_see(states_to_bool_array);
-    game_automaton.see_what_states_must_be_marked_by_move_enders();
     for(auto& el: pattern_automata){
         el.mark_start_as_outgoing_usable();
         el.mark_states_as_double_reachable(shift_tables);
-        el.add_information_about_states_to_see(states_to_bool_array);
-        el.see_what_states_must_be_marked_by_move_enders();
     }
     if(opts.enabled_any_square_optimisation())
         for(auto& el: shift_tables)
@@ -297,7 +292,6 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
         pieces_to_id,
         edges_to_id,
         variables_to_id,
-        states_to_bool_array,
         input.get_declarations(),
         shift_tables,
         precomputed_patterns,
@@ -324,7 +318,6 @@ void game_compiler::generate_states_iterator(void){
             pieces_to_id,
             edges_to_id,
             variables_to_id,
-            states_to_bool_array,
             input.get_declarations(),
             shift_tables,
             precomputed_patterns,
@@ -338,7 +331,6 @@ void game_compiler::generate_states_iterator(void){
             pieces_to_id,
             edges_to_id,
             variables_to_id,
-            states_to_bool_array,
             input.get_declarations(),
             shift_tables,
             precomputed_patterns,
@@ -354,7 +346,6 @@ void game_compiler::generate_states_iterator(void){
                 pieces_to_id,
                 edges_to_id,
                 variables_to_id,
-                states_to_bool_array,
                 input.get_declarations(),
                 shift_tables,
                 precomputed_patterns,
@@ -365,7 +356,6 @@ void game_compiler::generate_states_iterator(void){
                 i));
     }
     output.add_header_line("");
-    generate_visited_array_for_prioritized_states();
 }
 
 void game_compiler::generate_resettable_bitarray(void){
@@ -508,7 +498,6 @@ void game_compiler::generate_actions_applier(void){
         pieces_to_id,
         edges_to_id,
         variables_to_id,
-        states_to_bool_array,
         input.get_declarations(),
         shift_tables,
         precomputed_patterns,
@@ -546,11 +535,6 @@ void game_compiler::generate_move_class(void){
 void game_compiler::print_all_shift_tables(void){
     for(uint i=0;i<shift_tables.size();++i)
         shift_tables[i].print_array(output,i);
-}
-
-void game_compiler::generate_visited_array_for_prioritized_states(void){
-    if(not states_to_bool_array.empty())
-        output.add_header_line("bool visited_for_prioritized["+std::to_string(states_to_bool_array.size())+"];");
 }
 
 const cpp_container& game_compiler::compile(void){

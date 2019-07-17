@@ -306,30 +306,6 @@ void automaton_builder::dispatch(const rbg_parser::sum& m){
     }
 }
 
-void automaton_builder::dispatch(const rbg_parser::prioritized_sum& m){
-    std::vector<automaton> elements;
-    for(const auto& el: m.get_content()){
-        std::vector<label> block;
-        std::vector<label> shift_block;
-        automaton_builder element_builder(
-            board,
-            pattern_automata,
-            shift_tables,
-            precomputed_patterns,
-            block,
-            shift_block,
-            opts);
-        el->accept(element_builder);
-        elements.push_back(element_builder.get_final_result());
-        assert(block.empty() and shift_block.empty());
-    }
-    end_shift_automaton();
-    build_automaton_from_actions_so_far();
-    concat_automaton_to_result_so_far(edge_automaton({})); // VERY dirty hack; has to stay a while
-    concat_automaton_to_result_so_far(prioritized_sum_of_automatons(std::move(elements)));
-}
-
-
 void automaton_builder::dispatch(const rbg_parser::concatenation& m){
     auto b(delegate_builder());
     for(const auto& el: m.get_content())

@@ -50,8 +50,6 @@ class automaton{
         void print_recursive_calls_for_pattern_in_start_state(
             cpp_container& output,
             const static_transition_data& static_data)const;
-        void add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const;
-        void see_what_states_must_be_marked_by_move_enders(void);
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data)const;
@@ -62,7 +60,6 @@ class automaton{
 };
 
 automaton sum_of_automatons(std::vector<automaton>&& elements);
-automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
 automaton concatenation_of_automatons(std::vector<automaton>&& elements);
 automaton edge_automaton(const std::vector<label>& label_list);
 

@@ -96,15 +96,9 @@ void edge::print_transition_function(
         }
         else if(not local_register[current_state].get_only_exit().label_list.empty() and dynamic_data.should_check_for_visited())
             dynamic_data.visit_node(output);
-        if(static_data.states_to_bool_array.find(current_state) != static_data.states_to_bool_array.end())
-            output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(current_state))+"] = true;");
-        local_register[current_state].print_marking_for_prioritized_sum(output, static_data);
         local_register[current_state].get_only_exit().handle_labels(output,static_data,dynamic_data);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
-    if(static_data.states_to_bool_array.find(current_state) != static_data.states_to_bool_array.end())
-        output.add_source_line("visited_for_prioritized["+std::to_string(static_data.states_to_bool_array.at(current_state))+"] = true;");
-    local_register[current_state].print_marking_for_prioritized_sum(output, static_data);
     if(dynamic_data.should_handle_branching_shift_table())
         dynamic_data.handle_branching_shift_table(output,local_register[current_state],current_state);
     else

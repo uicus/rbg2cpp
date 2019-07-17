@@ -90,7 +90,6 @@ void automaton::print_any_appliers_table(cpp_container& output, const std::strin
 }
 
 void automaton::mark_end_as_move_end(void){
-    local_register[accept_state].mark_as_move_ender();
     mark_end_as_outgoing_usable();
 }
 
@@ -151,17 +150,6 @@ void automaton::print_recursive_calls_for_pattern_in_start_state(
     local_register[start_state].print_recursive_calls(start_state,output,static_data,dynamic_data);
 }
 
-void automaton::add_information_about_states_to_see(std::map<uint,uint>& states_to_bool_array)const{
-    for(const auto& el: local_register)
-        el.add_information_about_state_to_see(states_to_bool_array);
-}
-
-void automaton::see_what_states_must_be_marked_by_move_enders(void){
-    std::vector<uint> states_to_mark_if_end;
-    std::vector<bool> visited_states(local_register.size(),false);
-    local_register[start_state].run_dfs_to_get_states_to_mark(start_state,states_to_mark_if_end,visited_states,local_register);
-}
-
 void automaton::print_indices_to_actions_correspondence(
     cpp_container& output,
     const static_transition_data& static_data)const{
@@ -188,12 +176,6 @@ automaton sum_of_automatons(std::vector<automaton>&& elements){
         result.local_register[old_endpoints.second].connect_with_state(result_endpoints.second);
     }
     elements.clear();
-    return result;
-}
-
-automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements){
-    automaton result = sum_of_automatons(std::move(elements));
-    result.local_register[result.start_state].set_state_to_see_before_continuing(result.accept_state);
     return result;
 }
 
