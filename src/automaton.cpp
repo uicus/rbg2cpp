@@ -89,16 +89,23 @@ void automaton::print_any_appliers_table(cpp_container& output, const std::strin
     output.add_source_line("}");
 }
 
-void automaton::mark_end_as_move_end(void){
+void automaton::mark_end_as_keeper_move_start(void){
     mark_end_as_outgoing_usable();
+    local_register[accept_state].mark_as_keeper_move_beginning();
+}
+
+void automaton::mark_end_as_player_move_start(void){
+    mark_end_as_outgoing_usable();
+    local_register[accept_state].mark_as_player_move_beginning();
 }
 
 void automaton::mark_end_as_outgoing_usable(void){
     local_register[accept_state].mark_explicitly_as_transition_start();
 }
 
-void automaton::mark_start_as_outgoing_usable(void){
+void automaton::mark_start_as_rules_beginning(void){
     local_register[start_state].mark_explicitly_as_transition_start();
+    local_register[start_state].mark_as_keeper_move_beginning();
 }
 
 void automaton::mark_states_as_double_reachable(const std::vector<shift_table>& shift_tables){

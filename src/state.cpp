@@ -21,6 +21,7 @@ void state::absorb(state&& rhs){
         next_states = std::move(rhs.next_states);
         outgoing_edges_needed |= rhs.outgoing_edges_needed;
         doubly_reachable |= rhs.doubly_reachable;
+        assert(rhs.state_user == none);
         rhs.next_states.clear();
     }
 }
@@ -70,6 +71,14 @@ void state::notify_endpoints_about_being_reachable(std::vector<uint>& reachabili
             ++reachability[el.get_endpoint()];
         ++reachability[el.get_endpoint()];
     }
+}
+
+void state::mark_as_keeper_move_beginning(void){
+    state_user = keeper_start;
+}
+
+void state::mark_as_player_move_beginning(void){
+    state_user = player_start;
 }
 
 void state::mark_as_doubly_reachable(void){

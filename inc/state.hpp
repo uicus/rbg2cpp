@@ -19,10 +19,17 @@ namespace rbg_parser{
     class graph;
 }
 
+enum state_user_type{
+    none,
+    player_start,
+    keeper_start
+};
+
 class state{
         std::vector<edge> next_states;
         bool outgoing_edges_needed;
         bool doubly_reachable;
+        state_user_type state_user = none;
     public:
         void inform_about_being_appended(uint shift_value);
         void inform_about_state_deletion(uint deleted_index);
@@ -36,6 +43,8 @@ class state{
         void print_outgoing_any_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
         void print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const;
         void notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const;
+        void mark_as_keeper_move_beginning(void);
+        void mark_as_player_move_beginning(void);
         void mark_as_doubly_reachable(void);
         bool can_be_checked_for_visit(void)const;
         void mark_explicitly_as_transition_start(void);

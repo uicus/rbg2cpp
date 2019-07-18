@@ -239,10 +239,10 @@ void game_compiler::build_game_automaton(void){
     input.get_moves()->accept(b);
     game_automaton = b.get_final_result();
     assert(block.empty() and shift_block.empty());
-    game_automaton.mark_start_as_outgoing_usable();
+    game_automaton.mark_start_as_rules_beginning();
     game_automaton.mark_states_as_double_reachable(shift_tables);
     for(auto& el: pattern_automata){
-        el.mark_start_as_outgoing_usable();
+        el.mark_start_as_rules_beginning();
         el.mark_states_as_double_reachable(shift_tables);
     }
     if(opts.enabled_any_square_optimisation())

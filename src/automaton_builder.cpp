@@ -12,7 +12,6 @@
 #include"star_move.hpp"
 #include"concatenation.hpp"
 #include"sum.hpp"
-#include"prioritized_sum.hpp"
 #include"compiler_options.hpp"
 #include"graph.hpp"
 
@@ -201,15 +200,16 @@ void automaton_builder::handle_any_switch(const rbg_parser::game_move& m){
     end_shift_automaton();
     current_block.push_back({action,&m,0});
     build_automaton_from_actions_so_far();
-    currently_modified_automaton.mark_end_as_move_end();
 }
 
 void automaton_builder::dispatch(const rbg_parser::player_switch& m){
     handle_any_switch(m);
+    currently_modified_automaton.mark_end_as_player_move_start();
 }
 
 void automaton_builder::dispatch(const rbg_parser::keeper_switch& m){
     handle_any_switch(m);
+    currently_modified_automaton.mark_end_as_keeper_move_start();
 }
 
 void automaton_builder::build_shift_automaton_from_actions_so_far(void){
