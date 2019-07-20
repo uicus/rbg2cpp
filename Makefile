@@ -15,7 +15,7 @@ PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_CFLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++11
+COMMON_CFLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
 CFLAGS := $(COMMON_CFLAGS) -s $(INCLUDE)
 
 SIMULATIONS := 100

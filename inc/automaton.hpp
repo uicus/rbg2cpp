@@ -12,6 +12,7 @@ class shift_table;
 class precomputed_pattern;
 class actions_compiler;
 struct static_transition_data;
+class rules_board_automaton;
 
 namespace rbg_parser{
     class game_move;
@@ -54,6 +55,11 @@ class automaton{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data)const;
+        rules_board_automaton generate_rules_board_automaton(
+            const std::vector<shift_table>& shift_tables,
+            const std::vector<precomputed_pattern>& precomputed_patterns,
+            const std::vector<std::vector<uint>>& board_structure,
+            const std::map<rbg_parser::token, uint>& edges_to_id)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);

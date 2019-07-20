@@ -5,6 +5,7 @@
 #include"types.hpp"
 #include"actions_compiler.hpp"
 #include"transition_data.hpp"
+#include"rules_board_automaton.hpp"
 #include<algorithm>
 
 constexpr int MAXIMAL_GAME_DEPENDENT_STAIGHTNESS = 10;
@@ -16,6 +17,7 @@ name(opts.output_file()),
 pieces_to_id(),
 edges_to_id(),
 variables_to_id(),
+board_structure(),
 game_automaton(),
 pattern_automata(),
 shift_tables(),
@@ -88,7 +90,7 @@ void game_compiler::fill_edges_map(void){
         edges_to_id.insert(std::make_pair(el, current_id++));
 }
 
-std::string game_compiler::numbers_to_array(const std::vector<int>& numbers)const{
+std::string game_compiler::numbers_to_array(const std::vector<uint>& numbers)const{
     std::string result = "{";
     for(uint i=0;i<numbers.size()-1;++i)
         result += std::to_string(numbers[i])+",";
@@ -101,13 +103,14 @@ std::string game_compiler::numbers_to_array(const std::vector<int>& numbers)cons
 void game_compiler::generate_board_structure(void){
     const auto& g = input.get_board();
     output.add_source_line("static const int cell_neighbors["+std::to_string(g.get_size()+1)+"]["+std::to_string(edges_to_id.size())+"] = {");
-    output.add_source_line(numbers_to_array(std::vector<int>(edges_to_id.size(),0))+",");
+    output.add_source_line(numbers_to_array(std::vector<uint>(edges_to_id.size(),0))+",");
     for(uint i=0;i<g.get_size();++i){
         const auto& outgoing_edges = g.get_outgoing_edges(i);
-        std::vector<int> neighbors(edges_to_id.size(),0);
+        std::vector<uint> neighbors(edges_to_id.size(),0);
         for(const auto& el: outgoing_edges)
             neighbors[edges_to_id[el.first]] = int(el.second+1);
         output.add_source_line(numbers_to_array(neighbors)+",");
+        board_structure.emplace_back(std::move(neighbors));
     }
     output.add_source_line("};");
     output.add_source_line("");

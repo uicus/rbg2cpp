@@ -3,6 +3,7 @@
 #include"cpp_container.hpp"
 #include"actions_compiler.hpp"
 #include"transition_data.hpp"
+#include"rules_board_automaton.hpp"
 #include<cassert>
 
 void state::inform_about_being_appended(uint shift_value){
@@ -145,4 +146,20 @@ void state::print_indices_to_actions_correspondence(
     const static_transition_data& static_data)const{
     for(const auto& el: next_states)
         el.print_indices_to_actions_correspondence(output, static_data);
+}
+
+void state::add_state_to_board_automaton(
+    uint own_number,
+    rules_board_automaton& rba,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
+    const std::vector<std::vector<uint>>& board_structure,
+    const std::map<rbg_parser::token, uint>& edges_to_id)const{
+    for(const auto& el: next_states)
+        rba.report_edge_from_original_automaton(el,
+                                                own_number,
+                                                shift_tables,
+                                                precomputed_patterns,
+                                                board_structure,
+                                                edges_to_id);
 }

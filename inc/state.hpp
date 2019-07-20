@@ -13,6 +13,7 @@ class compiler_options;
 class precomputed_pattern;
 class actions_compiler;
 struct static_transition_data;
+class rules_board_automaton;
 
 namespace rbg_parser{
     class game_move;
@@ -65,6 +66,13 @@ class state{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data)const;
+        void add_state_to_board_automaton(
+            uint own_number,
+            rules_board_automaton& rba,
+            const std::vector<shift_table>& shift_tables,
+            const std::vector<precomputed_pattern>& precomputed_patterns,
+            const std::vector<std::vector<uint>>& board_structure,
+            const std::map<rbg_parser::token, uint>& edges_to_id)const;
 };
 
 #endif

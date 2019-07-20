@@ -11,6 +11,7 @@
 #include"shift.hpp"
 #include"transition_data.hpp"
 #include"unchecked_modifiers_compiler.hpp"
+#include"next_cells_getter.hpp"
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
@@ -160,4 +161,48 @@ void edge::print_indices_to_actions_correspondence(
             case always_false:
                 break;
         }
+}
+
+std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
+    uint starting_cell,
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
+    const std::vector<std::vector<uint>>& board_structure,
+    const std::map<rbg_parser::token, uint>& edges_to_id)const{
+    bool modifier_encountered = false;
+    std::vector<uint> next_cells = {starting_cell};
+    for(const auto& el: label_list){
+        assert(next_cells.size() == 1);
+        switch(el.k){
+            case action:
+                {
+                    next_cells_getter ncg(starting_cell, board_structure, edges_to_id);
+                    el.a->accept(ncg);
+                    modifier_encountered |= ncg.was_modifier_encountered();
+                    auto next_cell = ncg.get_next_cell();
+                    if(next_cell)
+                        next_cells[0] = *next_cell;
+                    else
+                        next_cells.clear();
+                }
+                break;
+            case s_pattern:
+                if(not precomputed_patterns[el.structure_index].evaluates_to_true(next_cells[0]))
+                    next_cells.clear();
+                break;
+            case s_table:
+                next_cells = shift_tables[el.structure_index].get_next_cells(next_cells[0]);
+                break;
+            case positive_pattern:
+            case negative_pattern:
+            case always_true:
+                break;
+            case always_false:
+                next_cells.clear();
+                break;
+        }
+        if(next_cells.empty())
+            return std::make_tuple(modifier_encountered, std::move(next_cells));
+    }
+    return std::make_tuple(modifier_encountered, std::move(next_cells));
 }

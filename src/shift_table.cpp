@@ -84,6 +84,10 @@ void shift_table::check_if_any_square(void){
     any_square = true;
 }
 
+std::vector<uint> shift_table::get_next_cells(uint starting_cell)const{
+    return std::vector<uint>(next_cells[starting_cell].begin(), next_cells[starting_cell].end());
+}
+
 uint insert_shift_table(std::vector<shift_table>& shift_tables, shift_table&& st){
     for(uint i=0;i<shift_tables.size();++i)
         if(shift_tables[i]==st)

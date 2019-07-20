@@ -4,6 +4,7 @@
 #include"shift_table.hpp"
 #include"graph.hpp"
 #include"transition_data.hpp"
+#include"rules_board_automaton.hpp"
 #include<cassert>
 
 uint automaton::get_start_state(void){
@@ -162,6 +163,22 @@ void automaton::print_indices_to_actions_correspondence(
     const static_transition_data& static_data)const{
     for(const auto& el: local_register)
         el.print_indices_to_actions_correspondence(output, static_data);
+}
+
+rules_board_automaton automaton::generate_rules_board_automaton(
+    const std::vector<shift_table>& shift_tables,
+    const std::vector<precomputed_pattern>& precomputed_patterns,
+    const std::vector<std::vector<uint>>& board_structure,
+    const std::map<rbg_parser::token, uint>& edges_to_id)const{
+    rules_board_automaton result(local_register.size(), board_structure.size());
+    for(uint i=0;i<local_register.size();++i)
+        local_register[i].add_state_to_board_automaton(i,
+                                                       result,
+                                                       shift_tables,
+                                                       precomputed_patterns,
+                                                       board_structure,
+                                                       edges_to_id);
+    return result;
 }
 
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){

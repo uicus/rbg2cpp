@@ -23,6 +23,7 @@ class shift_table{
         void print_array(cpp_container& output, uint index)const;
         bool is_any_square(void)const;
         void check_if_any_square(void);
+        std::vector<uint> get_next_cells(uint starting_cell)const;
 };
 
 uint insert_shift_table(std::vector<shift_table>& shift_tables, shift_table&& st);

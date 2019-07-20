@@ -25,6 +25,7 @@ class game_compiler{
         std::map<rbg_parser::token, uint> pieces_to_id;
         std::map<rbg_parser::token, uint> edges_to_id;
         std::map<rbg_parser::token, uint> variables_to_id;
+        std::vector<std::vector<uint>> board_structure;
         automaton game_automaton;
         std::vector<automaton> pattern_automata;
         std::vector<shift_table> shift_tables;
@@ -37,7 +38,7 @@ class game_compiler{
         void generate_pieces_decoder(void);
         void generate_variables_decoder(void);
         void fill_edges_map(void);
-        std::string numbers_to_array(const std::vector<int>& numbers)const;
+        std::string numbers_to_array(const std::vector<uint>& numbers)const;
         void generate_board_structure(void);
         void generate_appliers_lists(void);
         void generate_actions_applier(void);

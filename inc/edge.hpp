@@ -3,6 +3,7 @@
 
 #include<vector>
 #include<map>
+#include<tuple>
 #include"types.hpp"
 #include"token.hpp"
 
@@ -59,6 +60,12 @@ class edge{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data)const;
+        std::tuple<bool, std::vector<uint>> build_next_cells_edges(
+                uint starting_cell,
+                const std::vector<shift_table>& shift_tables,
+                const std::vector<precomputed_pattern>& precomputed_patterns,
+                const std::vector<std::vector<uint>>& board_structure,
+                const std::map<rbg_parser::token, uint>& edges_to_id)const;
 };
 
 #endif
