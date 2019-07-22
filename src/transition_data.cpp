@@ -186,6 +186,10 @@ void dynamic_transition_data::queue_cell_check(void){
     should_check_cell_correctness = true;
 }
 
+void dynamic_transition_data::clear_queue_checks(void){
+    should_check_cell_correctness = false;
+}
+
 void dynamic_transition_data::set_next_player(uint next){
     next_player = next;
 }

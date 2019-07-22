@@ -40,7 +40,7 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
     if(m.get_legal_ons().size() == 0)
         dynamic_data.insert_reverting_sequence_after_fail(output);
     else if(m.get_legal_ons().size() < static_data.pieces_to_id.size()){
-        dynamic_data.handle_cell_check(output);
+        dynamic_data.clear_queue_checks();
         output.add_source_line("switch(pieces[cell]){");
         if(m.get_legal_ons().size() < static_data.pieces_to_id.size()/2+1){
             for(const auto& el: m.get_legal_ons())
@@ -53,6 +53,7 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
             for(const auto& el: static_data.pieces_to_id)
                 if(not m.get_legal_ons().count(el.first))
                     output.add_source_line("case "+std::to_string(el.second)+":");
+            output.add_source_line("case -1:");
             dynamic_data.insert_reverting_sequence_after_fail(output);
             output.add_source_line("default:");
             output.add_source_line("break;");
