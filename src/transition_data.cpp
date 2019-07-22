@@ -204,8 +204,8 @@ int dynamic_transition_data::get_next_player(void)const{
 }
 
 void dynamic_transition_data::finallize(cpp_container& output){
-    handle_waiting_modifier(output);
     handle_cell_check(output);
+    handle_waiting_modifier(output);
 }
 
 void dynamic_transition_data::queue_state_to_check_visited(uint state_index){
