@@ -3,6 +3,8 @@
 
 rules_board_automaton::rules_board_automaton(uint num_of_states, uint num_of_cells)
   : potential_starter(num_of_states)
+  , check_needed(num_of_states)
+  , visited(num_of_states, num_of_cells)
   , states(num_of_states){
     for(auto& el: states)
         el.resize(num_of_cells);
@@ -20,10 +22,26 @@ void rules_board_automaton::report_edge_from_original_automaton(
     for(uint i=0;i<starting_states.size();++i)
     {
         auto [modifier_encountered, next_cells] = e.build_next_cells_edges(i, shift_tables, precomputed_patterns, board_structure, edges_to_id);
-        for(auto el: next_cells){
+        for(auto el: next_cells)
             starting_states[i].edges.emplace_back(edge_info{target_state, el, modifier_encountered});
-        }
         if(modifier_encountered)
             potential_starter[target_state] = true;
+    }
+}
+
+void rules_board_automaton::run_dfs_from(uint state, uint cell){
+    visited.reset();
+    std::vector<std::pair<uint,uint>> dfs_stack = {{state,cell}};
+    while(not dfs_stack.empty()){
+        auto [next_state, next_cell] = dfs_stack.back();
+        dfs_stack.pop_back();
+        if(visited.is_set(next_state, next_cell))
+            check_needed[next_state] = true;
+        else{
+            visited.set(next_state, next_cell);
+            for(const auto& el: states[next_state][next_cell].edges)
+                if(not el.crosses_modifier)
+                    dfs_stack.emplace_back(el.target_state, el.target_cell);
+        }
     }
 }

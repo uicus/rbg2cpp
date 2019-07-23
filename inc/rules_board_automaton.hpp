@@ -5,6 +5,7 @@
 
 #include<vector>
 #include<map>
+#include"resettable_bitarray.hpp"
 
 class edge;
 class shift_table;
@@ -25,7 +26,10 @@ class rules_board_automaton{
             std::vector<edge_info> edges = {};
         };
         std::vector<bool> potential_starter;
+        std::vector<bool> check_needed;
+        resettable_bitarray visited;
         std::vector<std::vector<state_info>> states;
+        void run_dfs_from(uint state, uint cell);
     public:
         rules_board_automaton(void)=delete;
         rules_board_automaton(const rules_board_automaton&)=delete;
