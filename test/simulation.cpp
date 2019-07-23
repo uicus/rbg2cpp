@@ -45,26 +45,24 @@ void random_simulation(){
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){
-        if(state.get_current_player() == KEEPER){
+        states_count++;
+        state.get_all_moves(cache, legal_moves);
+        if(legal_moves.empty()){
+            count_terminal(state, depth);
+            return;
+        }
+        else{
+            depth++;
+            moves_count += legal_moves.size();
+            std::uniform_int_distribution<uint> distribution(0,legal_moves.size()-1);
+            uint chosen_move = distribution(random_generator);
+            state.apply_move(legal_moves[chosen_move]);
+        }
+        while(state.get_current_player() == KEEPER){
             auto any_move = state.apply_any_move(cache);
             if(not any_move){
                 count_terminal(state, depth);
                 return;
-            }
-        }
-        else{
-            states_count++;
-            depth++;
-            state.get_all_moves(cache, legal_moves);
-            if(legal_moves.empty()){
-                count_terminal(state, depth);
-                return;
-            }
-            else{
-                moves_count += legal_moves.size();
-                std::uniform_int_distribution<> random_distribution(0,legal_moves.size()-1);
-                uint chosen_move = random_distribution(random_generator);
-                state.apply_move(legal_moves[chosen_move]);
             }
         }
     }
@@ -83,7 +81,7 @@ int main(int argv, char** argc){
     while(initial_state.get_current_player() == KEEPER){
         auto any_move = initial_state.apply_any_move(cache);
         if(not any_move)
-            return 0;
+            return 2;
     }
     ulong simulations_count = std::stoi(argc[1]);
 
