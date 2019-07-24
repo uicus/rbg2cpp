@@ -45,3 +45,12 @@ void rules_board_automaton::run_dfs_from(uint state, uint cell){
         }
     }
 }
+
+std::vector<bool> rules_board_automaton::get_cache_checks_need(void){
+    std::fill(check_needed.begin(), check_needed.end(), false);
+    for(uint i=0;i<states.size();++i)
+        if(potential_starter[i])
+            for(uint j=0;j<states[i].size();++j)
+                run_dfs_from(i, j);
+    return check_needed;
+}
