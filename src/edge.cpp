@@ -176,7 +176,7 @@ std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
         switch(el.k){
             case action:
                 {
-                    next_cells_getter ncg(starting_cell, board_structure, edges_to_id);
+                    next_cells_getter ncg(next_cells[0], board_structure, edges_to_id);
                     el.a->accept(ncg);
                     modifier_encountered |= ncg.was_modifier_encountered();
                     auto next_cell = ncg.get_next_cell();
