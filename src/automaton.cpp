@@ -178,6 +178,7 @@ rules_board_automaton automaton::generate_rules_board_automaton(
                                                        precomputed_patterns,
                                                        board_structure,
                                                        edges_to_id);
+    result.report_start_state(start_state);
     return result;
 }
 

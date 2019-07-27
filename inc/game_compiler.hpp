@@ -10,6 +10,7 @@
 #include"automaton.hpp"
 #include"shift_table.hpp"
 #include"precomputed_pattern.hpp"
+#include"cache_checks_container.hpp"
 
 class compiler_options;
 
@@ -30,6 +31,7 @@ class game_compiler{
         std::vector<automaton> pattern_automata;
         std::vector<shift_table> shift_tables;
         std::vector<precomputed_pattern> precomputed_patterns;
+        cache_checks_container ccc;
         bool uses_pieces_in_arithmetics;
         bool injective_board;
         const rbg_parser::parsed_game& input;
@@ -57,6 +59,7 @@ class game_compiler{
         void generate_main_next_getters(void);
         void generate_pattern_evaluator(uint pattern_index);
         void print_all_shift_tables(void);
+        void generate_cache_checks_container(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);
         game_compiler(const game_compiler&)=delete;

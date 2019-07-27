@@ -5,6 +5,7 @@
 #include"precomputed_pattern.hpp"
 #include"cpp_container.hpp"
 #include"state.hpp"
+#include"cache_checks_container.hpp"
 #include<cassert>
 
 static_transition_data::static_transition_data(
@@ -14,6 +15,7 @@ static_transition_data::static_transition_data(
     const rbg_parser::declarations& decl,
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
+    const cache_checks_container& ccc,
     bool uses_pieces_in_arithmetics,
     bool injective_board,
     const std::string& name_prefix,
@@ -25,6 +27,7 @@ static_transition_data::static_transition_data(
         decl(decl),
         shift_tables(shift_tables),
         precomputed_patterns(precomputed_patterns),
+        ccc(ccc),
         uses_pieces_in_arithmetics(uses_pieces_in_arithmetics),
         injective_board(injective_board),
         return_type(),
@@ -36,7 +39,8 @@ static_transition_data::static_transition_data(
         cache_level_reverter(),
         cache_setter(),
         cache_set_getter(),
-        kind(kind){
+        kind(kind),
+        pattern_index(pattern_index){
     switch(kind){
         case all_getter:
             return_type = "void";
@@ -209,7 +213,12 @@ void dynamic_transition_data::finallize(cpp_container& output){
 }
 
 void dynamic_transition_data::queue_state_to_check_visited(uint state_index){
-    last_state_to_check = state_index;
+    if(static_data.kind == inside_pattern){
+        if(static_data.ccc.should_cache_be_checked_in_pattern(state_index, static_data.pattern_index))
+            last_state_to_check = state_index;
+    }
+    else if(static_data.ccc.should_cache_be_checked(state_index))
+        last_state_to_check = state_index;
 }
 
 bool dynamic_transition_data::should_check_for_visited(void)const{
@@ -221,16 +230,17 @@ void dynamic_transition_data::visit_node(
     const std::string& cell,
     bool custom_fail_instruction,
     const std::string& fail_instruction){
-    assert(should_check_for_visited());
     finallize(output);
-    output.add_source_line("if("+static_data.cache_set_getter+"("+std::to_string(last_state_to_check)+", "+cell+"-1)){");
-    if(custom_fail_instruction)
-        output.add_source_line(fail_instruction);
-    else
-        insert_reverting_sequence_after_fail(output);
-    output.add_source_line("}");
-    output.add_source_line(static_data.cache_setter+"("+std::to_string(last_state_to_check)+", "+cell+"-1);");
-    last_state_to_check = -1;
+    if(should_check_for_visited()){
+        output.add_source_line("if("+static_data.cache_set_getter+"("+std::to_string(last_state_to_check)+", "+cell+"-1)){");
+        if(custom_fail_instruction)
+            output.add_source_line(fail_instruction);
+        else
+            insert_reverting_sequence_after_fail(output);
+        output.add_source_line("}");
+        output.add_source_line(static_data.cache_setter+"("+std::to_string(last_state_to_check)+", "+cell+"-1);");
+        last_state_to_check = -1;
+    }
 }
 
 void dynamic_transition_data::queue_branching_shift_table(uint index){

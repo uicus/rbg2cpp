@@ -39,6 +39,7 @@ class rules_board_automaton{
         ~rules_board_automaton(void)=default;
         rules_board_automaton(uint num_of_states, uint num_of_cells);
         std::vector<bool> get_cache_checks_need(void);
+        void report_start_state(uint starting_state);
         void report_edge_from_original_automaton(
             const edge& e,
             uint starting_state,

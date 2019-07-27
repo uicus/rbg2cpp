@@ -29,6 +29,10 @@ void rules_board_automaton::report_edge_from_original_automaton(
     }
 }
 
+void rules_board_automaton::report_start_state(uint starting_state){
+    potential_starter[starting_state] = true;
+}
+
 void rules_board_automaton::run_dfs_from(uint state, uint cell){
     visited.reset();
     std::vector<std::pair<uint,uint>> dfs_stack = {{state,cell}};

@@ -253,6 +253,15 @@ void game_compiler::build_game_automaton(void){
             el.check_if_any_square();
 }
 
+void game_compiler::generate_cache_checks_container(void){
+    ccc = cache_checks_container(game_automaton,
+                                 pattern_automata,
+                                 shift_tables,
+                                 precomputed_patterns,
+                                 board_structure,
+                                 edges_to_id);
+}
+
 void game_compiler::generate_iterator_helper_structures(void){
     output.add_header_line("struct action_representation{");
     output.add_header_line("int index;");
@@ -298,6 +307,7 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
         input.get_declarations(),
         shift_tables,
         precomputed_patterns,
+        ccc,
         uses_pieces_in_arithmetics,
         injective_board,
         "get_pattern_value"+std::to_string(pattern_index)+"_",
@@ -324,6 +334,7 @@ void game_compiler::generate_states_iterator(void){
             input.get_declarations(),
             shift_tables,
             precomputed_patterns,
+            ccc,
             uses_pieces_in_arithmetics,
             injective_board,
             "apply_any_move_",
@@ -337,6 +348,7 @@ void game_compiler::generate_states_iterator(void){
             input.get_declarations(),
             shift_tables,
             precomputed_patterns,
+            ccc,
             uses_pieces_in_arithmetics,
             injective_board,
             "get_all_moves_",
@@ -352,6 +364,7 @@ void game_compiler::generate_states_iterator(void){
                 input.get_declarations(),
                 shift_tables,
                 precomputed_patterns,
+                ccc,
                 uses_pieces_in_arithmetics,
                 injective_board,
                 "get_pattern_value"+std::to_string(i)+"_",
@@ -504,6 +517,7 @@ void game_compiler::generate_actions_applier(void){
         input.get_declarations(),
         shift_tables,
         precomputed_patterns,
+        ccc,
         uses_pieces_in_arithmetics,
         injective_board,
         "",
@@ -551,6 +565,7 @@ const cpp_container& game_compiler::compile(void){
     output.add_header_line("");
     fill_edges_map();
     generate_board_structure();
+    generate_cache_checks_container();
     generate_variables_bounds();
     print_all_shift_tables();
     output.add_header_line("");

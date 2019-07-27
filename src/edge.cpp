@@ -191,6 +191,7 @@ std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
                     next_cells.clear();
                 break;
             case s_table:
+                assert(not shift_tables[el.structure_index].can_be_backtraced() or label_list.size() == 1);
                 next_cells = shift_tables[el.structure_index].get_next_cells(next_cells[0]);
                 break;
             case positive_pattern:

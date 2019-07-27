@@ -15,6 +15,7 @@ class shift_table;
 class precomputed_pattern;
 class cpp_container;
 class state;
+class cache_checks_container;
 
 enum kind_of_transition{
     all_getter,
@@ -29,6 +30,7 @@ struct static_transition_data{
     const rbg_parser::declarations& decl;
     const std::vector<shift_table>& shift_tables;
     const std::vector<precomputed_pattern>& precomputed_patterns;
+    const cache_checks_container& ccc;
     bool uses_pieces_in_arithmetics;
     bool injective_board;
     std::string return_type;
@@ -41,6 +43,7 @@ struct static_transition_data{
     std::string cache_setter;
     std::string cache_set_getter;
     kind_of_transition kind;
+    uint pattern_index = 0;
     static_transition_data(
         const std::map<rbg_parser::token, uint>& pieces_to_id,
         const std::map<rbg_parser::token, uint>& edges_to_id,
@@ -48,6 +51,7 @@ struct static_transition_data{
         const rbg_parser::declarations& decl,
         const std::vector<shift_table>& shift_tables,
         const std::vector<precomputed_pattern>& precomputed_patterns,
+        const cache_checks_container& ccc,
         bool uses_pieces_in_arithmetics,
         bool injective_board,
         const std::string& name_prefix,
