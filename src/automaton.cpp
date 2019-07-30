@@ -179,6 +179,7 @@ rules_board_automaton automaton::generate_rules_board_automaton(
                                                        board_structure,
                                                        edges_to_id);
     result.report_start_state(start_state);
+    result.make_checking_exempt(accept_state);
     return result;
 }
 

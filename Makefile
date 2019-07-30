@@ -15,8 +15,10 @@ PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_CFLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
-CFLAGS := $(COMMON_CFLAGS) -s $(INCLUDE)
+COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
+
+COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
+SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto
 
 SIMULATIONS := 100
 DEPTH := 3
@@ -32,14 +34,14 @@ ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
 endif
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEP_DIR)/%.d | $(OBJ_DIR)
-	$(C) $(CFLAGS) -c $< -o $@
+	$(C) $(COMPILER_FLAGS) -c $< -o $@
 
 $(DEP_DIR)/%.d: $(SRC_DIR)/%.cpp | $(DEP_DIR)
-	$(C) $(CFLAGS) -MM -MT '$(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$<) $@' $< -MF $@
+	$(C) $(COMPILER_FLAGS) -MM -MT '$(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$<) $@' $< -MF $@
 
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
 	cd $(RBG_PARSER_DIR); make librbgParser.a; cd ..
-	$(C) $(CFLAGS) $(OBJECTS) $(PARSER_BIN_DIR)/librbgParser.a -o $(BIN_DIR)/$@
+	$(C) $(COMPILER_FLAGS) $(OBJECTS) $(PARSER_BIN_DIR)/librbgParser.a -o $(BIN_DIR)/$@
 
 $(DEP_DIR):
 	mkdir -p $(DEP_DIR)
@@ -58,12 +60,12 @@ simulate_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
 	@echo "******** Running simulation... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
 simulate_old:
-	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
 benchmark_%: $(RBG_PARSER_DIR)/examples/%.rbg
@@ -74,7 +76,7 @@ benchmark_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark-flatmc.cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark-flatmc.cpp"
 	@echo "******** Running benchmark flat MC... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
@@ -86,7 +88,7 @@ perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(COMMON_CFLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(COMMON_CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp"
 	@echo "******** Running perft... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(DEPTH)
 

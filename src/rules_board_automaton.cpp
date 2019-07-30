@@ -56,5 +56,11 @@ std::vector<bool> rules_board_automaton::get_cache_checks_need(void){
         if(potential_starter[i])
             for(uint j=0;j<states[i].size();++j)
                 run_dfs_from(i, j);
+    for(auto el: check_exempts)
+        check_needed[el] = false;
     return check_needed;
+}
+
+void rules_board_automaton::make_checking_exempt(uint state){
+    check_exempts.emplace_back(state);
 }

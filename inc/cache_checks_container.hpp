@@ -3,6 +3,7 @@
 
 #include<vector>
 #include<map>
+#include<optional>
 
 class automaton;
 class shift_table;
@@ -13,8 +14,13 @@ namespace rbg_parser{
 }
 
 class cache_checks_container{
-        std::vector<bool> main_automation_checks = {};
-        std::vector<std::vector<bool>> pattern_automata_checks = {};
+        struct cache_info{
+            uint real_size;
+            std::vector<std::optional<uint>> states_to_cache_correspondence;
+        };
+        cache_info main_automation_checks = {};
+        std::vector<cache_info> pattern_automata_checks = {};
+        cache_info transform_mask_into_cache_info(const std::vector<bool>& checks_bitmask)const;
     public:
         cache_checks_container(void)=default;
         cache_checks_container(const cache_checks_container&)=delete;
@@ -29,7 +35,10 @@ class cache_checks_container{
                                const std::vector<std::vector<uint>>& board_structure,
                                const std::map<rbg_parser::token, uint>& edges_to_id);
         bool should_cache_be_checked(uint state)const;
+        bool is_main_cache_needed(void)const;
         bool should_cache_be_checked_in_pattern(uint state, uint pattern)const;
+        bool is_pattern_cache_needed(uint pattern)const;
+        bool is_any_cache_needed(void)const;
 };
 
 #endif

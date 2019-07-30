@@ -27,6 +27,7 @@ class rules_board_automaton{
         };
         std::vector<bool> potential_starter;
         std::vector<bool> check_needed;
+        std::vector<uint> check_exempts = {};
         resettable_bitarray visited;
         std::vector<std::vector<state_info>> states;
         void run_dfs_from(uint state, uint cell);
@@ -39,6 +40,7 @@ class rules_board_automaton{
         ~rules_board_automaton(void)=default;
         rules_board_automaton(uint num_of_states, uint num_of_cells);
         std::vector<bool> get_cache_checks_need(void);
+        void make_checking_exempt(uint state);
         void report_start_state(uint starting_state);
         void report_edge_from_original_automaton(
             const edge& e,
