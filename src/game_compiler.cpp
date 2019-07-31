@@ -280,26 +280,29 @@ void game_compiler::generate_iterator_helper_structures(void){
 }
 
 void game_compiler::generate_main_next_getters(void){
-    output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
-    output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves){");
-    output.add_source_line("cache.reset();");
+    output.add_header_line("void get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves);");
+    output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves){");
+    if(ccc.is_main_cache_needed())
+        output.add_source_line("cache.reset();");
     output.add_source_line("moves.clear();");
     output.add_source_line("move_representation mr;");
-    game_automaton.print_all_getters_table(output, "get_all_moves");
+    game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed());
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("bool apply_any_move(resettable_bitarray_stack& cache);");
-    output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack& cache){");
-    output.add_source_line("cache.reset();");
-    game_automaton.print_any_appliers_table(output, "apply_any_move");
+    output.add_header_line("bool apply_any_move(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+");");
+    output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+"){");
+    if(ccc.is_main_cache_needed())
+        output.add_source_line("cache.reset();");
+    game_automaton.print_any_appliers_table(output, "apply_any_move", ccc.is_any_cache_needed());
     output.add_source_line("}");
     output.add_source_line("");
 }
 
 void game_compiler::generate_pattern_evaluator(uint pattern_index){
-    output.add_header_line("bool evaluate"+std::to_string(pattern_index)+"(int cell, resettable_bitarray_stack& cache);");
-    output.add_source_line("bool game_state::evaluate"+std::to_string(pattern_index)+"(int cell, resettable_bitarray_stack& cache){");
-    output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
+    output.add_header_line("bool evaluate"+std::to_string(pattern_index)+"(int cell"+std::string(ccc.is_any_cache_needed()?", resettable_bitarray_stack& cache":"")+");");
+    output.add_source_line("bool game_state::evaluate"+std::to_string(pattern_index)+"(int cell"+std::string(ccc.is_any_cache_needed()?", resettable_bitarray_stack& cache":"")+"){");
+    if(ccc.is_pattern_cache_needed(pattern_index))
+        output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
     static_transition_data static_data(
         pieces_to_id,
         edges_to_id,
@@ -371,129 +374,6 @@ void game_compiler::generate_states_iterator(void){
                 inside_pattern,
                 i));
     }
-    output.add_header_line("");
-}
-
-void game_compiler::generate_resettable_bitarray(void){
-    output.add_header_include("limits");
-    output.add_header_line("template<int states,int cells>");
-    output.add_header_line("class resettable_bitarray{");
-    output.add_header_line("public:");
-    output.add_header_line("inline bool is_set(int state, int cell)const{");
-    output.add_header_line("return content[state][cell] == current_threshold;");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("inline void set(int state, int cell){");
-    output.add_header_line("content[state][cell] = current_threshold;");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("inline void reset(void){");
-    output.add_header_line("if(++current_threshold == 0){");
-    output.add_header_line("++current_threshold;");
-    output.add_header_line("for(unsigned int i=0;i<states;++i){");
-    output.add_header_line("for(unsigned int j=0;j<cells;++j){");
-    output.add_header_line("content[i][j] = 0;");
-    output.add_header_line("}");
-    output.add_header_line("}");
-    output.add_header_line("}");
-    output.add_header_line("}");
-    output.add_header_line("");
-    output.add_header_line("private:");
-    output.add_header_line("unsigned int content[states][cells] = {};");
-    output.add_header_line("unsigned int current_threshold = 1;");
-    output.add_header_line("};");
-    output.add_header_line("");
-}
-
-void game_compiler::generate_resettable_bitarray_stack(void){
-    generate_resettable_bitarray();
-    output.add_header_include("vector");
-    output.add_header_line("class resettable_bitarray_stack{");
-    output.add_header_line("public:");
-    output.add_header_line("void push(void);");
-    output.add_source_line("void resettable_bitarray_stack::push(void){");
-    output.add_source_line("if(current_top >= main_content.size()){");
-    output.add_source_line("main_content.emplace_back();");
-    output.add_source_line("}");
-    output.add_source_line("else{");
-    output.add_source_line("main_content[current_top].reset();");
-    output.add_source_line("}");
-    output.add_source_line("++current_top;");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void revert_to_level(unsigned int level);");
-    output.add_source_line("void resettable_bitarray_stack::revert_to_level(unsigned int level){");
-    output.add_source_line("current_top = level;");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("unsigned int get_level(void);");
-    output.add_source_line("unsigned int resettable_bitarray_stack::get_level(void){");
-    output.add_source_line("return current_top;");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("bool is_set(int state, int cell)const;");
-    output.add_source_line("bool resettable_bitarray_stack::is_set(int state, int cell)const{");
-    output.add_source_line("return main_content[current_top-1].is_set(state,cell);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void set(int state, int cell);");
-    output.add_source_line("void resettable_bitarray_stack::set(int state, int cell){");
-    output.add_source_line("main_content[current_top-1].set(state,cell);");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("void reset(void);");
-    output.add_source_line("void resettable_bitarray_stack::reset(void){");
-    output.add_source_line("current_top = 0;");
-    output.add_source_line("push();");
-    output.add_source_line("}");
-    output.add_source_line("");
-    for(uint i=0;i<pattern_automata.size();++i){
-        output.add_header_line("void pattern_push"+std::to_string(i)+"(void);");
-        output.add_source_line("void resettable_bitarray_stack::pattern_push"+std::to_string(i)+"(void){");
-        output.add_source_line("if(pattern_current_top"+std::to_string(i)+" >= pattern_content"+std::to_string(i)+".size()){");
-        output.add_source_line("pattern_content"+std::to_string(i)+".emplace_back();");
-        output.add_source_line("}");
-        output.add_source_line("else{");
-        output.add_source_line("pattern_content"+std::to_string(i)+"[pattern_current_top"+std::to_string(i)+"].reset();");
-        output.add_source_line("}");
-        output.add_source_line("++pattern_current_top"+std::to_string(i)+";");
-        output.add_source_line("}");
-        output.add_source_line("");
-        output.add_header_line("void pattern_revert_to_level"+std::to_string(i)+"(unsigned int level);");
-        output.add_source_line("void resettable_bitarray_stack::pattern_revert_to_level"+std::to_string(i)+"(unsigned int level){");
-        output.add_source_line("pattern_current_top"+std::to_string(i)+" = level;");
-        output.add_source_line("}");
-        output.add_source_line("");
-        output.add_header_line("unsigned int pattern_get_level"+std::to_string(i)+"(void);");
-        output.add_source_line("unsigned int resettable_bitarray_stack::pattern_get_level"+std::to_string(i)+"(void){");
-        output.add_source_line("return pattern_current_top"+std::to_string(i)+";");
-        output.add_source_line("}");
-        output.add_source_line("");
-        output.add_header_line("bool pattern_is_set"+std::to_string(i)+"(int state, int cell)const;");
-        output.add_source_line("bool resettable_bitarray_stack::pattern_is_set"+std::to_string(i)+"(int state, int cell)const{");
-        output.add_source_line("return pattern_content"+std::to_string(i)+"[pattern_current_top"+std::to_string(i)+"-1].is_set(state,cell);");
-        output.add_source_line("}");
-        output.add_source_line("");
-        output.add_header_line("void pattern_set"+std::to_string(i)+"(int state, int cell);");
-        output.add_source_line("void resettable_bitarray_stack::pattern_set"+std::to_string(i)+"(int state, int cell){");
-        output.add_source_line("pattern_content"+std::to_string(i)+"[pattern_current_top"+std::to_string(i)+"-1].set(state,cell);");
-        output.add_source_line("}");
-        output.add_source_line("");
-        output.add_header_line("void pattern_reset"+std::to_string(i)+"(void);");
-        output.add_source_line("void resettable_bitarray_stack::pattern_reset"+std::to_string(i)+"(void){");
-        output.add_source_line("pattern_current_top"+std::to_string(i)+" = 0;");
-        output.add_source_line("pattern_push"+std::to_string(i)+"();");
-        output.add_source_line("}");
-        output.add_source_line("");
-    }
-    output.add_header_line("private:");
-    output.add_header_line("std::vector<resettable_bitarray<"+std::to_string(game_automaton.get_size())+","+std::to_string(input.get_board().get_size())+">> main_content = {};");
-    output.add_header_line("unsigned int current_top = 0;");
-    for(uint i=0;i<pattern_automata.size();++i){
-        output.add_header_line("std::vector<resettable_bitarray<"+std::to_string(pattern_automata[i].get_size())+","+std::to_string(input.get_board().get_size())+">> pattern_content"+std::to_string(i)+" = {};");
-        output.add_header_line("unsigned int pattern_current_top"+std::to_string(i)+" = 0;");
-    }
-    output.add_header_line("};");
     output.add_header_line("");
 }
 
@@ -569,7 +449,7 @@ const cpp_container& game_compiler::compile(void){
     generate_variables_bounds();
     print_all_shift_tables();
     output.add_header_line("");
-    generate_resettable_bitarray_stack();
+    ccc.generate_resettable_bitarray_stack(output);
     generate_iterator_helper_structures();
     generate_move_class();
     generate_game_state_class();

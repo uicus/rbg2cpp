@@ -8,6 +8,7 @@
 class automaton;
 class shift_table;
 class precomputed_pattern;
+class cpp_container;
 
 namespace rbg_parser{
     class token;
@@ -20,7 +21,9 @@ class cache_checks_container{
         };
         cache_info main_automation_checks = {};
         std::vector<cache_info> pattern_automata_checks = {};
+        uint board_size = 0;
         cache_info transform_mask_into_cache_info(const std::vector<bool>& checks_bitmask)const;
+        void generate_resettable_bitarray(cpp_container& output)const;
     public:
         cache_checks_container(void)=default;
         cache_checks_container(const cache_checks_container&)=delete;
@@ -39,6 +42,9 @@ class cache_checks_container{
         bool should_cache_be_checked_in_pattern(uint state, uint pattern)const;
         bool is_pattern_cache_needed(uint pattern)const;
         bool is_any_cache_needed(void)const;
+        void generate_resettable_bitarray_stack(cpp_container& output)const;
+        uint get_cache_cell_to_check(uint state)const;
+        uint get_cache_cell_to_check_in_pattern(uint state, uint pattern)const;
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include"actions_compiler.hpp"
 #include"transition_data.hpp"
 #include"rules_board_automaton.hpp"
+#include"cache_checks_container.hpp"
 #include<cassert>
 
 void state::inform_about_being_appended(uint shift_value){
@@ -43,22 +44,22 @@ void state::print_transition_functions(
         }
 }
 
-void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
+void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used)const{
     std::string resulting_line = "{";
     if(next_states.size()>1 or outgoing_edges_needed){
         output.add_source_line("case "+std::to_string(from_state)+":");
         for(uint i=0;i<next_states.size();++i)
-            output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell, cache, mr, moves);");
+            output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell"+std::string(cache_used?", cache":"")+", mr, moves);");
         output.add_source_line("break;");
     }
 }
 
-void state::print_outgoing_any_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix)const{
+void state::print_outgoing_any_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used)const{
     std::string resulting_line = "{";
     if(next_states.size()>1 or outgoing_edges_needed){
         output.add_source_line("case "+std::to_string(from_state)+":");
         for(uint i=0;i<next_states.size();++i){
-            output.add_source_line("if("+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell, cache)){");
+            output.add_source_line("if("+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell"+std::string(cache_used?", cache":"")+")){");
             output.add_source_line("return true;");
             output.add_source_line("}");
         }
@@ -127,13 +128,13 @@ void state::print_recursive_calls(
     switch(static_data.kind){
         case all_getter:
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+", cache, mr, moves);");
+                output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+std::string(static_data.ccc.is_any_cache_needed()?", cache":"")+", mr, moves);");
             }
             break;
         case any_getter:
         case inside_pattern:
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line("if("+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+", cache)){");
+                output.add_source_line("if("+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+std::string(static_data.ccc.is_any_cache_needed()?", cache":"")+")){");
                 dynamic_data.insert_reverting_sequence_after_success(output);
                 output.add_source_line("}");
             }

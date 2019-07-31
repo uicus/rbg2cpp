@@ -88,6 +88,7 @@ class dynamic_transition_data{
         void print_cache_level_revert(cpp_container& output)const;
         void print_modifiers_list_revert(cpp_container& output)const;
         void insert_unended_reverting_sequence(cpp_container& output)const;
+        bool should_use_cache(void)const;
     public:
         dynamic_transition_data(const static_transition_data& static_data, uint from_state);
         const std::string& get_start_state(void)const;

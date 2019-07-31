@@ -12,6 +12,7 @@
 #include"transition_data.hpp"
 #include"unchecked_modifiers_compiler.hpp"
 #include"next_cells_getter.hpp"
+#include"cache_checks_container.hpp"
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
@@ -44,13 +45,13 @@ void edge::handle_labels(
                 break;
             case positive_pattern:
                 dynamic_data.finallize(output);
-                output.add_source_line("if(not evaluate"+std::to_string(el.structure_index)+"(cell, cache)){");
+                output.add_source_line("if(not evaluate"+std::to_string(el.structure_index)+"(cell"+std::string(static_data.ccc.is_any_cache_needed()?", cache":"")+")){");
                 dynamic_data.insert_reverting_sequence_after_fail(output);
                 output.add_source_line("}");
                 break;
             case negative_pattern:
                 dynamic_data.finallize(output);
-                output.add_source_line("if(evaluate"+std::to_string(el.structure_index)+"(cell, cache)){");
+                output.add_source_line("if(evaluate"+std::to_string(el.structure_index)+"(cell"+std::string(static_data.ccc.is_any_cache_needed()?", cache":"")+")){");
                 dynamic_data.insert_reverting_sequence_after_fail(output);
                 output.add_source_line("}");
                 break;
@@ -81,8 +82,10 @@ void edge::print_transition_function(
     const static_transition_data& static_data,
     dynamic_transition_data& dynamic_data,
     const std::vector<state>& local_register)const{
-    output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int cell, resettable_bitarray_stack& cache"+(static_data.kind == all_getter ? ", move_representation& mr, std::vector<move>& moves" : "")+");");
-    std::string arguments = "[[maybe_unused]] int cell, [[maybe_unused]] resettable_bitarray_stack& cache";
+    output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int cell"+std::string(static_data.ccc.is_any_cache_needed()?", resettable_bitarray_stack& cache":"")+(static_data.kind == all_getter ? ", move_representation& mr, std::vector<move>& moves" : "")+");");
+    std::string arguments = "[[maybe_unused]] int cell";
+    if(static_data.ccc.is_any_cache_needed())
+        arguments += ", [[maybe_unused]] resettable_bitarray_stack& cache";
     if(static_data.kind == all_getter)
         arguments += ", [[maybe_unused]] move_representation& mr, [[maybe_unused]] std::vector<move>& moves";
     output.add_source_line(static_data.return_type+" game_state::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"("+arguments+"){");

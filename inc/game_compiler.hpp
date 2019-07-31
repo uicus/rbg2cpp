@@ -54,8 +54,6 @@ class game_compiler{
         void build_game_automaton(void);
         void generate_states_iterator(void);
         void generate_iterator_helper_structures(void);
-        void generate_resettable_bitarray(void);
-        void generate_resettable_bitarray_stack(void);
         void generate_main_next_getters(void);
         void generate_pattern_evaluator(uint pattern_index);
         void print_all_shift_tables(void);

@@ -86,19 +86,24 @@ last_state_to_check(-1),
 branching_shift_table_to_handle(-1){
 }
 
+bool dynamic_transition_data::should_use_cache(void)const{
+    return (static_data.kind == inside_pattern and static_data.ccc.is_pattern_cache_needed(static_data.pattern_index))
+        or (static_data.kind != inside_pattern and static_data.ccc.is_main_cache_needed());
+}
+
 const std::string& dynamic_transition_data::get_start_state(void)const{
     return from_state;
 }
 
 void dynamic_transition_data::save_board_change_for_later_revert(cpp_container& output, uint piece_id){
-    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_cell = cell;");
-    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int board_change"+std::to_string(reverting_stack.size())+"_piece = pieces[cell];");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":"")+"int board_change"+std::to_string(reverting_stack.size())+"_cell = cell;");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":"")+"int board_change"+std::to_string(reverting_stack.size())+"_piece = pieces[cell];");
     reverting_stack.push_back({board_change,piece_id});
     pending_modifier = true;
 }
 
 void dynamic_transition_data::save_variable_change_for_later_revert(cpp_container& output, uint variable_id){
-    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"int variable_change"+std::to_string(reverting_stack.size())+" = variables["+std::to_string(variable_id)+"];");
+    output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":"")+"int variable_change"+std::to_string(reverting_stack.size())+" = variables["+std::to_string(variable_id)+"];");
     reverting_stack.push_back({variable_change,variable_id});
     pending_modifier = true;
 }
@@ -166,9 +171,9 @@ void dynamic_transition_data::insert_reverting_sequence_after_success(cpp_contai
 }
 
 void dynamic_transition_data::handle_waiting_modifier(cpp_container& output){
-    if(pending_modifier){
+    if(pending_modifier and should_use_cache()){
         if(not has_saved_cache_level)
-            output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":" ")+"unsigned int previous_cache_level = "+static_data.cache_level_getter);
+            output.add_source_line(std::string(static_data.kind == any_getter ? "[[maybe_unused]] ":"")+"unsigned int previous_cache_level = "+static_data.cache_level_getter);
         has_saved_cache_level = true;
         output.add_source_line(static_data.cache_level_pusher);
     }
@@ -215,10 +220,10 @@ void dynamic_transition_data::finallize(cpp_container& output){
 void dynamic_transition_data::queue_state_to_check_visited(uint state_index){
     if(static_data.kind == inside_pattern){
         if(static_data.ccc.should_cache_be_checked_in_pattern(state_index, static_data.pattern_index))
-            last_state_to_check = state_index;
+            last_state_to_check = static_data.ccc.get_cache_cell_to_check_in_pattern(state_index, static_data.pattern_index);
     }
     else if(static_data.ccc.should_cache_be_checked(state_index))
-        last_state_to_check = state_index;
+        last_state_to_check = static_data.ccc.get_cache_cell_to_check(state_index);
 }
 
 bool dynamic_transition_data::should_check_for_visited(void)const{
