@@ -9,7 +9,7 @@ constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
 
-int avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
+ulong avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
 int min_goals[reasoner::NUMBER_OF_PLAYERS] = {};
 int max_goals[reasoner::NUMBER_OF_PLAYERS] = {};
 ulong states_count = 0, moves_count = 0, depths_sum = 0;
@@ -69,7 +69,7 @@ void random_simulation(){
 }
 
 double count_per_sec(ulong count, ulong ms){
-    return static_cast<double>(count)/static_cast<double>(ms)*1000.0;
+    return static_cast<long double>(count)/ms*1000.0;
 }
 
 int main(int argv, char** argc){
@@ -95,8 +95,8 @@ int main(int argv, char** argc){
     std::cout << "number of plays: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " plays/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     std::cout << "number of moves: " << moves_count << " (" << std::fixed << count_per_sec(moves_count, ms) << " moves/sec)" << std::endl;
-    std::cout << "depth: avg " << static_cast<double>(depths_sum)/simulations_count << " min " << min_depth << " max " << max_depth << std::endl;
+    std::cout << "depth: avg " << static_cast<long double>(depths_sum)/simulations_count << " min " << min_depth << " max " << max_depth << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
-        std::cout << "goal of player " << i << ": avg " << static_cast<double>(avg_goals[i])/simulations_count << " min " << min_goals[i] << " max " << max_goals[i] << std::endl;
+        std::cout << "goal of player " << i << ": avg " << static_cast<long double>(avg_goals[i])/simulations_count << " min " << min_goals[i] << " max " << max_goals[i] << std::endl;
     return 0;
 }
