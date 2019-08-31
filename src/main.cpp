@@ -19,6 +19,7 @@ int main(int argc, const char** argv){
         std::cerr<<"\"-Werror\" - treat warnings as errors"<<std::endl;
         std::cerr<<"\"-fno-shift-tables\" - turn off the shift table optimization"<<std::endl;
         std::cerr<<"\"-fno-anysquare-opt\" - turn off the any square optimization"<<std::endl;
+        std::cerr<<"\"-fsemi-split\" - turn on generation of semi split moves getters (may decrease performance of generated code)"<<std::endl;
     }
     else{
         rbg_parser::messages_container msg;

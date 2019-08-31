@@ -304,6 +304,7 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
     if(ccc.is_pattern_cache_needed(pattern_index))
         output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
     static_transition_data static_data(
+        opts,
         pieces_to_id,
         edges_to_id,
         variables_to_id,
@@ -331,6 +332,7 @@ void game_compiler::generate_states_iterator(void){
     game_automaton.print_transition_functions(
         output,
         static_transition_data(
+            opts,
             pieces_to_id,
             edges_to_id,
             variables_to_id,
@@ -345,6 +347,7 @@ void game_compiler::generate_states_iterator(void){
     game_automaton.print_transition_functions(
         output,
         static_transition_data(
+            opts,
             pieces_to_id,
             edges_to_id,
             variables_to_id,
@@ -361,6 +364,7 @@ void game_compiler::generate_states_iterator(void){
         pattern_automata[i].print_transition_functions(
             output,
             static_transition_data(
+                opts,
                 pieces_to_id,
                 edges_to_id,
                 variables_to_id,
@@ -391,6 +395,7 @@ void game_compiler::generate_appliers_lists(void){
 
 void game_compiler::generate_actions_applier(void){
     static_transition_data static_data(
+        opts,
         pieces_to_id,
         edges_to_id,
         variables_to_id,

@@ -16,6 +16,7 @@ class precomputed_pattern;
 class cpp_container;
 class state;
 class cache_checks_container;
+class compiler_options;
 
 enum kind_of_transition{
     all_getter,
@@ -24,6 +25,7 @@ enum kind_of_transition{
 };
 
 struct static_transition_data{
+    const compiler_options& opts;
     const std::map<rbg_parser::token, uint>& pieces_to_id;
     const std::map<rbg_parser::token, uint>& edges_to_id;
     const std::map<rbg_parser::token, uint>& variables_to_id;
@@ -45,6 +47,7 @@ struct static_transition_data{
     kind_of_transition kind;
     uint pattern_index = 0;
     static_transition_data(
+        const compiler_options& opts,
         const std::map<rbg_parser::token, uint>& pieces_to_id,
         const std::map<rbg_parser::token, uint>& edges_to_id,
         const std::map<rbg_parser::token, uint>& variables_to_id,

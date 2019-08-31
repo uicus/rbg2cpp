@@ -8,6 +8,7 @@ show_warnings(true),
 warnings_as_errors(false),
 shift_tables(true),
 vectorless_any_squares(true),
+semi_split_generation(false),
 output_name("game"){
 }
 
@@ -16,6 +17,7 @@ show_warnings(true),
 warnings_as_errors(false),
 shift_tables(true),
 vectorless_any_squares(true),
+semi_split_generation(false),
 output_name("game"){
     for(uint i=0;i<number_of_args;++i){
         if(args[i][0] != '-')
@@ -36,6 +38,8 @@ output_name("game"){
                 shift_tables = false;
             else if(!std::strcmp(args[i], "-fno-anysquare-opt"))
                 vectorless_any_squares = false;
+            else if(!std::strcmp(args[i], "-fsemi-split"))
+                semi_split_generation = true;
             else
                 throw std::invalid_argument("Unrecognized flag");
         }
@@ -55,6 +59,10 @@ bool compiler_options::enabled_shift_tables(void)const{
 
 bool compiler_options::enabled_any_square_optimisation(void)const{
     return vectorless_any_squares;
+}
+
+bool compiler_options::enabled_semi_split_generation(void)const{
+    return semi_split_generation;
 }
 
 const std::string& compiler_options::output_file(void)const{

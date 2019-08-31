@@ -9,6 +9,7 @@
 #include<cassert>
 
 static_transition_data::static_transition_data(
+    const compiler_options& opts,
     const std::map<rbg_parser::token, uint>& pieces_to_id,
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
@@ -21,7 +22,8 @@ static_transition_data::static_transition_data(
     const std::string& name_prefix,
     kind_of_transition kind,
     uint pattern_index)
-      : pieces_to_id(pieces_to_id),
+      : opts(opts),
+        pieces_to_id(pieces_to_id),
         edges_to_id(edges_to_id),
         variables_to_id(variables_to_id),
         decl(decl),

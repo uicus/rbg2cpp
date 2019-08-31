@@ -11,6 +11,7 @@ class compiler_options{
         bool warnings_as_errors : 1;
         bool shift_tables : 1;
         bool vectorless_any_squares : 1;
+        bool semi_split_generation : 1;
         std::string output_name;
     public:
         compiler_options(void);
@@ -20,6 +21,7 @@ class compiler_options{
         bool escalating_warnings(void)const;
         bool enabled_shift_tables(void)const;
         bool enabled_any_square_optimisation(void)const;
+        bool enabled_semi_split_generation(void)const;
         const std::string& output_file(void)const;
 };
 
