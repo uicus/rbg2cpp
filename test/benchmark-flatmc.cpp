@@ -13,12 +13,11 @@ ulong states_count = 0;
 ulong avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::move> legal_moves;    
+std::vector<reasoner::move> legal_moves;
 
 void count_terminal(const reasoner::game_state &state){
-    for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i){
-      avg_goals[i] += state.get_player_score(i);
-    }
+    for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
+        avg_goals[i] += state.get_player_score(i);
 }
 
 void random_simulation(){
@@ -40,7 +39,7 @@ void random_simulation(){
             if(not any_move){
                 count_terminal(state);
                 return;
-			}
+            }
         }
     }
 }
@@ -60,16 +59,17 @@ int main(int argv, char** argc){
             return 2;
     }
     std::chrono::duration simulation_duration = std::chrono::milliseconds(std::stoi(argc[1]));
-    
+
     ulong simulations_count = 0;
     std::chrono::steady_clock::time_point end_time;
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
     std::chrono::steady_clock::time_point planned_end_time = start_time + simulation_duration;
-    while (true) {
-       simulations_count++;
-       random_simulation();
-       end_time = std::chrono::steady_clock::now();
-       if (end_time >= planned_end_time) break;
+    while(true){
+        simulations_count++;
+        random_simulation();
+        end_time = std::chrono::steady_clock::now();
+        if(end_time >= planned_end_time)
+            break;
 	}
 
     ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
