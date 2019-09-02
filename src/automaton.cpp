@@ -72,10 +72,10 @@ void automaton::print_transition_functions(
         local_register[i].print_transition_functions(i,output,static_data,local_register);
 }
 
-void automaton::print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used)const{
+void automaton::print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const{
     output.add_source_line("switch(current_state){");
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_outgoing_all_transitions(i,output,functions_prefix,cache_used);
+        local_register[i].print_outgoing_all_transitions(i,output,functions_prefix,cache_used,semisplit_enabled);
     output.add_source_line("default:");
     output.add_source_line("break;");
     output.add_source_line("}");

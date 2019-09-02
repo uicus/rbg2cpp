@@ -6,6 +6,7 @@
 #include"rules_board_automaton.hpp"
 #include"cache_checks_container.hpp"
 #include<cassert>
+#include<numeric>
 
 void state::inform_about_being_appended(uint shift_value){
     for(auto& el: next_states)
@@ -44,12 +45,30 @@ void state::print_transition_functions(
         }
 }
 
-void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used)const{
+namespace{
+std::string join_strings_into_parameters(const std::vector<std::string>& arguments){
+    auto result = std::accumulate(arguments.begin(), arguments.end(), std::string(),
+        [](const auto& a, const auto& b){return a+b+", ";});
+    result.pop_back();
+    result.pop_back();
+    return result;
+}
+}
+
+void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const{
     std::string resulting_line = "{";
     if(next_states.size()>1 or outgoing_edges_needed){
         output.add_source_line("case "+std::to_string(from_state)+":");
+        std::vector<std::string> arguments = {"current_cell"};
+        if(cache_used)
+            arguments.emplace_back("cache");
+        arguments.emplace_back("mr");
+        arguments.emplace_back("moves");
+        if(semisplit_enabled)
+            arguments.emplace_back("move_length_limit");
+        auto args_string = join_strings_into_parameters(arguments);
         for(uint i=0;i<next_states.size();++i)
-            output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell"+std::string(cache_used?", cache":"")+", mr, moves);");
+            output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+");");
         output.add_source_line("break;");
     }
 }
@@ -58,8 +77,12 @@ void state::print_outgoing_any_transitions(uint from_state, cpp_container& outpu
     std::string resulting_line = "{";
     if(next_states.size()>1 or outgoing_edges_needed){
         output.add_source_line("case "+std::to_string(from_state)+":");
+        std::vector<std::string> arguments = {"current_cell"};
+        if(cache_used)
+            arguments.emplace_back("cache");
+        auto args_string = join_strings_into_parameters(arguments);
         for(uint i=0;i<next_states.size();++i){
-            output.add_source_line("if("+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"(current_cell"+std::string(cache_used?", cache":"")+")){");
+            output.add_source_line("if("+functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+")){");
             output.add_source_line("return true;");
             output.add_source_line("}");
         }
@@ -125,20 +148,33 @@ void state::print_recursive_calls(
     const static_transition_data& static_data,
     dynamic_transition_data& dynamic_data,
     const std::string& cell)const{
+    std::vector<std::string> arguments = {cell};
+    if(static_data.ccc.is_any_cache_needed())
+        arguments.emplace_back("cache");
     switch(static_data.kind){
         case all_getter:
+        {
+            arguments.emplace_back("mr");
+            arguments.emplace_back("moves");
+            if(static_data.opts.enabled_semi_split_generation())
+                arguments.emplace_back("move_length_limit");
+            auto args_string = join_strings_into_parameters(arguments);
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+std::string(static_data.ccc.is_any_cache_needed()?", cache":"")+", mr, moves);");
+                output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+");");
             }
             break;
+        }
         case any_getter:
         case inside_pattern:
+        {
+            auto args_string = join_strings_into_parameters(arguments);
             for(uint i=0;i<next_states.size();++i){
-                output.add_source_line("if("+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+cell+std::string(static_data.ccc.is_any_cache_needed()?", cache":"")+")){");
+                output.add_source_line("if("+static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+")){");
                 dynamic_data.insert_reverting_sequence_after_success(output);
                 output.add_source_line("}");
             }
             break;
+        }
     }
 }
 

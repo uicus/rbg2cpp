@@ -4,6 +4,7 @@
 #include<vector>
 #include<map>
 #include<tuple>
+#include<string>
 #include"types.hpp"
 #include"token.hpp"
 
@@ -45,6 +46,10 @@ class edge{
             cpp_container& output,
             const static_transition_data& static_data,
             dynamic_transition_data& dynamic_data)const;
+        void print_function_signature(cpp_container& output,
+                                      const std::string& return_type,
+                                      const std::string& name,
+                                      const std::vector<std::string>& arguments)const;
     public:
         edge(uint local_register_endpoint_index, const std::vector<label>& label_list);
         void shift(uint shift_value);

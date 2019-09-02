@@ -13,6 +13,7 @@
 #include"unchecked_modifiers_compiler.hpp"
 #include"next_cells_getter.hpp"
 #include"cache_checks_container.hpp"
+#include<numeric>
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
 local_register_endpoint_index(local_register_endpoint_index),
@@ -77,18 +78,40 @@ void edge::handle_labels(
     }
 }
 
+void edge::print_function_signature(cpp_container& output,
+                                    const std::string& return_type,
+                                    const std::string& name,
+                                    const std::vector<std::string>& arguments)const{
+    auto header_version = std::accumulate(arguments.begin(), arguments.end(), std::string(),
+        [](const auto& a, const auto& b){return a+b+", ";});
+    auto source_version = std::accumulate(arguments.begin(), arguments.end(), std::string(),
+        [](const auto& a, const auto& b){return a+"[[maybe_unused]] "+b+", ";});
+    source_version.pop_back();
+    source_version.pop_back();
+    header_version.pop_back();
+    header_version.pop_back();
+    output.add_header_line(return_type+" "+name+"("+header_version+");");
+    output.add_source_line(return_type+" game_state::"+name+"("+source_version+"){");
+}
+
 void edge::print_transition_function(
     cpp_container& output,
     const static_transition_data& static_data,
     dynamic_transition_data& dynamic_data,
     const std::vector<state>& local_register)const{
-    output.add_header_line(static_data.return_type+" "+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"(int cell"+std::string(static_data.ccc.is_any_cache_needed()?", resettable_bitarray_stack& cache":"")+(static_data.kind == all_getter ? ", move_representation& mr, std::vector<move>& moves" : "")+");");
-    std::string arguments = "[[maybe_unused]] int cell";
+    std::vector<std::string> arguments = {"int cell"};
     if(static_data.ccc.is_any_cache_needed())
-        arguments += ", [[maybe_unused]] resettable_bitarray_stack& cache";
-    if(static_data.kind == all_getter)
-        arguments += ", [[maybe_unused]] move_representation& mr, [[maybe_unused]] std::vector<move>& moves";
-    output.add_source_line(static_data.return_type+" game_state::"+static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index)+"("+arguments+"){");
+        arguments.emplace_back("resettable_bitarray_stack& cache");
+    if(static_data.kind == all_getter){
+        arguments.emplace_back("move_representation& mr");
+        arguments.emplace_back("std::vector<move>& moves");
+    }
+    if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation())
+        arguments.emplace_back("int move_length_limit");
+    print_function_signature(output,
+                             static_data.return_type,
+                             static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index),
+                             arguments);
     actions_compiler ac(output,static_data,dynamic_data);
     handle_labels(output,static_data,dynamic_data);
     uint current_state = local_register_endpoint_index;
