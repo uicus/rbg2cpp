@@ -6,6 +6,7 @@
 #include"cpp_container.hpp"
 #include"state.hpp"
 #include"cache_checks_container.hpp"
+#include"compiler_options.hpp"
 #include<cassert>
 
 static_transition_data::static_transition_data(
@@ -122,6 +123,16 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
     output.add_source_line("variables["+std::to_string(variable_id)+"] = variable_change"+std::to_string(stack_position)+";");
 }
 
+void dynamic_transition_data::insert_move_size_check(cpp_container& output, const std::string& index, const std::string& cell)const{
+    if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation()){
+        output.add_source_line("if(mr.size()>=move_length_limit){");
+        output.add_source_line("moves.emplace_back(mr);");
+        output.add_source_line("moves.back().mr.emplace_back("+index+","+cell+");");
+        insert_reverting_sequence_after_success(output);
+        output.add_source_line("}");
+    }
+}
+
 void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell){
     if(static_data.kind == all_getter){
         if(not encountered_any_change)
@@ -149,10 +160,9 @@ void dynamic_transition_data::print_cache_level_revert(cpp_container& output)con
 }
 
 void dynamic_transition_data::print_modifiers_list_revert(cpp_container& output)const{
-    if(static_data.kind != inside_pattern){
+    if(static_data.kind != inside_pattern)
         if(encountered_any_change)
             output.add_source_line("mr.resize(previous_changes_list);");
-    }
 }
 
 void dynamic_transition_data::insert_unended_reverting_sequence(cpp_container& output)const{

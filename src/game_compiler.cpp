@@ -282,12 +282,19 @@ void game_compiler::generate_iterator_helper_structures(void){
 void game_compiler::generate_main_next_getters(void){
     output.add_header_line("void get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves);");
     output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves){");
+    if(opts.enabled_semi_split_generation()){
+        output.add_source_line("get_all_semimoves("+std::string(ccc.is_any_cache_needed()?" cache":"")+", moves, 1000);");
+        output.add_source_line("}");
+        output.add_source_line("");
+        output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves, unsigned int move_length_limit);");
+        output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves, unsigned int move_length_limit){");
+    }
     if(ccc.is_main_cache_needed())
         output.add_source_line("cache.reset();");
     output.add_source_line("moves.clear();");
     output.add_source_line("move_representation mr;");
     if(opts.enabled_semi_split_generation())
-        output.add_source_line("int move_length_limit = 1000;");
+        output.add_source_line("--move_length_limit;");
     game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), opts.enabled_semi_split_generation());
     output.add_source_line("}");
     output.add_source_line("");

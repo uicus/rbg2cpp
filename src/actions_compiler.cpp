@@ -27,6 +27,7 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
     dynamic_data.handle_cell_check(output);
+    dynamic_data.insert_move_size_check(output, std::to_string(m.index_in_expression()), "cell");
     dynamic_data.save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
     dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
     if(static_data.uses_pieces_in_arithmetics){
@@ -63,6 +64,7 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
 }
 
 void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index){
+    dynamic_data.insert_move_size_check(output, action_index, "cell");
     dynamic_data.save_variable_change_for_later_revert(output, variable_id);
     dynamic_data.push_any_change_on_modifiers_list(output, action_index, "cell");
     output.add_source_line("variables["+std::to_string(variable_id)+"] = "+rvalue+";");
