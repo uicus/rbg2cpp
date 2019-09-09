@@ -189,6 +189,24 @@ void edge::print_indices_to_actions_correspondence(
         }
 }
 
+void edge::print_final_action_effects(cpp_container& output)const{
+    for(const auto& el: label_list)
+        switch(el.k){
+            case action:
+                output.add_source_line("case "+std::to_string(el.a->index_in_expression())+":");
+                output.add_source_line("current_state = "+std::to_string(local_register_endpoint_index)+";");
+                output.add_source_line("break;");
+                break;
+            case positive_pattern:
+            case negative_pattern:
+            case s_pattern:
+            case s_table:
+            case always_true:
+            case always_false:
+                break;
+        }
+}
+
 std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
     uint starting_cell,
     const std::vector<shift_table>& shift_tables,

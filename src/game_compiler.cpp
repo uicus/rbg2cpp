@@ -198,6 +198,14 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("for(const auto& el: m.mr){");
     output.add_source_line("apply_action(el);");
     output.add_source_line("}");
+    if(opts.enabled_semi_split_generation()){
+        output.add_source_line("current_cell = m.mr.back().cell;");
+        output.add_source_line("switch(m.mr.back().index){");
+        game_automaton.print_final_action_effects(output);
+        output.add_source_line("default:");
+        output.add_source_line("break;");
+        output.add_source_line("}");
+    }
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("std::vector<move> get_all_moves(resettable_bitarray_stack& cache);");

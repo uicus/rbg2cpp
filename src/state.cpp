@@ -185,6 +185,11 @@ void state::print_indices_to_actions_correspondence(
         el.print_indices_to_actions_correspondence(output, static_data);
 }
 
+void state::print_final_action_effects(cpp_container& output)const{
+    for(const auto& el: next_states)
+        el.print_final_action_effects(output);
+}
+
 void state::add_state_to_board_automaton(
     uint own_number,
     rules_board_automaton& rba,

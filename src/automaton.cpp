@@ -165,6 +165,11 @@ void automaton::print_indices_to_actions_correspondence(
         el.print_indices_to_actions_correspondence(output, static_data);
 }
 
+void automaton::print_final_action_effects(cpp_container& output)const{
+    for(const auto& el: local_register)
+        el.print_final_action_effects(output);
+}
+
 rules_board_automaton automaton::generate_rules_board_automaton(
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,

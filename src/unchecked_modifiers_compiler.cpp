@@ -5,6 +5,7 @@
 #include"switch.hpp"
 #include"transition_data.hpp"
 #include"arithmetics_printer.hpp"
+#include"compiler_options.hpp"
 
 unchecked_modifiers_compiler::unchecked_modifiers_compiler(cpp_container& output,
                                                            const static_transition_data& static_data,
@@ -40,16 +41,20 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::assignment& m){
 
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::player_switch& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
-    output.add_source_line("current_cell = action.cell;");
     output.add_source_line("current_player = "+std::to_string(static_data.variables_to_id.at(m.get_player())+1)+";");
-    output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
+    if(not static_data.opts.enabled_semi_split_generation()){
+        output.add_source_line("current_cell = action.cell;");
+        output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
+    }
     output.add_source_line("break;");
 }
 
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::keeper_switch& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
-    output.add_source_line("current_cell = action.cell;");
     output.add_source_line("current_player = 0;");
-    output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
+    if(not static_data.opts.enabled_semi_split_generation()){
+        output.add_source_line("current_cell = action.cell;");
+        output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
+    }
     output.add_source_line("break;");
 }

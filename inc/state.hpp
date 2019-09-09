@@ -66,6 +66,7 @@ class state{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data)const;
+        void print_final_action_effects(cpp_container& output)const;
         void add_state_to_board_automaton(
             uint own_number,
             rules_board_automaton& rba,

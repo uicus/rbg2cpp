@@ -55,6 +55,7 @@ class automaton{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data)const;
+        void print_final_action_effects(cpp_container& output)const;
         rules_board_automaton generate_rules_board_automaton(
             const std::vector<shift_table>& shift_tables,
             const std::vector<precomputed_pattern>& precomputed_patterns,
