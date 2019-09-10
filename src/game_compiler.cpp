@@ -301,8 +301,6 @@ void game_compiler::generate_main_next_getters(void){
         output.add_source_line("cache.reset();");
     output.add_source_line("moves.clear();");
     output.add_source_line("move_representation mr;");
-    if(opts.enabled_semi_split_generation())
-        output.add_source_line("--move_length_limit;");
     game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), opts.enabled_semi_split_generation());
     output.add_source_line("}");
     output.add_source_line("");
