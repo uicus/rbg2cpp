@@ -16,6 +16,8 @@ unchecked_modifiers_compiler::unchecked_modifiers_compiler(cpp_container& output
 
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::off& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
+    if(static_data.opts.enabled_semi_split_generation())
+        output.add_source_line("ri.brr.emplace_back(pieces[action.cell], action.cell);");
     if(static_data.uses_pieces_in_arithmetics){
         output.add_source_line("--pieces_count[pieces[action.cell]];");
         output.add_source_line("++pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
@@ -27,14 +29,17 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::off& m){
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::assignment& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
     const auto& left_side = m.get_left_side();
+    const std::string left_variable_name = std::to_string(static_data.variables_to_id.at(left_side));
+    if(static_data.opts.enabled_semi_split_generation())
+        output.add_source_line("ri.vrr.emplace_back(variables["+left_variable_name+"], "+left_variable_name+");");
     arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id,"");
     m.get_right_side()->accept(right_side_printer);
     if(right_side_printer.can_be_precomputed()){
-        output.add_source_line("variables["+std::to_string(static_data.variables_to_id.at(left_side))+"] = "+std::to_string(right_side_printer.precomputed_value())+";");
+        output.add_source_line("variables["+left_variable_name+"] = "+std::to_string(right_side_printer.precomputed_value())+";");
     }
     else{
         std::string final_result = right_side_printer.get_final_result();
-        output.add_source_line("variables["+std::to_string(static_data.variables_to_id.at(left_side))+"] = "+final_result+";");
+        output.add_source_line("variables["+left_variable_name+"] = "+final_result+";");
     }
     output.add_source_line("break;");
 }

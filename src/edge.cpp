@@ -190,12 +190,15 @@ void edge::print_indices_to_actions_correspondence(
 }
 
 void edge::print_final_action_effects(cpp_container& output)const{
-    for(const auto& el: label_list)
-        switch(el.k){
+    for (auto el=label_list.rbegin(); el!=label_list.rend(); ++el)
+        switch(el->k){
             case action:
-                output.add_source_line("case "+std::to_string(el.a->index_in_expression())+":");
-                output.add_source_line("current_state = "+std::to_string(local_register_endpoint_index)+";");
-                output.add_source_line("break;");
+                if(el->a->is_modifier()){
+                    output.add_source_line("case "+std::to_string(el->a->index_in_expression())+":");
+                    output.add_source_line("current_state = "+std::to_string(local_register_endpoint_index)+";");
+                    output.add_source_line("break;");
+                    return;
+                }
                 break;
             case positive_pattern:
             case negative_pattern:

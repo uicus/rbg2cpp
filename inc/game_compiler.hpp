@@ -58,6 +58,8 @@ class game_compiler{
         void generate_pattern_evaluator(uint pattern_index);
         void print_all_shift_tables(void);
         void generate_cache_checks_container(void);
+        void generate_revert_info_structure(void);
+        void generate_reverter(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);
         game_compiler(const game_compiler&)=delete;
