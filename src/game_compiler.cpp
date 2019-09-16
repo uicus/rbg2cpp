@@ -187,6 +187,8 @@ void game_compiler::generate_state_getters(void){
     output.add_source_line("return variables[player_id-1];");
     output.add_source_line("}");
     output.add_source_line("");
+    if(opts.enabled_semi_split_generation())
+        game_automaton.print_is_nodal_function(output);
 }
 
 void game_compiler::generate_game_state_class(void){

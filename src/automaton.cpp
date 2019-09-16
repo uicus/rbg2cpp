@@ -188,6 +188,21 @@ rules_board_automaton automaton::generate_rules_board_automaton(
     return result;
 }
 
+void automaton::print_is_nodal_function(cpp_container& output)const{
+    output.add_header_line("bool is_nodal(void)const;");
+    output.add_source_line("bool game_state::is_nodal(void)const{");
+    output.add_source_line("switch(current_state){");
+    for(uint i=0;i<local_register.size();++i)
+        if(local_register[i].is_full_state())
+            output.add_source_line("case "+std::to_string(i)+":");
+    output.add_source_line("return true;");
+    output.add_source_line("default:");
+    output.add_source_line("return false;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);

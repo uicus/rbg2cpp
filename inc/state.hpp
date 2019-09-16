@@ -52,6 +52,7 @@ class state{
         const edge& get_only_exit(void)const;
         bool is_dead_end(void)const;
         bool is_no_choicer(void)const;
+        bool is_full_state(void)const;
         void push_next_states_to_shift_tables_dfs_stack(
             uint current_cell,
             const rbg_parser::graph& board,

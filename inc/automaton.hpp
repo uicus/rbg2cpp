@@ -61,6 +61,7 @@ class automaton{
             const std::vector<precomputed_pattern>& precomputed_patterns,
             const std::vector<std::vector<uint>>& board_structure,
             const std::map<rbg_parser::token, uint>& edges_to_id)const;
+        void print_is_nodal_function(cpp_container& output)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);

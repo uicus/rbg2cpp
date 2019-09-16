@@ -130,6 +130,10 @@ bool state::is_no_choicer(void)const{
     return next_states.size() == 1;
 }
 
+bool state::is_full_state(void)const{
+    return state_user == player_start or state_user == keeper_start;
+}
+
 void state::push_next_states_to_shift_tables_dfs_stack(
     uint current_cell,
     const rbg_parser::graph& board,
