@@ -11,16 +11,17 @@ reasoner::game_state initial_state;
 ulong states_count, leaves_count;
 
 void perft_state_at_depth(reasoner::game_state& state, uint depth){
-    if(depth == 0 and state.get_current_player() != KEEPER){
+    if(depth == 0 and state.is_nodal() and state.get_current_player() != KEEPER){
         ++states_count;
         ++leaves_count;
         return;
     }
     else{
         if(state.get_current_player() == KEEPER){
-            auto any_move = state.apply_any_move(cache);
+            auto temp_state = state;
+            auto any_move = temp_state.apply_any_move(cache);
             if(any_move)
-                return perft_state_at_depth(state, depth);
+                return perft_state_at_depth(temp_state, depth);
             else{
                 ++states_count;
                 if(depth == 0)
@@ -29,12 +30,18 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth){
             }
         }
         else{
-            ++states_count;
-            auto legal_moves = state.get_all_moves(cache);
-            for(const auto& el: legal_moves){
-                auto temp_state = state;
-                temp_state.apply_move(el);
-                perft_state_at_depth(temp_state,depth-1);
+            if(state.is_nodal())
+                ++states_count;
+            std::vector<reasoner::move> legal_semimoves;
+            state.get_all_semimoves(cache, legal_semimoves, 1);
+            for(const auto& el: legal_semimoves){
+                auto reverter = state.apply_move(el);
+                state.apply_move(el);
+                if(state.is_nodal())
+                    perft_state_at_depth(state,depth-1);
+                else
+                    perft_state_at_depth(state,depth);
+                state.revert(reverter);
             }
         }
     }

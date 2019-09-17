@@ -232,9 +232,9 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("}");
     output.add_source_line("");
     generate_main_next_getters();
+    generate_reverter();
     output.add_header_line("private:");
     generate_actions_applier();
-    generate_reverter();
     generate_states_iterator();
     output.add_header_line("int current_cell = 1;");
     output.add_header_line("int current_player = 0;");

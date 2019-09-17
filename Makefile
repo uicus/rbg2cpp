@@ -104,6 +104,18 @@ perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@echo "******** Running perft... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(DEPTH)
 
+perft_semisplit_%: $(RBG_PARSER_DIR)/examples/%.rbg
+	@rm -rf $(TEST_DIR)/reasoner.*
+	@rm -rf $(TEST_DIR)/test
+	@echo "Running $(TARGET)..."
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -fsemi-split -o reasoner $<
+	@mv reasoner.hpp $(TEST_DIR)/
+	@mv reasoner.cpp $(TEST_DIR)/
+	@echo "Running $(C)..."
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft_semisplit.cpp"
+	@echo "******** Running simulation... ********"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(DEPTH)
+
 clean:
 	cd $(RBG_PARSER_DIR); make clean; cd ..
 	rm -rf $(OBJ_DIR)
