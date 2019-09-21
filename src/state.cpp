@@ -38,7 +38,7 @@ void state::print_transition_functions(
     cpp_container& output,
     const static_transition_data& static_data,
     const std::vector<state>& local_register)const{
-    if(next_states.size()>1 or outgoing_edges_needed)
+    if(next_states.size()>1 or outgoing_edges_needed or (static_data.opts.enabled_semi_split_generation() and static_data.kind == all_getter))
         for(const auto& el: next_states){
             dynamic_transition_data dynamic_data(static_data,from_state);
             el.print_transition_function(output, static_data, dynamic_data, local_register);
@@ -57,7 +57,7 @@ std::string join_strings_into_parameters(const std::vector<std::string>& argumen
 
 void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const{
     std::string resulting_line = "{";
-    if(next_states.size()>1 or outgoing_edges_needed){
+    if(next_states.size()>1 or outgoing_edges_needed or semisplit_enabled){
         output.add_source_line("case "+std::to_string(from_state)+":");
         std::vector<std::string> arguments = {"current_cell"};
         if(cache_used)
@@ -208,4 +208,18 @@ void state::add_state_to_board_automaton(
                                                 precomputed_patterns,
                                                 board_structure,
                                                 edges_to_id);
+}
+
+void state::print_last_edge_modifier_to_cell_change_correspondence(
+        cpp_container& output,
+        const std::vector<shift_table>& shift_tables,
+        const std::vector<std::vector<uint>>& board_structure,
+        const std::map<rbg_parser::token, uint>& edges_to_id,
+        std::map<uint, uint>& modifier_to_cell_change_table)const{
+    for(const auto& el: next_states)
+        el.print_last_edge_modifier_to_cell_change_correspondence(output,
+                                                                  shift_tables,
+                                                                  board_structure,
+                                                                  edges_to_id,
+                                                                  modifier_to_cell_change_table);
 }

@@ -72,6 +72,12 @@ class edge{
                 const std::vector<precomputed_pattern>& precomputed_patterns,
                 const std::vector<std::vector<uint>>& board_structure,
                 const std::map<rbg_parser::token, uint>& edges_to_id)const;
+        void print_last_edge_modifier_to_cell_change_correspondence(
+                cpp_container& output,
+                const std::vector<shift_table>& shift_tables,
+                const std::vector<std::vector<uint>>& board_structure,
+                const std::map<rbg_parser::token, uint>& edges_to_id,
+                std::map<uint, uint>& modifier_to_cell_change_table)const;
 };
 
 #endif
