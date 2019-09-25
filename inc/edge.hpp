@@ -64,7 +64,8 @@ class edge{
         bool is_shift_table_with_multiple_choices(const std::vector<shift_table>& shift_tables)const;
         void print_indices_to_actions_correspondence(
             cpp_container& output,
-            const static_transition_data& static_data)const;
+            const static_transition_data& static_data,
+            bool generate_revert=false)const;
         void print_final_action_effects(cpp_container& output)const;
         std::tuple<bool, std::vector<uint>> build_next_cells_edges(
                 uint starting_cell,

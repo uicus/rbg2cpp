@@ -173,8 +173,9 @@ bool edge::is_shift_table_with_multiple_choices(const std::vector<shift_table>& 
 
 void edge::print_indices_to_actions_correspondence(
     cpp_container& output,
-    const static_transition_data& static_data)const{
-    unchecked_modifiers_compiler umc(output,static_data,local_register_endpoint_index);
+    const static_transition_data& static_data,
+    bool generate_revert)const{
+    unchecked_modifiers_compiler umc(output,static_data,local_register_endpoint_index, generate_revert);
     for(const auto& el: label_list)
         switch(el.k){
             case action:
