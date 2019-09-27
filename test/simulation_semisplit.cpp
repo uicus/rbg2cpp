@@ -7,22 +7,25 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
-constexpr int SINGLE_CHARGES = 0;
-
-constexpr int MAX_SEMIDEPTH = 100;
+constexpr uint CHARGES = 0;
+constexpr uint MAX_SEMIDEPTH = 100;
 
 std::mt19937 random_generator(1);
 
 ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 int goals_min[reasoner::NUMBER_OF_PLAYERS] = {};
 int goals_max[reasoner::NUMBER_OF_PLAYERS] = {};
-ulong states_count = 0, semistates_count = 0, semimoves_count = 0, semifails = 0;
+
+ulong states_count = 0, semistates_count = 0, semimoves_count = 0;
 ulong semidepth_sum = 0;
 uint semidepth_min = std::numeric_limits<uint>::max();
 uint semidepth_max = std::numeric_limits<uint>::min();
-ulong depth_sum = 0;
+
 uint depth_min = std::numeric_limits<uint>::max();
 uint depth_max = std::numeric_limits<uint>::min();
+
+ulong charges_count = 0, charges_successful = 0;
+
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 std::vector<reasoner::move> legal_semimoves[MAX_SEMIDEPTH];
@@ -51,17 +54,17 @@ void count_terminal(const reasoner::game_state state, uint depth){
 
 void count_semiterminal(const uint semidepth){
     semidepth_sum += semidepth;
-    if (semidepth < semidepth_min)
+    if(semidepth < semidepth_min)
         semidepth_min = semidepth;
-    if (semidepth > semidepth_max)
+    if(semidepth > semidepth_max)
         semidepth_max = semidepth;
 }
 
 // bool apply_random_move_charge(reasoner::game_state &state, uint semidepth) {
     // std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
-    // semidepth++;
     // state.get_all_semimoves(cache, semimoves, 1);
     // semimoves_count += semimoves.size();
+    // semidepth++;
     // if (semimoves.size() == 0) return false;
     // Apply random semimove
     // semistates_count++;
@@ -74,16 +77,15 @@ void count_semiterminal(const uint semidepth){
     // }
     // if (apply_random_move_charge(state, semidepth)) return true;
     // Backtrack
-    // semifails++;
     // state.revert(ri);
     // return false;
 // }
 
-bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth) {
-    std::vector<reasoner::move>& semimoves = legal_semimoves[semidepth];
-    semidepth++;
+bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
+    std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
     state.get_all_semimoves(cache, semimoves, 1);
     semimoves_count += semimoves.size();
+    semidepth++;
     while(not semimoves.empty()){
         // Apply random semimove
         semistates_count++;
@@ -97,7 +99,6 @@ bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth) {
         if(apply_random_move_exhaustive(state, semidepth))
             return true;
         // Backtrack
-        semifails++;
         state.revert(ri);
         semimoves[chosen_semimove] = semimoves.back();
         semimoves.pop_back();
@@ -105,18 +106,19 @@ bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth) {
     return false;
 }
 
-bool apply_random_move(reasoner::game_state &state){
-    return apply_random_move_exhaustive(state, 0);
-}
-
 void random_simulation(){
     std::vector<reasoner::move> moves;
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){
-        // for (uint i = SINGLE_CHARGES; i != 0; i--)
-        // if (apply_random_move_charge(state, 0)) goto lb_found;
-        if(not apply_random_move(state)){
+        // for (uint i = CHARGES; i != 0; i--) {
+        // charges_count++;
+        // if (apply_random_move_charge(state, 0)) {
+        // charges_successful++;
+        // goto lb_found;
+        // }
+        // }
+        if(not apply_random_move_exhaustive(state, 0)){
             count_terminal(state, depth);
             return;
         }
@@ -162,6 +164,8 @@ int main(int argv, char** argc){
     std::cout << "number of semimoves: " << semimoves_count << " (" << std::fixed << count_per_sec(semimoves_count, ms) << " semimoves/sec)" << std::endl;
     std::cout << "depth: avg " << static_cast<long double>(states_count)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
     std::cout << "semidepth: avg " << static_cast<long double>(semidepth_sum)/states_count << " min " << semidepth_min << " max " << semidepth_max << std::endl;
+    if constexpr(CHARGES)
+        std::cout << "charges: sucessful " << charges_successful << " total " << charges_count << " (" << static_cast<long double>(charges_successful)/charges_count << " ratio)" << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << " min " << goals_min[i] << " max " << goals_max[i] << std::endl;
     return 0;
