@@ -60,26 +60,26 @@ void count_semiterminal(const uint semidepth){
         semidepth_max = semidepth;
 }
 
-// bool apply_random_move_charge(reasoner::game_state &state, uint semidepth) {
-    // std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
-    // state.get_all_semimoves(cache, semimoves, 1);
-    // semimoves_count += semimoves.size();
-    // semidepth++;
-    // if (semimoves.size() == 0) return false;
-    // Apply random semimove
-    // semistates_count++;
-    // std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
-    // uint chosen_semimove = distribution(random_generator);
-    // reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
-    // if (state.is_nodal()) {
-        // count_semiterminal(semidepth);
-        // return true;
-    // }
-    // if (apply_random_move_charge(state, semidepth)) return true;
-    // Backtrack
-    // state.revert(ri);
-    // return false;
-// }
+ bool apply_random_move_charge(reasoner::game_state &state, uint semidepth) {
+     std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
+     state.get_all_semimoves(cache, semimoves, 1);
+     semimoves_count += semimoves.size();
+     semidepth++;
+     if (semimoves.size() == 0) return false;
+     // Apply random semimove
+     semistates_count++;
+     std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
+     uint chosen_semimove = distribution(random_generator);
+     reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
+     if (state.is_nodal()) {
+         count_semiterminal(semidepth);
+         return true;
+     }
+     if (apply_random_move_charge(state, semidepth)) return true;
+     // Backtrack
+     state.revert(ri);
+     return false;
+ }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
     std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
@@ -111,18 +111,18 @@ void random_simulation(){
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){
-        // for (uint i = CHARGES; i != 0; i--) {
-        // charges_count++;
-        // if (apply_random_move_charge(state, 0)) {
-        // charges_successful++;
-        // goto lb_found;
-        // }
-        // }
+        for (uint i = CHARGES; i != 0; i--) {
+            charges_count++;
+            if (apply_random_move_charge(state, 0)) {
+                charges_successful++;
+                goto lb_found;
+            }
+        }
         if(not apply_random_move_exhaustive(state, 0)){
             count_terminal(state, depth);
             return;
         }
-        // lb_found:;
+        lb_found:;
         depth++;
         while(state.get_current_player() == KEEPER){
             auto any_move = state.apply_any_move(cache);
