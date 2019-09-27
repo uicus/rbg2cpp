@@ -35,7 +35,7 @@ void initialize_goals_arrays(void){
 }
 
 void count_terminal(const reasoner::game_state state, uint depth){
-    depth_sum += depth;
+    states_count += depth;
     if(depth < depth_min)
         depth_min = depth;
     if(depth > depth_max)
@@ -109,7 +109,6 @@ void random_simulation(){
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){
-        states_count++;
         for (uint i = SINGLE_CHARGES; i != 0; i--)
           if (apply_random_move_charge(state, 0)) goto lb_found;
         if (!apply_random_move_exhaustive(state, 0)) {
@@ -156,8 +155,8 @@ int main(int argv, char** argc){
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     std::cout << "number of semistates: " << semistates_count << " (" << std::fixed << count_per_sec(semistates_count, ms) << " semistates/sec)" << std::endl;
     std::cout << "number of semimoves: " << semimoves_count << " (" << std::fixed << count_per_sec(semimoves_count, ms) << " semimoves/sec)" << std::endl;
-    std::cout << "depth: avg " << static_cast<long double>(depth_sum)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
-    std::cout << "semidepth: avg " << static_cast<long double>(semidepth_sum)/(states_count-simulations_count) << " min " << semidepth_min << " max " << semidepth_max << std::endl;
+    std::cout << "depth: avg " << static_cast<long double>(states_count)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
+    std::cout << "semidepth: avg " << static_cast<long double>(semidepth_sum)/states_count << " min " << semidepth_min << " max " << semidepth_max << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << " min " << goals_min[i] << " max " << goals_max[i] << std::endl;
     return 0;

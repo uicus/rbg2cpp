@@ -23,13 +23,13 @@ void count_terminal(const reasoner::game_state &state){
 void random_simulation(){
     reasoner::game_state state = initial_state;
     while(true){
-        states_count++;
         state.get_all_moves(cache, legal_moves);
         if(legal_moves.empty()){
             count_terminal(state);
             return;
         }
         else{
+            states_count++;
             std::uniform_int_distribution<> distribution(0,legal_moves.size()-1);
             uint chosen_move = distribution(random_generator);
             state.apply_move(legal_moves[chosen_move]);
