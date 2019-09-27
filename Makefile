@@ -72,7 +72,7 @@ simulate_semisplit_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation_semisplit.cpp"
 	@echo "******** Running simulation... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
 
