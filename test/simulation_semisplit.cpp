@@ -7,7 +7,7 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
-constexpr int SINGLE_CHARGES = 5;
+constexpr int SINGLE_CHARGES = 0;
 
 constexpr int MAX_SEMIDEPTH = 100;
 
@@ -110,11 +110,6 @@ void random_simulation(){
     uint depth = 0;
     while(true){
         states_count++;
-        state.get_all_moves(cache, moves);
-        if (count_nodal_states(state, 0) != moves.size()) {
-			std::cout << "ERRROR\n";
-			exit(100);
-		}
         for (uint i = SINGLE_CHARGES; i != 0; i--)
           if (apply_random_move_charge(state, 0)) goto lb_found;
         if (!apply_random_move_exhaustive(state, 0)) {
