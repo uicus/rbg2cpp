@@ -9,35 +9,36 @@ constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
 
-ulong avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
-int min_goals[reasoner::NUMBER_OF_PLAYERS] = {};
-int max_goals[reasoner::NUMBER_OF_PLAYERS] = {};
-ulong states_count = 0, moves_count = 0, depths_sum = 0;
-uint min_depth = std::numeric_limits<uint>::max();
-uint max_depth = std::numeric_limits<uint>::min();
+ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
+int goals_min[reasoner::NUMBER_OF_PLAYERS] = {};
+int goals_max[reasoner::NUMBER_OF_PLAYERS] = {};
+ulong states_count = 0, moves_count = 0;
+ulong depth_sum = 0;
+uint depth_min = std::numeric_limits<uint>::max();
+uint depth_max = std::numeric_limits<uint>::min();
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 std::vector<reasoner::move> legal_moves;
 
 void initialize_goals_arrays(void){
     for(uint i=0;i<reasoner::NUMBER_OF_PLAYERS;++i){
-        min_goals[i] = std::numeric_limits<int>::max();
-        max_goals[i] = std::numeric_limits<int>::min();
+        goals_min[i] = std::numeric_limits<int>::max();
+        goals_max[i] = std::numeric_limits<int>::min();
     }
 }
 
 void count_terminal(const reasoner::game_state state, uint depth){
-    depths_sum += depth;
-    if(depth < min_depth)
-        min_depth = depth;
-    if(depth > max_depth)
-        max_depth = depth;
+    depth_sum += depth;
+    if(depth < depth_min)
+        depth_min = depth;
+    if(depth > depth_max)
+        depth_max = depth;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i){
-        avg_goals[i] += state.get_player_score(i);
-        if(state.get_player_score(i) < min_goals[i])
-            min_goals[i] = state.get_player_score(i);
-        if(state.get_player_score(i) > max_goals[i])
-            max_goals[i] = state.get_player_score(i);
+        goals_avg[i] += state.get_player_score(i);
+        if(state.get_player_score(i) < goals_min[i])
+            goals_min[i] = state.get_player_score(i);
+        if(state.get_player_score(i) > goals_max[i])
+            goals_max[i] = state.get_player_score(i);
     }
 }
 
@@ -95,8 +96,8 @@ int main(int argv, char** argc){
     std::cout << "number of plays: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " plays/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     std::cout << "number of moves: " << moves_count << " (" << std::fixed << count_per_sec(moves_count, ms) << " moves/sec)" << std::endl;
-    std::cout << "depth: avg " << static_cast<long double>(depths_sum)/simulations_count << " min " << min_depth << " max " << max_depth << std::endl;
+    std::cout << "depth: avg " << static_cast<long double>(depth_sum)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
-        std::cout << "goal of player " << i << ": avg " << static_cast<long double>(avg_goals[i])/simulations_count << " min " << min_goals[i] << " max " << max_goals[i] << std::endl;
+        std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << " min " << goals_min[i] << " max " << goals_max[i] << std::endl;
     return 0;
 }

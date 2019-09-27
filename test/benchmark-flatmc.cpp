@@ -10,14 +10,14 @@ constexpr int KEEPER = 0;
 std::mt19937 random_generator(1);
 
 ulong states_count = 0;
-ulong avg_goals[reasoner::NUMBER_OF_PLAYERS] = {};
+ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 std::vector<reasoner::move> legal_moves;
 
 void count_terminal(const reasoner::game_state &state){
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
-        avg_goals[i] += state.get_player_score(i);
+        goals_avg[i] += state.get_player_score(i);
 }
 
 void random_simulation(){
@@ -77,6 +77,6 @@ int main(int argv, char** argc){
     std::cout << "number of plays: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " plays/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
-        std::cout << "goal of player " << i << ": avg " << static_cast<long double>(avg_goals[i])/simulations_count << std::endl;
+        std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << std::endl;
     return 0;
 }
