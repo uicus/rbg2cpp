@@ -49,73 +49,78 @@ void count_terminal(const reasoner::game_state state, uint depth){
     }
 }
 
-void count_semiterminal(const uint semidepth) {
+void count_semiterminal(const uint semidepth){
     semidepth_sum += semidepth;
-	if (semidepth < semidepth_min)
-	    semidepth_min = semidepth;
-	if (semidepth > semidepth_max)
+    if (semidepth < semidepth_min)
+        semidepth_min = semidepth;
+    if (semidepth > semidepth_max)
         semidepth_max = semidepth;
 }
 
-bool apply_random_move_charge(reasoner::game_state &state, uint semidepth) {
-	std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
-	semidepth++;
-	state.get_all_semimoves(cache, semimoves, 1);
-	semimoves_count += semimoves.size();
-	if (semimoves.size() == 0) return false;
-      // Apply random semimove
-	  semistates_count++;
-      std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
-      uint chosen_semimove = distribution(random_generator);
-	  reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
-	  if (state.is_nodal()) {
-		  count_semiterminal(semidepth);
-		  return true;
-	  }
-	  if (apply_random_move_charge(state, semidepth)) return true;
-	  // Backtrack
-	  semifails++;
-	  state.revert(ri);
-	return false;
-}
+// bool apply_random_move_charge(reasoner::game_state &state, uint semidepth) {
+    // std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
+    // semidepth++;
+    // state.get_all_semimoves(cache, semimoves, 1);
+    // semimoves_count += semimoves.size();
+    // if (semimoves.size() == 0) return false;
+    // Apply random semimove
+    // semistates_count++;
+    // std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
+    // uint chosen_semimove = distribution(random_generator);
+    // reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
+    // if (state.is_nodal()) {
+        // count_semiterminal(semidepth);
+        // return true;
+    // }
+    // if (apply_random_move_charge(state, semidepth)) return true;
+    // Backtrack
+    // semifails++;
+    // state.revert(ri);
+    // return false;
+// }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth) {
-	std::vector<reasoner::move> &semimoves = legal_semimoves[semidepth];
-	semidepth++;
-	state.get_all_semimoves(cache, semimoves, 1);
-	semimoves_count += semimoves.size();
-	while (semimoves.size() > 0) {
-      // Apply random semimove
-	  semistates_count++;
-      std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
-      uint chosen_semimove = distribution(random_generator);
-	  reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
-	  if (state.is_nodal()) {
-		  count_semiterminal(semidepth);
-	      return true;
-	  }
-	  if (apply_random_move_exhaustive(state, semidepth)) return true;
-	  // Backtrack
-	  semifails++;
-	  state.revert(ri);
-	  semimoves[chosen_semimove] = semimoves.back();
-	  semimoves.pop_back();
-	}
-	return false;
+    std::vector<reasoner::move>& semimoves = legal_semimoves[semidepth];
+    semidepth++;
+    state.get_all_semimoves(cache, semimoves, 1);
+    semimoves_count += semimoves.size();
+    while(not semimoves.empty()){
+        // Apply random semimove
+        semistates_count++;
+        std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
+        uint chosen_semimove = distribution(random_generator);
+        reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
+        if(state.is_nodal()){
+            count_semiterminal(semidepth);
+            return true;
+        }
+        if(apply_random_move_exhaustive(state, semidepth))
+            return true;
+        // Backtrack
+        semifails++;
+        state.revert(ri);
+        semimoves[chosen_semimove] = semimoves.back();
+        semimoves.pop_back();
+    }
+    return false;
+}
+
+bool apply_random_move(reasoner::game_state &state){
+    return apply_random_move_exhaustive(state, 0);
 }
 
 void random_simulation(){
-	std::vector<reasoner::move> moves;
+    std::vector<reasoner::move> moves;
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){
-        for (uint i = SINGLE_CHARGES; i != 0; i--)
-          if (apply_random_move_charge(state, 0)) goto lb_found;
-        if (!apply_random_move_exhaustive(state, 0)) {
-			count_terminal(state, depth);
-			return;
-		}
-		lb_found:;
+        // for (uint i = SINGLE_CHARGES; i != 0; i--)
+        // if (apply_random_move_charge(state, 0)) goto lb_found;
+        if(not apply_random_move(state)){
+            count_terminal(state, depth);
+            return;
+        }
+        // lb_found:;
         depth++;
         while(state.get_current_player() == KEEPER){
             auto any_move = state.apply_any_move(cache);

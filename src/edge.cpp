@@ -124,6 +124,7 @@ void edge::print_transition_function(
         }
         else if(not local_register[current_state].get_only_exit().label_list.empty() and dynamic_data.should_check_for_visited())
             dynamic_data.visit_node(output);
+        dynamic_data.insert_move_size_check(output);
         local_register[current_state].get_only_exit().handle_labels(output,static_data,dynamic_data);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }

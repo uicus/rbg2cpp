@@ -124,7 +124,7 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
 }
 
 void dynamic_transition_data::insert_move_size_check(cpp_container& output)const{
-    if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation()){
+    if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation() and encountered_any_change){
         output.add_source_line("if(mr.size()>=move_length_limit){");
         output.add_source_line("moves.emplace_back(mr);");
         insert_reverting_sequence_after_success(output);
@@ -300,8 +300,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         insert_reverting_sequence_after_success(output);
     }
     else{
-        if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation() and encountered_any_change)
-            insert_move_size_check(output);
+        insert_move_size_check(output);
         finallize(output);
         state_at_end.print_recursive_calls(state_index,output,static_data,*this);
         insert_reverting_sequence_after_fail(output);
