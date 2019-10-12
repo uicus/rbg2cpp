@@ -166,11 +166,6 @@ void automaton::print_indices_to_actions_correspondence(
         el.print_indices_to_actions_correspondence(output, static_data, generate_revert);
 }
 
-void automaton::print_final_action_effects(cpp_container& output)const{
-    for(const auto& el: local_register)
-        el.print_final_action_effects(output);
-}
-
 rules_board_automaton automaton::generate_rules_board_automaton(
     const std::vector<shift_table>& shift_tables,
     const std::vector<precomputed_pattern>& precomputed_patterns,
@@ -200,39 +195,6 @@ void automaton::print_is_nodal_function(cpp_container& output)const{
     output.add_source_line("default:");
     output.add_source_line("return false;");
     output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("");
-}
-
-void automaton::print_last_edge_modifier_to_cell_change_correspondence(
-    cpp_container& output,
-    const std::vector<shift_table>& shift_tables,
-    const std::vector<std::vector<uint>>& board_structure,
-    const std::map<rbg_parser::token, uint>& edges_to_id)const{
-    std::map<uint, uint> modifier_to_cell_change_table;
-    for(const auto& el: local_register)
-        el.print_last_edge_modifier_to_cell_change_correspondence(output,
-                                                                  shift_tables,
-                                                                  board_structure,
-                                                                  edges_to_id,
-                                                                  modifier_to_cell_change_table);
-    if(modifier_to_cell_change_table.empty()){
-        output.add_header_line("int next_cell(int, int last_cell)const;");
-        output.add_source_line("int game_state::next_cell(int, int last_cell)const{");
-        output.add_source_line("return last_cell;");
-    }
-    else{
-        output.add_header_line("int next_cell(int last_action_index, int last_cell)const;");
-        output.add_source_line("int game_state::next_cell(int last_action_index, int last_cell)const{");
-        output.add_source_line("switch(last_action_index){");
-        for(const auto& el: modifier_to_cell_change_table){
-            output.add_source_line("case "+std::to_string(el.first)+":");
-            output.add_source_line("return cell_change_table"+std::to_string(el.second)+"[last_cell];");
-        }
-        output.add_source_line("default:");
-        output.add_source_line("return last_cell;");
-        output.add_source_line("}");
-    }
     output.add_source_line("}");
     output.add_source_line("");
 }

@@ -18,7 +18,7 @@ unchecked_modifiers_compiler::unchecked_modifiers_compiler(cpp_container& output
 
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::off& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
-    if(static_data.opts.enabled_semi_split_generation() and generate_revert)
+    if(generate_revert)
         output.add_source_line("ri.brr.emplace_back(pieces[action.cell], action.cell);");
     if(static_data.uses_pieces_in_arithmetics){
         output.add_source_line("--pieces_count[pieces[action.cell]];");
@@ -32,7 +32,7 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::assignment& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
     const auto& left_side = m.get_left_side();
     const std::string left_variable_name = std::to_string(static_data.variables_to_id.at(left_side));
-    if(static_data.opts.enabled_semi_split_generation() and generate_revert)
+    if(generate_revert)
         output.add_source_line("ri.vrr.emplace_back(variables["+left_variable_name+"], "+left_variable_name+");");
     arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id,"");
     m.get_right_side()->accept(right_side_printer);
@@ -49,7 +49,7 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::assignment& m){
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::player_switch& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
     output.add_source_line("current_player = "+std::to_string(static_data.variables_to_id.at(m.get_player())+1)+";");
-    if(not static_data.opts.enabled_semi_split_generation()){
+    if(not generate_revert){
         output.add_source_line("current_cell = action.cell;");
         output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
     }
@@ -59,7 +59,7 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::player_switch& m){
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::keeper_switch& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
     output.add_source_line("current_player = 0;");
-    if(not static_data.opts.enabled_semi_split_generation()){
+    if(not generate_revert){
         output.add_source_line("current_cell = action.cell;");
         output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
     }

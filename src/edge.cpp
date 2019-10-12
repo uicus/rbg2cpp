@@ -13,7 +13,6 @@
 #include"unchecked_modifiers_compiler.hpp"
 #include"next_cells_getter.hpp"
 #include"cache_checks_container.hpp"
-#include"next_board_getter.hpp"
 #include<numeric>
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
@@ -105,7 +104,10 @@ void edge::print_transition_function(
         arguments.emplace_back("resettable_bitarray_stack& cache");
     if(static_data.kind == all_getter){
         arguments.emplace_back("move_representation& mr");
-        arguments.emplace_back("std::vector<move>& moves");
+        if(static_data.opts.enabled_semi_split_generation())
+            arguments.emplace_back("std::vector<semimove>& moves");
+        else
+            arguments.emplace_back("std::vector<move>& moves");
     }
     if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation())
         arguments.emplace_back("unsigned int move_length_limit");
@@ -124,7 +126,7 @@ void edge::print_transition_function(
         }
         else if(not local_register[current_state].get_only_exit().label_list.empty() and dynamic_data.should_check_for_visited())
             dynamic_data.visit_node(output);
-        dynamic_data.insert_move_size_check(output);
+        dynamic_data.insert_move_size_check(output, current_state);
         local_register[current_state].get_only_exit().handle_labels(output,static_data,dynamic_data);
         current_state = local_register[current_state].get_only_exit().local_register_endpoint_index;
     }
@@ -192,27 +194,6 @@ void edge::print_indices_to_actions_correspondence(
         }
 }
 
-void edge::print_final_action_effects(cpp_container& output)const{
-    for (auto el=label_list.rbegin(); el!=label_list.rend(); ++el)
-        switch(el->k){
-            case action:
-                if(el->a->is_modifier()){
-                    output.add_source_line("case "+std::to_string(el->a->index_in_expression())+":");
-                    output.add_source_line("current_state = "+std::to_string(local_register_endpoint_index)+";");
-                    output.add_source_line("break;");
-                    return;
-                }
-                break;
-            case positive_pattern:
-            case negative_pattern:
-            case s_pattern:
-            case s_table:
-            case always_true:
-            case always_false:
-                break;
-        }
-}
-
 std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
     uint starting_cell,
     const std::vector<shift_table>& shift_tables,
@@ -257,46 +238,3 @@ std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
     }
     return std::make_tuple(modifier_encountered, std::move(next_cells));
 }
-
-void edge::print_last_edge_modifier_to_cell_change_correspondence(
-    cpp_container& output,
-    const std::vector<shift_table>& shift_tables,
-    const std::vector<std::vector<uint>>& board_structure,
-    const std::map<rbg_parser::token, uint>& edges_to_id,
-    std::map<uint, uint>& modifier_to_cell_change_table)const{
-    for(uint i=label_list.size();i>0;--i)
-        if(label_list[i-1].k == action and label_list[i-1].a->is_modifier()){
-            next_board_getter nbg(board_structure, edges_to_id);
-            for(uint j=i-1;j<label_list.size();++j)
-                switch(label_list[j].k){
-                    case action:
-                        label_list[j].a->accept(nbg);
-                        break;
-                    case s_table:
-                        nbg.apply_shift_table(shift_tables[label_list[j].structure_index]);
-                        break;
-                    case s_pattern:
-                    case positive_pattern:
-                    case negative_pattern:
-                    case always_true:
-                    case always_false:
-                        break;
-                }
-            auto shifts_result = nbg.get_next_board();
-            if(shifts_result){
-                uint table_index = modifier_to_cell_change_table.size();
-                modifier_to_cell_change_table.insert(std::make_pair(label_list[i-1].a->index_in_expression(), table_index));
-                std::string table_string = "static const int cell_change_table"+std::to_string(table_index)+"["+std::to_string(board_structure.size()+1)+"] = {0";
-                for(const auto& el: *shifts_result){
-                    if(el)
-                        table_string += ","+std::to_string(*el+1);
-                    else
-                        table_string += ",0";
-                }
-                table_string += "};";
-                output.add_source_line(table_string);
-            }
-            return;
-        }
-}
-

@@ -196,8 +196,8 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("public:");
     generate_state_getters();
     if(opts.enabled_semi_split_generation()){
-        output.add_header_line("revert_information apply_move_with_revert(const move& m);");
-        output.add_source_line("revert_information game_state::apply_move_with_revert(const move& m){");
+        output.add_header_line("revert_information apply_semimove_with_revert(const semimove& m);");
+        output.add_source_line("revert_information game_state::apply_semimove_with_revert(const semimove& m){");
         output.add_source_line("revert_information ri;");
         output.add_source_line("ri.previous_cell = current_cell;");
         output.add_source_line("ri.previous_player = current_player;");
@@ -205,36 +205,26 @@ void game_compiler::generate_game_state_class(void){
         output.add_source_line("for(const auto& el: m.mr){");
         output.add_source_line("apply_action_with_revert(el, ri);");
         output.add_source_line("}");
-        output.add_source_line("current_cell = next_cell(m.mr.back().index, m.mr.back().cell);");
-        output.add_source_line("switch(m.mr.back().index){");
-        game_automaton.print_final_action_effects(output);
-        output.add_source_line("default:");
-        output.add_source_line("break;");
-        output.add_source_line("}");
+        output.add_source_line("current_cell = m.cell;");
+        output.add_source_line("current_state = m.state;");
         output.add_source_line("return ri;");
         output.add_source_line("}");
         output.add_source_line("");
-        output.add_header_line("void apply_move(const move& m);");
-        output.add_source_line("void game_state::apply_move(const move& m){");
+        output.add_header_line("void apply_semimove(const semimove& m);");
+        output.add_source_line("void game_state::apply_semimove(const semimove& m){");
         output.add_source_line("for(const auto& el: m.mr){");
         output.add_source_line("apply_action(el);");
         output.add_source_line("}");
-        output.add_source_line("current_cell = next_cell(m.mr.back().index, m.mr.back().cell);");
-        output.add_source_line("switch(m.mr.back().index){");
-        game_automaton.print_final_action_effects(output);
-        output.add_source_line("default:");
-        output.add_source_line("break;");
-        output.add_source_line("}");
+        output.add_source_line("current_cell = m.cell;");
+        output.add_source_line("current_state = m.state;");
         output.add_source_line("}");
     }
-    else{
-        output.add_header_line("void apply_move(const move& m);");
-        output.add_source_line("void game_state::apply_move(const move& m){");
-        output.add_source_line("for(const auto& el: m.mr){");
-        output.add_source_line("apply_action(el);");
-        output.add_source_line("}");
-        output.add_source_line("}");
-    }
+    output.add_header_line("void apply_move(const move& m);");
+    output.add_source_line("void game_state::apply_move(const move& m){");
+    output.add_source_line("for(const auto& el: m.mr){");
+    output.add_source_line("apply_action(el);");
+    output.add_source_line("}");
+    output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("std::vector<move> get_all_moves(resettable_bitarray_stack& cache);");
     output.add_source_line("std::vector<move> game_state::get_all_moves(resettable_bitarray_stack& cache){");
@@ -247,11 +237,6 @@ void game_compiler::generate_game_state_class(void){
     generate_main_next_getters();
     generate_reverter();
     output.add_header_line("private:");
-    if(opts.enabled_semi_split_generation())
-        game_automaton.print_last_edge_modifier_to_cell_change_correspondence(output,
-                                                                              shift_tables,
-                                                                              board_structure,
-                                                                              edges_to_id);
     generate_actions_applier();
     generate_states_iterator();
     output.add_header_line("int current_cell = 1;");
@@ -346,11 +331,16 @@ void game_compiler::generate_main_next_getters(void){
     if(opts.enabled_semi_split_generation()){
         output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
         output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves){");
-        output.add_source_line("get_all_semimoves(cache, moves, 1000);");
+        output.add_source_line("std::vector<semimove> semimoves;");
+        output.add_source_line("get_all_semimoves(cache, semimoves, 1000);");
+        output.add_source_line("moves.clear();");
+        output.add_source_line("for(const auto& el: semimoves){");
+        output.add_source_line("moves.emplace_back(el.mr);");
+        output.add_source_line("}");
         output.add_source_line("}");
         output.add_source_line("");
-        output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves, unsigned int move_length_limit);");
-        output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves, unsigned int move_length_limit){");
+        output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<semimove>& moves, unsigned int move_length_limit);");
+        output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<semimove>& moves, unsigned int move_length_limit){");
     }
     else{
         output.add_header_line("void get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves);");
@@ -530,14 +520,40 @@ void game_compiler::generate_move_class(void){
     output.add_header_line("struct move{");
     output.add_header_line("move_representation mr;");
     output.add_header_line("move(void) = default;");
-    output.add_header_line("move(const move_representation& mr)");
-    output.add_header_line(": mr(mr){");
-    output.add_header_line("}");
+    output.add_header_line("move(const move_representation& mr);");
+    output.add_source_line("move::move(const move_representation& mr)");
+    output.add_source_line(": mr(mr){");
+    output.add_source_line("}");
     output.add_header_line("bool operator==(const move& rhs) const;");
     output.add_source_line("bool move::operator==(const move& rhs) const{");
     output.add_source_line("return mr == rhs.mr;");
     output.add_source_line("}");
     output.add_header_line("};");
+    if(opts.enabled_semi_split_generation()){
+        output.add_header_line("class semimove{");
+        output.add_header_line("friend class game_state;");
+        output.add_header_line("private:");
+        output.add_header_line("move_representation mr;");
+        output.add_header_line("int cell;");
+        output.add_header_line("int state;");
+        output.add_header_line("semimove(void)=default;");
+        output.add_header_line("public:");
+        output.add_header_line("semimove(const move_representation& mr, int cell, int state);");
+        output.add_source_line("semimove::semimove(const move_representation& mr, int cell, int state)");
+        output.add_source_line(": mr(mr)");
+        output.add_source_line(", cell(cell)");
+        output.add_source_line(", state(state){");
+        output.add_source_line("}");
+        output.add_header_line("const move_representation& get_actions(void)const;");
+        output.add_source_line("const move_representation& semimove::get_actions(void)const{");
+        output.add_source_line("return mr;");
+        output.add_source_line("}");
+        output.add_header_line("bool operator==(const semimove& rhs) const;");
+        output.add_source_line("bool semimove::operator==(const semimove& rhs) const{");
+        output.add_source_line("return cell == rhs.cell and state == rhs.state and mr == rhs.mr;");
+        output.add_source_line("}");
+        output.add_header_line("};");
+    }
 }
 
 void game_compiler::print_all_shift_tables(void){

@@ -28,7 +28,7 @@ ulong charges_count = 0, charges_successful = 0;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::move> legal_semimoves[MAX_SEMIDEPTH];
+std::vector<reasoner::semimove> legal_semimoves[MAX_SEMIDEPTH];
 
 void initialize_goals_arrays(void){
     for(uint i=0;i<reasoner::NUMBER_OF_PLAYERS;++i){
@@ -60,29 +60,29 @@ void count_semiterminal(const uint semidepth){
         semidepth_max = semidepth;
 }
 
-reasoner::revert_information apply_random_move_from_given(reasoner::game_state &state, std::vector<reasoner::move> &moves){
-    std::uniform_int_distribution<uint> distribution(0,moves.size()-1);
-    uint chosen_move = distribution(random_generator);
-    reasoner::revert_information ri = state.apply_move_with_revert(moves[chosen_move]);
-    moves[chosen_move] = moves.back();
-    moves.pop_back();
+reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::semimove> &semimoves){
+    std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
+    uint chosen_semimove = distribution(random_generator);
+    reasoner::revert_information ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
+    semimoves[chosen_semimove] = semimoves.back();
+    semimoves.pop_back();
     return ri;
 }
 
-std::vector<reasoner::move>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::move>& semimoves = legal_semimoves[semidepth];
+std::vector<reasoner::semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
+    std::vector<reasoner::semimove>& semimoves = legal_semimoves[semidepth];
     state.get_all_semimoves(cache, semimoves, 1);
     semimoves_count += semimoves.size();
     return semimoves;
 }
 
 bool apply_random_move_charge(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::move>& semimoves = fill_semimoves_table(state, semidepth);
+    std::vector<reasoner::semimove>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     if(semimoves.empty())
         return false;
     semistates_count++;
-    auto ri = apply_random_move_from_given(state, semimoves);
+    auto ri = apply_random_semimove_from_given(state, semimoves);
     if(state.is_nodal()){
         count_semiterminal(semidepth);
         return true;
@@ -105,11 +105,11 @@ bool apply_random_charge(reasoner::game_state &state){
 }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::move>& semimoves = fill_semimoves_table(state, semidepth);
+    std::vector<reasoner::semimove>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     while(not semimoves.empty()){
-        auto ri = apply_random_move_from_given(state, semimoves);
-        semistates_count++; // BUG? counting semistate every time we choose a random move from it?
+        auto ri = apply_random_semimove_from_given(state, semimoves);
+        semistates_count++;
         if(state.is_nodal()){
             count_semiterminal(semidepth);
             return true;
@@ -130,7 +130,6 @@ bool apply_random_move(reasoner::game_state &state){
 }
 
 void random_simulation(){
-    std::vector<reasoner::move> moves;
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){

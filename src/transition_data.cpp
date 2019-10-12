@@ -123,10 +123,10 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
     output.add_source_line("variables["+std::to_string(variable_id)+"] = variable_change"+std::to_string(stack_position)+";");
 }
 
-void dynamic_transition_data::insert_move_size_check(cpp_container& output)const{
+void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint state_index)const{
     if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation() and encountered_any_change){
         output.add_source_line("if(mr.size()>=move_length_limit){");
-        output.add_source_line("moves.emplace_back(mr);");
+        output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
         insert_reverting_sequence_after_success(output);
         output.add_source_line("}");
     }
@@ -290,8 +290,12 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         insert_reverting_sequence_after_success(output);
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
         handle_cell_check(output);
-        if(static_data.kind == all_getter)
-            output.add_source_line("moves.emplace_back(mr);");
+        if(static_data.kind == all_getter){
+            if(static_data.opts.enabled_semi_split_generation())
+                output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
+            else
+                output.add_source_line("moves.emplace_back(mr);");
+        }
         else{
             output.add_source_line("current_player = "+std::to_string(next_player)+";");
             output.add_source_line("current_state = "+std::to_string(state_index)+";");
@@ -300,7 +304,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         insert_reverting_sequence_after_success(output);
     }
     else{
-        insert_move_size_check(output);
+        insert_move_size_check(output, state_index);
         finallize(output);
         state_at_end.print_recursive_calls(state_index,output,static_data,*this);
         insert_reverting_sequence_after_fail(output);

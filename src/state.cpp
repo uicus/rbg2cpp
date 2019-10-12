@@ -190,11 +190,6 @@ void state::print_indices_to_actions_correspondence(
         el.print_indices_to_actions_correspondence(output, static_data, generate_revert);
 }
 
-void state::print_final_action_effects(cpp_container& output)const{
-    for(const auto& el: next_states)
-        el.print_final_action_effects(output);
-}
-
 void state::add_state_to_board_automaton(
     uint own_number,
     rules_board_automaton& rba,
@@ -209,18 +204,4 @@ void state::add_state_to_board_automaton(
                                                 precomputed_patterns,
                                                 board_structure,
                                                 edges_to_id);
-}
-
-void state::print_last_edge_modifier_to_cell_change_correspondence(
-        cpp_container& output,
-        const std::vector<shift_table>& shift_tables,
-        const std::vector<std::vector<uint>>& board_structure,
-        const std::map<rbg_parser::token, uint>& edges_to_id,
-        std::map<uint, uint>& modifier_to_cell_change_table)const{
-    for(const auto& el: next_states)
-        el.print_last_edge_modifier_to_cell_change_correspondence(output,
-                                                                  shift_tables,
-                                                                  board_structure,
-                                                                  edges_to_id,
-                                                                  modifier_to_cell_change_table);
 }
