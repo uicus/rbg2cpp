@@ -155,6 +155,7 @@ int main(int argv, char** argc){
 		std::cout << semilength << ": plays/sec " << eff;
 		std::cout << " simulations " << simulations_count << " semimovelength_max " << semimovelength_max;
 		std::cout << " davg " << static_cast<long double>(states_count)/simulations_count << " dmin " << depth_min << " dmax " << depth_max;
+        std::cout << " sdavg " << static_cast<long double>(semidepth_sum)/states_count << " sdmin " << semidepth_min << " sdmax " << semidepth_max;
         std::cout << " semistates " << semistates_count << " semimoves " << semimoves_count << std::endl;
         if (best_eff < eff){
 		    best_eff = eff;
