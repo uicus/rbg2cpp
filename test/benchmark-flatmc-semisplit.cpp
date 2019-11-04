@@ -6,38 +6,39 @@
 typedef unsigned int uint;
 typedef unsigned long ulong;
 constexpr int KEEPER = 0;
+constexpr uint MAX_SEMIDEPTH = 100;
 
 std::mt19937 random_generator(1);
 
+uint semilength;
 ulong states_count = 0, semistates_count = 0;
 ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::move> legal_moves;
+std::vector<reasoner::move> legal_semimoves[MAX_SEMIDEPTH];
 
 void count_terminal(const reasoner::game_state &state){
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         goals_avg[i] += state.get_player_score(i);
 }
 
-reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::semimove> &semimoves){
+reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::move> &semimoves){
     std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
     uint chosen_semimove = distribution(random_generator);
-    reasoner::revert_information ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
+    reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
     semimoves[chosen_semimove] = semimoves.back();
     semimoves.pop_back();
     return ri;
 }
 
-std::vector<reasoner::semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::semimove>& semimoves = legal_semimoves[semidepth];
-    state.get_all_semimoves(cache, semimoves, 1);
-    semimoves_count += semimoves.size();
+std::vector<reasoner::move>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
+    std::vector<reasoner::move>& semimoves = legal_semimoves[semidepth];
+    state.get_all_semimoves(cache, semimoves, semilength);
     return semimoves;
 }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::semimove>& semimoves = fill_semimoves_table(state, semidepth);
+    std::vector<reasoner::move>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     while(not semimoves.empty()){
         auto ri = apply_random_semimove_from_given(state, semimoves);
@@ -75,8 +76,8 @@ double count_per_sec(ulong count, ulong ms){
 }
 
 int main(int argv, char** argc){
-    if(argv != 2){
-        std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
+    if(argv != 3){
+        std::cout << "Wrong arguments. Exitting..." << std::endl;
         return 1;
     }
     while(initial_state.get_current_player() == KEEPER){
@@ -85,6 +86,7 @@ int main(int argv, char** argc){
             return 2;
     }
     std::chrono::duration simulation_duration = std::chrono::milliseconds(std::stoi(argc[1]));
+    semilength = std::stoi(argc[2]);
 
     ulong simulations_count = 0;
     std::chrono::steady_clock::time_point end_time;

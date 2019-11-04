@@ -8,29 +8,33 @@ typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
 constexpr uint MAX_SEMIDEPTH = 100;
+constexpr uint MAX_SEMILENGTH = 32;
+constexpr uint RANDOM_SEED = 1;
 
-std::mt19937 random_generator(1);
+std::mt19937 random_generator;
 
 uint semilength;
 
-ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
-int goals_min[reasoner::NUMBER_OF_PLAYERS] = {};
-int goals_max[reasoner::NUMBER_OF_PLAYERS] = {};
+ulong goals_avg[reasoner::NUMBER_OF_PLAYERS];
+int goals_min[reasoner::NUMBER_OF_PLAYERS];
+int goals_max[reasoner::NUMBER_OF_PLAYERS];
 
-ulong states_count = 0, semistates_count = 0, semimoves_count = 0;
-ulong semidepth_sum = 0;
-uint semidepth_min = std::numeric_limits<uint>::max();
-uint semidepth_max = std::numeric_limits<uint>::min();
-
-uint depth_min = std::numeric_limits<uint>::max();
-uint depth_max = std::numeric_limits<uint>::min();
+ulong simulations_count, states_count, semistates_count, semimoves_count;
+ulong semidepth_sum;
+uint semidepth_min, semidepth_max, semimovelength_max;
+uint depth_min, depth_max;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 std::vector<reasoner::move> legal_semimoves[MAX_SEMIDEPTH];
 
-void initialize_goals_arrays(void){
+void initialize(void){
+	random_generator = std::mt19937(RANDOM_SEED);
+	simulations_count = states_count = semistates_count = semimoves_count = semidepth_sum = semimovelength_max = 0;
+    semidepth_min = depth_min = std::numeric_limits<uint>::max();
+    semidepth_max = depth_max = semimovelength_max = std::numeric_limits<uint>::min();
     for(uint i=0;i<reasoner::NUMBER_OF_PLAYERS;++i){
+		goals_avg[i] = 0;
         goals_min[i] = std::numeric_limits<int>::max();
         goals_max[i] = std::numeric_limits<int>::min();
     }
@@ -77,6 +81,7 @@ std::vector<reasoner::move>& fill_semimoves_table(reasoner::game_state &state, u
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
     std::vector<reasoner::move>& semimoves = fill_semimoves_table(state, semidepth);
+    for (reasoner::move &m: semimoves) if (m.mr.size() > semimovelength_max) semimovelength_max = m.mr.size();
     semidepth++;
     while(not semimoves.empty()){
         auto ri = apply_random_semimove_from_given(state, semimoves);
@@ -115,35 +120,49 @@ double count_per_sec(ulong count, ulong ms){
     return static_cast<long double>(count)/ms*1000.0;
 }
 
+ulong run_simulations_for_duration(const ulong ms) {
+    initialize();
+    std::chrono::steady_clock::time_point end_time;
+    std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
+    std::chrono::steady_clock::time_point planned_end_time = start_time + std::chrono::milliseconds(ms);
+    while(true){
+        simulations_count++;
+        random_simulation();
+        end_time = std::chrono::steady_clock::now();
+        if(end_time >= planned_end_time)
+            break;
+	}
+	return std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
+}
+
 int main(int argv, char** argc){
-    if(argv != 3){
-        std::cout << "Wrong arguments. Exitting..." << std::endl;
+    if(argv != 2){
+        std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
         return 1;
     }
-    initialize_goals_arrays();
     while(initial_state.get_current_player() == KEEPER){
         auto any_move = initial_state.apply_any_move(cache);
         if(not any_move)
             return 2;
     }
-    ulong simulations_count = std::stoi(argc[1]);
-    semilength = std::stoi(argc[2]);
+    ulong estimation_time_ms = std::stoi(argc[1]);
 
-    std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    for(ulong i = 0; i < simulations_count; ++i)
-        random_simulation();
-    std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
-
-    ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout << "semilength: " << semilength << "\n";
-    std::cout << "time: " << ms << " ms" << std::endl;
-    std::cout << "number of plays: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " plays/sec)" << std::endl;
-    std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
-    std::cout << "number of semistates: " << semistates_count << " (" << std::fixed << count_per_sec(semistates_count, ms) << " semistates/sec)" << std::endl;
-    std::cout << "number of semimoves: " << semimoves_count << " (" << std::fixed << count_per_sec(semimoves_count, ms) << " semimoves/sec)" << std::endl;
-    std::cout << "depth: avg " << static_cast<long double>(states_count)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
-    std::cout << "semidepth: avg " << static_cast<long double>(semidepth_sum)/states_count << " min " << semidepth_min << " max " << semidepth_max << std::endl;
-    for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
-        std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << " min " << goals_min[i] << " max " << goals_max[i] << std::endl;
+	double best_eff = 0.0;
+	uint best_semilength = 1;
+	for (semilength = 1; semilength <= MAX_SEMILENGTH; semilength++){
+		ulong used_time = run_simulations_for_duration(estimation_time_ms);
+		double eff = count_per_sec(simulations_count, used_time);
+		std::cout << semilength << ": plays/sec " << eff;
+		std::cout << " simulations " << simulations_count << " semimovelength_max " << semimovelength_max;
+		std::cout << " davg " << static_cast<long double>(states_count)/simulations_count << " dmin " << depth_min << " dmax " << depth_max;
+        std::cout << " semistates " << semistates_count << " semimoves " << semimoves_count << std::endl;
+        if (best_eff < eff){
+		    best_eff = eff;
+		    best_semilength = semilength;
+		}
+		if (semimovelength_max < semilength) break;
+	}
+	std::cout << "Best semilength = " << best_semilength << std::endl;
+	
     return 0;
 }
