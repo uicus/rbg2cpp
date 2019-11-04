@@ -26,7 +26,7 @@ uint depth_min, depth_max;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::move> legal_semimoves[MAX_SEMIDEPTH];
+std::vector<reasoner::semimove> legal_semimoves[MAX_SEMIDEPTH];
 
 void initialize(void){
 	random_generator = std::mt19937(RANDOM_SEED);
@@ -63,25 +63,25 @@ void count_semiterminal(const uint semidepth){
         semidepth_max = semidepth;
 }
 
-reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::move> &semimoves){
+reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::semimove> &semimoves){
     std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
     uint chosen_semimove = distribution(random_generator);
-    reasoner::revert_information ri = state.apply_move_with_revert(semimoves[chosen_semimove]);
+    reasoner::revert_information ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
     semimoves[chosen_semimove] = semimoves.back();
     semimoves.pop_back();
     return ri;
 }
 
-std::vector<reasoner::move>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::move>& semimoves = legal_semimoves[semidepth];
+std::vector<reasoner::semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
+    std::vector<reasoner::semimove>& semimoves = legal_semimoves[semidepth];
     state.get_all_semimoves(cache, semimoves, semilength);
     semimoves_count += semimoves.size();
     return semimoves;
 }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::move>& semimoves = fill_semimoves_table(state, semidepth);
-    for (reasoner::move &m: semimoves) if (m.mr.size() > semimovelength_max) semimovelength_max = m.mr.size();
+    std::vector<reasoner::semimove>& semimoves = fill_semimoves_table(state, semidepth);
+    for (reasoner::semimove &m: semimoves) if (m.get_actions().size() > semimovelength_max) semimovelength_max = m.get_actions().size();
     semidepth++;
     while(not semimoves.empty()){
         auto ri = apply_random_semimove_from_given(state, semimoves);
