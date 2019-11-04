@@ -50,7 +50,7 @@ double count_per_sec(ulong count, ulong ms){
 
 int main(int argv, char** argc){
     if(argv != 2){
-        std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
+        std::cout << "Benchmark time unspecified. Exitting..." << std::endl;
         return 1;
     }
     while(initial_state.get_current_player() == KEEPER){

@@ -21,7 +21,9 @@ COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
 SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto
 
 SIMULATIONS := 100
+SEMILENGTH := 1
 DEPTH := 3
+TIME := 100
 MEMORY := 2000000
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
@@ -52,93 +54,31 @@ $(OBJ_DIR):
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-simulate_%: $(RBG_PARSER_DIR)/examples/%.rbg
+define RUN_SIMULATION
+$(1)_ggg_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@rm -rf $(TEST_DIR)/reasoner.*
 	@rm -rf $(TEST_DIR)/test
 	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -o reasoner $<
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) $(2) -o reasoner $$<
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
-	@echo "******** Running simulation... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(3).cpp"
+	@echo "******** Running $(4)... ********"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(5)
+endef
 
-simulate_semisplit_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	@rm -rf $(TEST_DIR)/reasoner.*
-	@rm -rf $(TEST_DIR)/test
-	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -fsemi-split -o reasoner $<
-	@mv reasoner.hpp $(TEST_DIR)/
-	@mv reasoner.cpp $(TEST_DIR)/
-	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation_semisplit.cpp"
-	@echo "******** Running simulation... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS) $(SEMILENGTH)
-
-estimate_semisplit_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	@rm -rf $(TEST_DIR)/reasoner.*
-	@rm -rf $(TEST_DIR)/test
-	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -fsemi-split -o reasoner $<
-	@mv reasoner.hpp $(TEST_DIR)/
-	@mv reasoner.cpp $(TEST_DIR)/
-	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/estimation_semisplit.cpp"
-	@echo "******** Running simulation... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
+$(eval $(call RUN_SIMULATION,simulate,,simulation,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,simulate_semisplit,-fsemi-split,simulation_semisplit,simulation,$(SIMULATIONS) $(SEMILENGTH)))
+$(eval $(call RUN_SIMULATION,estimate_semisplit,-fsemi-split,estimation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,benchmark,,benchmark_flatmc,benchmark flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME) $(SEMILENGTH)))
+$(eval $(call RUN_SIMULATION,perft,,perft,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,perft_semisplit,perft,$(DEPTH)))
 
 simulate_old:
 	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
-
-benchmark_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	@rm -rf $(TEST_DIR)/reasoner.*
-	@rm -rf $(TEST_DIR)/test
-	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -o reasoner $<
-	@mv reasoner.hpp $(TEST_DIR)/
-	@mv reasoner.cpp $(TEST_DIR)/
-	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark-flatmc.cpp"
-	@echo "******** Running benchmark flat MC... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
-
-benchmark_semisplit_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	@rm -rf $(TEST_DIR)/reasoner.*
-	@rm -rf $(TEST_DIR)/test
-	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -fsemi-split -o reasoner $<
-	@mv reasoner.hpp $(TEST_DIR)/
-	@mv reasoner.cpp $(TEST_DIR)/
-	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark-flatmc-semisplit.cpp"
-	@echo "******** Running benchmark semisplit flat MC... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS) $(SEMILENGTH)
-
-perft_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	@rm -rf $(TEST_DIR)/reasoner.*
-	@rm -rf $(TEST_DIR)/test
-	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -o reasoner $<
-	@mv reasoner.hpp $(TEST_DIR)/
-	@mv reasoner.cpp $(TEST_DIR)/
-	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft.cpp"
-	@echo "******** Running perft... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(DEPTH)
-
-perft_semisplit_%: $(RBG_PARSER_DIR)/examples/%.rbg
-	@rm -rf $(TEST_DIR)/reasoner.*
-	@rm -rf $(TEST_DIR)/test
-	@echo "Running $(TARGET)..."
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(BIN_DIR)/$(TARGET) -fsemi-split -o reasoner $<
-	@mv reasoner.hpp $(TEST_DIR)/
-	@mv reasoner.cpp $(TEST_DIR)/
-	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/perft_semisplit.cpp"
-	@echo "******** Running simulation... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(DEPTH)
 
 clean:
 	cd $(RBG_PARSER_DIR); make clean; cd ..
