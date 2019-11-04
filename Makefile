@@ -55,7 +55,7 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 define RUN_SIMULATION
-$(1)_ggg_%: $(RBG_PARSER_DIR)/examples/%.rbg
+$(1)_%: $(RBG_PARSER_DIR)/examples/%.rbg
 	@rm -rf $(TEST_DIR)/reasoner.*
 	@rm -rf $(TEST_DIR)/test
 	@echo "Running $(TARGET)..."
