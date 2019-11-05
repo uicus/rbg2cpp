@@ -135,7 +135,7 @@ int main(int argv, char** argc){
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout << "semilength: " << semilength << "\n";
+    std::cout << "semilength: " << semilength << std::endl;
     std::cout << "time: " << ms << " ms" << std::endl;
     std::cout << "number of plays: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " plays/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
