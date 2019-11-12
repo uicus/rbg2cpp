@@ -13,18 +13,18 @@ RBG_PARSER_DIR := rbgParser
 PARSER_INC_DIR := $(RBG_PARSER_DIR)/src
 PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
-C := g++
-INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
-
-COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
-SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto
-
 SIMULATIONS := 100
 SEMILENGTH := 1
 DEPTH := 3
 TIME := 100
 MEMORY := 2000000
+
+C := g++
+INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
+COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
+
+COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
+SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto -DSEMILENGTH=$(SEMILENGTH)
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
@@ -69,10 +69,10 @@ $(1)_%: $(RBG_PARSER_DIR)/examples/%.rbg
 endef
 
 $(eval $(call RUN_SIMULATION,simulate,,simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,simulate_semisplit,-fsemi-split,simulation_semisplit,simulation,$(SIMULATIONS) $(SEMILENGTH)))
+$(eval $(call RUN_SIMULATION,simulate_semisplit,-fsemi-split,simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,estimate_semisplit,-fsemi-split,estimation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,benchmark,,benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME) $(SEMILENGTH)))
+$(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,perft,,perft,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,perft_semisplit,perft,$(DEPTH)))
 
