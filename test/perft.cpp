@@ -5,10 +5,12 @@
 typedef unsigned int uint;
 typedef unsigned long ulong;
 constexpr int KEEPER = 0;
+constexpr uint MAX_DEPTH = 100;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 ulong states_count, leaves_count;
+std::vector<reasoner::move> legal_moves[MAX_DEPTH];
 
 void perft_state_at_depth(reasoner::game_state& state, uint depth){
     if(depth == 0 and state.get_current_player() != KEEPER){
@@ -30,8 +32,8 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth){
         }
         else{
             ++states_count;
-            auto legal_moves = state.get_all_moves(cache);
-            for(const auto& el: legal_moves){
+            state.get_all_moves(cache, legal_moves[depth]);
+            for(const auto& el: legal_moves[depth]){
                 auto temp_state = state;
                 temp_state.apply_move(el);
                 perft_state_at_depth(temp_state,depth-1);

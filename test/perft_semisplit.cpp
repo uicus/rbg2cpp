@@ -5,12 +5,14 @@
 typedef unsigned int uint;
 typedef unsigned long ulong;
 constexpr int KEEPER = 0;
+constexpr int MAX_SEMIDEPTH = 100;
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 ulong states_count, leaves_count;
+std::vector<reasoner::semimove> legal_semimoves[MAX_SEMIDEPTH];
 
-void perft_state_at_depth(reasoner::game_state& state, uint depth){
+void perft_state_at_depth(reasoner::game_state& state, uint depth, uint semidepth){
     if(depth == 0 and state.is_nodal() and state.get_current_player() != KEEPER){
         ++states_count;
         ++leaves_count;
@@ -21,7 +23,7 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth){
             auto temp_state = state;
             auto any_move = temp_state.apply_any_move(cache);
             if(any_move)
-                return perft_state_at_depth(temp_state, depth);
+                return perft_state_at_depth(temp_state, depth, semidepth);
             else{
                 ++states_count;
                 if(depth == 0)
@@ -32,15 +34,14 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth){
         else{
             if(state.is_nodal())
                 ++states_count;
-            std::vector<reasoner::semimove> legal_semimoves;
-            state.get_all_semimoves(cache, legal_semimoves, 1);
-            for(const auto& el: legal_semimoves){
+            state.get_all_semimoves(cache, legal_semimoves[semidepth], SEMILENGTH);
+            for(const auto& el: legal_semimoves[semidepth]){
                 auto was_nodal = state.is_nodal();
                 auto reverter = state.apply_semimove_with_revert(el);
                 if(was_nodal)
-                    perft_state_at_depth(state,depth-1);
+                    perft_state_at_depth(state,depth-1,semidepth+1);
                 else
-                    perft_state_at_depth(state,depth);
+                    perft_state_at_depth(state,depth,semidepth+1);
                 state.revert(reverter);
             }
         }
@@ -48,7 +49,7 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth){
 }
 
 void perft(uint depth){
-    perft_state_at_depth(initial_state,depth);
+    perft_state_at_depth(initial_state,depth,0);
 }
 
 double count_per_sec(ulong count, ulong ms){
