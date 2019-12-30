@@ -4,7 +4,7 @@ Regular Boardgames to C++ compiler
 ### Usage
 Simply clone the parser:
 ```
-git clone https://github.com/uicus/rbg2cpp.git
+git clone --recurse-submodules https://github.com/uicus/rbg2cpp.git
 ```
 
 Then compile it with
