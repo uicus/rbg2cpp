@@ -6,6 +6,7 @@
 #include"actions_compiler.hpp"
 #include"transition_data.hpp"
 #include"rules_board_automaton.hpp"
+#include"modifiers_counter.hpp"
 #include<algorithm>
 
 constexpr int MAXIMAL_GAME_DEPENDENT_STAIGHTNESS = 10;
@@ -583,6 +584,37 @@ void game_compiler::generate_reverter(void){
     }
 }
 
+void game_compiler::generate_indices_converters(void){
+    modifiers_counter mc;
+    input.get_moves()->accept(mc);
+    auto modifiers_count_to_actions_count = mc.get_result();
+    output.add_header_line("int action_to_modifier_index(int action_index);");
+    output.add_source_line("int action_to_modifier_index(int action_index){");
+    output.add_source_line("switch(action_index){");
+    for(uint i=0;i<modifiers_count_to_actions_count.size();++i){
+        output.add_source_line("case "+std::to_string(modifiers_count_to_actions_count[i])+":");
+        output.add_source_line("return "+std::to_string(i)+";");
+    }
+    output.add_source_line("default:");
+    output.add_source_line("return -1;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("int modifier_to_action_index(int modifier_index);");
+    output.add_source_line("int modifier_to_action_index(int modifier_index){");
+    output.add_source_line("switch(modifier_index){");
+    for(uint i=0;i<modifiers_count_to_actions_count.size();++i){
+        output.add_source_line("case "+std::to_string(i)+":");
+        output.add_source_line("return "+std::to_string(modifiers_count_to_actions_count[i])+";");
+    }
+    output.add_source_line("default:");
+    output.add_source_line("return -1;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+
+}
+
 const cpp_container& game_compiler::compile(void){
     build_game_automaton();
     output.add_header_line("namespace "+name+"{");
@@ -591,6 +623,7 @@ const cpp_container& game_compiler::compile(void){
     generate_board_cells_decoder();
     generate_pieces_decoder();
     generate_variables_decoder();
+    generate_indices_converters();
     output.add_header_line("");
     fill_edges_map();
     generate_board_structure();

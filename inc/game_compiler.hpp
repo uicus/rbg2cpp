@@ -60,6 +60,7 @@ class game_compiler{
         void generate_cache_checks_container(void);
         void generate_revert_info_structure(void);
         void generate_reverter(void);
+        void generate_indices_converters(void);
     public:
         game_compiler(const rbg_parser::parsed_game& input, const compiler_options& opts);
         game_compiler(const game_compiler&)=delete;
