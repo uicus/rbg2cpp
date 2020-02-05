@@ -588,6 +588,7 @@ void game_compiler::generate_indices_converters(void){
     modifiers_counter mc;
     input.get_moves()->accept(mc);
     auto modifiers_count_to_actions_count = mc.get_result();
+    output.add_header_line("constexpr int NUMBER_OF_MODIFIERS = "+std::to_string(modifiers_count_to_actions_count.size())+";");
     output.add_header_line("int action_to_modifier_index(int action_index);");
     output.add_source_line("int action_to_modifier_index(int action_index){");
     output.add_source_line("switch(action_index){");
