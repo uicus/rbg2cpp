@@ -2,13 +2,18 @@
 #define MONOTONICITY_DETERMINER
 
 #include"abstract_dispatcher.hpp"
+#include"token.hpp"
 #include<cassert>
+#include<set>
 
 namespace rbg_parser{
     class game_move;
 }
 
 class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
+        std::set<rbg_parser::token> all_ons_in_monotonics = {};
+        std::set<rbg_parser::token> ons_in_current_monotonic = {};
+        std::set<rbg_parser::token> all_used_offs = {};
     public:
         monotonicity_determiner(void)=default;
         monotonicity_determiner(const monotonicity_determiner&)=delete;
@@ -31,6 +36,9 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::integer_arithmetic&)override{assert(false);};
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);};
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);};
+        std::set<rbg_parser::token> get_ons_from_monotonics(void)const;
+        std::set<rbg_parser::token> get_all_offs(void)const;
+        void notify_about_monotonic_end(void);
 };
 
 #endif

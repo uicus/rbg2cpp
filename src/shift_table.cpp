@@ -95,3 +95,10 @@ uint insert_shift_table(std::vector<shift_table>& shift_tables, shift_table&& st
     shift_tables.push_back(std::move(st));
     return shift_tables.size()-1;
 }
+
+bool shift_table::are_all_the_same(void)const{
+    for(const auto& el: next_cells)
+        if(el != next_cells[0])
+            return false;
+    return true;
+}
