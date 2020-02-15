@@ -9,11 +9,29 @@
 namespace rbg_parser{
     class game_move;
 }
+class shift_table;
+
+struct monotonic_move{
+    uint start_state;
+    const shift_table* cell_choice;
+    std::set<rbg_parser::token> pieces_choice;
+};
 
 class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
-        std::set<rbg_parser::token> all_ons_in_monotonics = {};
         std::set<rbg_parser::token> ons_in_current_monotonic = {};
         std::set<rbg_parser::token> all_used_offs = {};
+        std::vector<monotonic_move> monotonics = {};
+        monotonic_move current_move = {};
+        enum {
+            beginning,
+            after_initial_switch,
+            after_shift_table,
+            only_finishing_switch_acceptable,
+            after_first_finishing_switch,
+            ruined,
+        } current_state = beginning;
+        uint automaton_state = 0;
+        void handle_non_monotonic_action(void);
     public:
         monotonicity_determiner(void)=default;
         monotonicity_determiner(const monotonicity_determiner&)=delete;
@@ -26,19 +44,21 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::concatenation&)override{assert(false);};
         void dispatch(const rbg_parser::star_move&)override{assert(false);};
         void dispatch(const rbg_parser::shift&)override;
-        void dispatch(const rbg_parser::ons&)override;
+        void dispatch(const rbg_parser::ons& m)override;
         void dispatch(const rbg_parser::off& m)override;
-        void dispatch(const rbg_parser::assignment& m)override;
+        void dispatch(const rbg_parser::assignment&)override;
         void dispatch(const rbg_parser::player_switch& m)override;
         void dispatch(const rbg_parser::keeper_switch& m)override;
-        void dispatch(const rbg_parser::move_check& m)override;
-        void dispatch(const rbg_parser::arithmetic_comparison& m)override;
+        void dispatch(const rbg_parser::move_check&)override;
+        void dispatch(const rbg_parser::arithmetic_comparison&)override;
         void dispatch(const rbg_parser::integer_arithmetic&)override{assert(false);};
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);};
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);};
-        std::set<rbg_parser::token> get_ons_from_monotonics(void)const;
+        void dispatch_shift_table(const shift_table& table);
         std::set<rbg_parser::token> get_all_offs(void)const;
-        void notify_about_monotonic_end(void);
+        void notify_about_last_alternative(void);
+        void notify_about_alternative_start(void);
+        void notify_about_automaton_state(uint state);
 };
 
 #endif
