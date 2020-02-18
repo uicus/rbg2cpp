@@ -5,6 +5,7 @@
 #include"transition_data.hpp"
 #include"rules_board_automaton.hpp"
 #include"cache_checks_container.hpp"
+#include"monotonicity_determiner.hpp"
 #include<cassert>
 #include<numeric>
 
@@ -204,4 +205,12 @@ void state::add_state_to_board_automaton(
                                                 precomputed_patterns,
                                                 board_structure,
                                                 edges_to_id);
+}
+
+void state::scan_for_monotonic_moves(std::vector<bool>& visited,
+                                     monotonicity_determiner& md)const{
+    for(const auto& el: next_states){
+        el.scan_for_monotonic_moves(visited, md);
+        md.notify_about_last_alternative();
+    }
 }

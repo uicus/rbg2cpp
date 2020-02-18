@@ -13,6 +13,7 @@
 #include"unchecked_modifiers_compiler.hpp"
 #include"next_cells_getter.hpp"
 #include"cache_checks_container.hpp"
+#include"monotonicity_determiner.hpp"
 #include<numeric>
 
 edge::edge(uint local_register_endpoint_index, const std::vector<label>& label_list):
@@ -237,4 +238,8 @@ std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
             return std::make_tuple(modifier_encountered, std::move(next_cells));
     }
     return std::make_tuple(modifier_encountered, std::move(next_cells));
+}
+
+void edge::scan_for_monotonic_moves(std::vector<bool>& visited,
+                                    monotonicity_determiner& md)const{
 }

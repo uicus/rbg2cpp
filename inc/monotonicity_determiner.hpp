@@ -5,6 +5,7 @@
 #include"token.hpp"
 #include<cassert>
 #include<set>
+#include<optional>
 
 namespace rbg_parser{
     class game_move;
@@ -14,11 +15,10 @@ class shift_table;
 struct monotonic_move{
     uint start_state;
     const shift_table* cell_choice;
-    std::set<rbg_parser::token> pieces_choice;
+    std::optional<std::set<rbg_parser::token>> pieces_choice;
 };
 
 class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
-        std::set<rbg_parser::token> ons_in_current_monotonic = {};
         std::set<rbg_parser::token> all_used_offs = {};
         std::vector<monotonic_move> monotonics = {};
         monotonic_move current_move = {};
@@ -32,6 +32,7 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         } current_state = beginning;
         uint automaton_state = 0;
         void handle_non_monotonic_action(void);
+        bool is_monotonic_ruined_by_off(const monotonic_move& m)const;
     public:
         monotonicity_determiner(void)=default;
         monotonicity_determiner(const monotonicity_determiner&)=delete;
@@ -59,6 +60,7 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         void notify_about_last_alternative(void);
         void notify_about_alternative_start(void);
         void notify_about_automaton_state(uint state);
+        std::vector<monotonic_move> get_final_result(void)const;
 };
 
 #endif

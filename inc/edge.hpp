@@ -16,6 +16,7 @@ class precomputed_pattern;
 class shift_table;
 struct static_transition_data;
 class dynamic_transition_data;
+class monotonicity_determiner;
 
 namespace rbg_parser{
     class game_move;
@@ -73,6 +74,8 @@ class edge{
                 const std::vector<precomputed_pattern>& precomputed_patterns,
                 const std::vector<std::vector<uint>>& board_structure,
                 const std::map<rbg_parser::token, uint>& edges_to_id)const;
+        void scan_for_monotonic_moves(std::vector<bool>& visited,
+                                      monotonicity_determiner& md)const;
 };
 
 #endif

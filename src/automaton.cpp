@@ -199,6 +199,17 @@ void automaton::print_is_nodal_function(cpp_container& output)const{
     output.add_source_line("");
 }
 
+std::vector<monotonic_move> automaton::get_monotonics(void)const{
+    std::vector<bool> visited(local_register.size(), false);
+    monotonicity_determiner md;
+    for(uint i=0;i<local_register.size();++i)
+        if(not visited[i]){
+            visited[i] = true;
+            local_register[i].scan_for_monotonic_moves(visited, md);
+        }
+    return md.get_final_result();
+}
+
 automaton concatenation_of_automatons(std::vector<automaton>&& elements){
     assert(not elements.empty());
     auto result = std::move(elements[0]);
