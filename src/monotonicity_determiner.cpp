@@ -72,6 +72,10 @@ void monotonicity_determiner::dispatch_shift_table(const shift_table& table){
         handle_non_monotonic_action();
 }
 
+void monotonicity_determiner::dispatch_other_action(void){
+    handle_non_monotonic_action();
+}
+
 std::set<rbg_parser::token> monotonicity_determiner::get_all_offs(void)const{
     return all_used_offs;
 }

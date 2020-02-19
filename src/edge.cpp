@@ -241,5 +241,56 @@ std::tuple<bool, std::vector<uint>> edge::build_next_cells_edges(
 }
 
 void edge::scan_for_monotonic_moves(std::vector<bool>& visited,
+                                    const std::vector<state>& local_register,
+                                    const std::vector<shift_table>& shift_tables,
                                     monotonicity_determiner& md)const{
+    md.notify_about_automaton_state(local_register_endpoint_index);
+    for(const auto& el: label_list){
+        switch(el.k){
+            case action:
+                el.a->accept(md);
+                break;
+            case s_table:
+                md.dispatch_shift_table(shift_tables[el.structure_index]);
+                break;
+            case s_pattern:
+            case positive_pattern:
+            case negative_pattern:
+            case always_true:
+            case always_false:
+                md.dispatch_other_action();
+                break;
+        }
+    }
+    if(local_register[local_register_endpoint_index].is_no_choicer()){
+        visited[local_register_endpoint_index] = true;
+        local_register[local_register_endpoint_index].get_only_exit().scan_for_monotonic_moves(visited, local_register, shift_tables, md);
+    }
+    else
+        local_register[local_register_endpoint_index].scan_first_actions_for_monotonics(local_register, shift_tables, md);
+}
+
+void edge::scan_first_actions_for_monotonics(const std::vector<state>& local_register,
+                                             const std::vector<shift_table>& shift_tables,
+                                             monotonicity_determiner& md)const{
+    md.notify_about_automaton_state(local_register_endpoint_index);
+    if(label_list.empty())
+        local_register[local_register_endpoint_index].scan_first_actions_for_monotonics(local_register, shift_tables, md);
+    else
+        switch(label_list.front().k){
+            case action:
+                label_list.front().a->accept(md);
+                break;
+            case s_table:
+                md.dispatch_shift_table(shift_tables[label_list.front().structure_index]);
+                break;
+            case s_pattern:
+            case positive_pattern:
+            case negative_pattern:
+            case always_true:
+            case always_false:
+                md.dispatch_other_action();
+                break;
+        }
+
 }

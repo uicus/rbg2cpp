@@ -56,6 +56,7 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::variable_arithmetic&)override{assert(false);};
         void dispatch(const rbg_parser::arithmetic_operation&)override{assert(false);};
         void dispatch_shift_table(const shift_table& table);
+        void dispatch_other_action(void);
         std::set<rbg_parser::token> get_all_offs(void)const;
         void notify_about_last_alternative(void);
         void notify_about_alternative_start(void);

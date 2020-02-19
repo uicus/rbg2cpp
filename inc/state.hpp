@@ -78,7 +78,12 @@ class state{
             const std::vector<std::vector<uint>>& board_structure,
             const std::map<rbg_parser::token, uint>& edges_to_id)const;
         void scan_for_monotonic_moves(std::vector<bool>& visited,
+                                      const std::vector<state>& local_register,
+                                      const std::vector<shift_table>& shift_tables,
                                       monotonicity_determiner& md)const;
+        void scan_first_actions_for_monotonics(const std::vector<state>& local_register,
+                                               const std::vector<shift_table>& shift_tables,
+                                               monotonicity_determiner& md)const;
 };
 
 #endif
