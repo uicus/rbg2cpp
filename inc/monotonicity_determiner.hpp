@@ -16,6 +16,7 @@ struct monotonic_move{
     uint start_state;
     const shift_table* cell_choice;
     std::optional<std::set<rbg_parser::token>> pieces_choice;
+    std::vector<uint> end_states;
 };
 
 class monotonicity_determiner : public rbg_parser::abstract_dispatcher{

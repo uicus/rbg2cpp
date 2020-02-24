@@ -211,10 +211,8 @@ void state::scan_for_monotonic_moves(std::vector<bool>& visited,
                                      const std::vector<state>& local_register,
                                      const std::vector<shift_table>& shift_tables,
                                      monotonicity_determiner& md)const{
-    for(const auto& el: next_states){
+    for(const auto& el: next_states)
         el.scan_for_monotonic_moves(visited, local_register, shift_tables, md);
-        md.notify_about_last_alternative();
-    }
 }
 
 void state::scan_first_actions_for_monotonics(const std::vector<state>& local_register,

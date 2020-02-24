@@ -40,19 +40,23 @@ void monotonicity_determiner::dispatch(const rbg_parser::assignment&){
 }
 
 void monotonicity_determiner::dispatch(const rbg_parser::player_switch&){
-    if(current_state == after_shift_table or current_state == only_finishing_switch_acceptable)
+    if(current_state == after_shift_table or current_state == only_finishing_switch_acceptable or current_state == after_first_finishing_switch){
+        current_move.end_states.emplace_back(automaton_state);
         current_state = after_first_finishing_switch;
+    }
     else{
         current_state = after_initial_switch;
-        current_move = {automaton_state, nullptr, {}};
+        current_move = {automaton_state, nullptr, {}, {}};
     }
 }
 
 void monotonicity_determiner::dispatch(const rbg_parser::keeper_switch&){
-    if(current_state == after_shift_table or current_state == only_finishing_switch_acceptable)
+    if(current_state == after_shift_table or current_state == only_finishing_switch_acceptable or current_state == after_first_finishing_switch){
+        current_move.end_states.emplace_back(automaton_state);
         current_state = after_first_finishing_switch;
+    }
     else
-        current_state = after_initial_switch;
+        handle_non_monotonic_action();
 }
 
 void monotonicity_determiner::dispatch(const rbg_parser::move_check&){
@@ -81,8 +85,10 @@ std::set<rbg_parser::token> monotonicity_determiner::get_all_offs(void)const{
 }
 
 void monotonicity_determiner::notify_about_last_alternative(void){
-    if(current_state == after_first_finishing_switch)
+    if(current_state == after_first_finishing_switch){
         monotonics.emplace_back(current_move);
+        current_state = beginning;
+    }
 }
 
 void monotonicity_determiner::notify_about_alternative_start(void){

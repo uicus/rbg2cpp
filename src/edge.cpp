@@ -249,9 +249,11 @@ void edge::scan_for_monotonic_moves(std::vector<bool>& visited,
         switch(el.k){
             case action:
                 el.a->accept(md);
+                md.notify_about_last_alternative();
                 break;
             case s_table:
                 md.dispatch_shift_table(shift_tables[el.structure_index]);
+                md.notify_about_last_alternative();
                 break;
             case s_pattern:
             case positive_pattern:
