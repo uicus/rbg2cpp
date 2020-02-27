@@ -73,6 +73,32 @@ void shift_table::print_array(cpp_container& output, uint index)const{
     }
 }
 
+void shift_table::print_monotonic_checker(cpp_container& output)const{
+    if(not any_square){
+        const std::set<uint>& allowed_cells = next_cells.front();
+        uint overall_size = next_cells.size();
+        if(allowed_cells.size()<overall_size/2+1){
+            output.add_source_line("switch(m.mr.front().cell){");
+            for(const auto& el: allowed_cells)
+                output.add_source_line("case "+std::to_string(el+1)+":");
+            output.add_source_line("break;");
+            output.add_source_line("default:");
+            output.add_source_line("return false;");
+            output.add_source_line("}");
+        }
+        else{
+            output.add_source_line("switch(m.mr.front().cell){");
+            for(uint i=0;i<overall_size;++i)
+                if(not allowed_cells.count(i))
+                    output.add_source_line("case "+std::to_string(i+1)+":");
+            output.add_source_line("return false;");
+            output.add_source_line("default:");
+            output.add_source_line("break;");
+            output.add_source_line("}");
+        }
+    }
+}
+
 bool shift_table::is_any_square(void)const{
     return any_square;
 }

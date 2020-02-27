@@ -268,8 +268,11 @@ void edge::scan_for_monotonic_moves(std::vector<bool>& visited,
         visited[local_register_endpoint_index] = true;
         local_register[local_register_endpoint_index].get_only_exit().scan_for_monotonic_moves(visited, local_register, shift_tables, md);
     }
-    else
+    else{
+        md.notify_about_alternative_start();
         local_register[local_register_endpoint_index].scan_first_actions_for_monotonics(local_register, shift_tables, md);
+        md.notify_about_last_alternative();
+    }
 }
 
 void edge::scan_first_actions_for_monotonics(const std::vector<state>& local_register,
@@ -294,5 +297,4 @@ void edge::scan_first_actions_for_monotonics(const std::vector<state>& local_reg
                 md.dispatch_other_action();
                 break;
         }
-
 }

@@ -7,6 +7,8 @@
 #include"transition_data.hpp"
 #include"rules_board_automaton.hpp"
 #include"modifiers_counter.hpp"
+#include"monotonicity_determiner.hpp"
+#include"monotonic_move.hpp"
 #include<algorithm>
 
 constexpr int MAXIMAL_GAME_DEPENDENT_STAIGHTNESS = 10;
@@ -237,6 +239,7 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("");
     generate_main_next_getters();
     generate_reverter();
+    generate_monotonic_moves();
     output.add_header_line("private:");
     generate_actions_applier();
     generate_states_iterator();
@@ -260,6 +263,7 @@ void game_compiler::generate_game_parameters(void){
     output.add_header_line("constexpr int NUMBER_OF_PIECES = "+std::to_string(pi.size())+";");
     output.add_header_line("constexpr int NUMBER_OF_VARIABLES = "+std::to_string(pl.size()+v.size())+";");
     output.add_header_line("constexpr int BOARD_DEGREE = "+std::to_string(e.size())+";");
+    output.add_header_line("constexpr int MONOTONIC_CLASSES = "+std::to_string(monotonic_moves.size())+";");
     output.add_header_line("");
 }
 
@@ -279,6 +283,7 @@ void game_compiler::build_game_automaton(void){
     if(opts.enabled_any_square_optimisation())
         for(auto& el: shift_tables)
             el.check_if_any_square();
+    monotonic_moves = game_automaton.get_monotonics(shift_tables);
 }
 
 void game_compiler::generate_cache_checks_container(void){
@@ -614,6 +619,49 @@ void game_compiler::generate_indices_converters(void){
     output.add_source_line("}");
     output.add_source_line("");
 
+}
+
+void game_compiler::generate_monotonic_moves(void){
+    output.add_header_line("int get_monotonicity_class(void);");
+    output.add_source_line("int game_state::get_monotonicity_class(void){");
+    output.add_source_line("switch(current_state){");
+    for(uint i=0;i<monotonic_moves.size();++i){
+        output.add_source_line("case "+std::to_string(monotonic_moves[i].start_state)+":");
+        output.add_source_line("return "+std::to_string(i)+";");
+    }
+    output.add_source_line("default:");
+    output.add_source_line("return -1;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("bool is_legal(const move& m)const;");
+    output.add_source_line("bool game_state::is_legal(const move& m)const{");
+    output.add_source_line("if(m.mr.size() != 1){");
+    output.add_source_line("return false;");
+    output.add_source_line("}");
+    output.add_source_line("switch(current_state){");
+    static_transition_data static_data(
+        opts,
+        pieces_to_id,
+        edges_to_id,
+        variables_to_id,
+        input.get_declarations(),
+        shift_tables,
+        precomputed_patterns,
+        ccc,
+        uses_pieces_in_arithmetics,
+        injective_board,
+        "",
+        all_getter);
+    for(const auto& el: monotonic_moves){
+        output.add_source_line("case "+std::to_string(el.start_state)+":");
+        el.print_legality_check(output, static_data);
+        output.add_source_line("return true;");
+    }
+    output.add_source_line("default:");
+    output.add_source_line("return false;");
+    output.add_source_line("}");
+    output.add_source_line("}");
 }
 
 const cpp_container& game_compiler::compile(void){

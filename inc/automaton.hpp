@@ -5,7 +5,7 @@
 
 #include"types.hpp"
 #include"state.hpp"
-#include"monotonicity_determiner.hpp"
+#include"monotonic_move.hpp"
 
 class cpp_container;
 class compiler_options;

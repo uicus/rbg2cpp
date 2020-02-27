@@ -3,26 +3,20 @@
 
 #include"abstract_dispatcher.hpp"
 #include"token.hpp"
+#include"monotonic_move.hpp"
 #include<cassert>
 #include<set>
-#include<optional>
 
 namespace rbg_parser{
     class game_move;
 }
 class shift_table;
 
-struct monotonic_move{
-    uint start_state;
-    const shift_table* cell_choice;
-    std::optional<std::set<rbg_parser::token>> pieces_choice;
-    std::vector<uint> end_states;
-};
-
 class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         std::set<rbg_parser::token> all_used_offs = {};
         std::vector<monotonic_move> monotonics = {};
         monotonic_move current_move = {};
+        std::set<uint> already_considered_moves_starts = {};
         enum {
             beginning,
             after_initial_switch,

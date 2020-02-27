@@ -25,6 +25,7 @@ class shift_table{
         void check_if_any_square(void);
         std::vector<uint> get_next_cells(uint starting_cell)const;
         bool are_all_the_same(void)const;
+        void print_monotonic_checker(cpp_container& output)const;
 };
 
 uint insert_shift_table(std::vector<shift_table>& shift_tables, shift_table&& st);

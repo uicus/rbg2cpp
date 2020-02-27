@@ -5,7 +5,6 @@
 #include"transition_data.hpp"
 #include"rules_board_automaton.hpp"
 #include"cache_checks_container.hpp"
-#include"monotonicity_determiner.hpp"
 #include<cassert>
 #include<numeric>
 
@@ -220,5 +219,4 @@ void state::scan_first_actions_for_monotonics(const std::vector<state>& local_re
                                               monotonicity_determiner& md)const{
     for(const auto& el: next_states)
         el.scan_first_actions_for_monotonics(local_register, shift_tables, md);
-    md.notify_about_last_alternative();
 }

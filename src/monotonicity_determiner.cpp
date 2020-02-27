@@ -2,6 +2,7 @@
 #include"offs.hpp"
 #include"ons.hpp"
 #include"shift_table.hpp"
+#include"switch.hpp"
 #include<algorithm>
 
 void monotonicity_determiner::handle_non_monotonic_action(void){
@@ -39,20 +40,20 @@ void monotonicity_determiner::dispatch(const rbg_parser::assignment&){
     handle_non_monotonic_action();
 }
 
-void monotonicity_determiner::dispatch(const rbg_parser::player_switch&){
+void monotonicity_determiner::dispatch(const rbg_parser::player_switch& m){
     if(current_state == after_shift_table or current_state == only_finishing_switch_acceptable or current_state == after_first_finishing_switch){
-        current_move.end_states.emplace_back(automaton_state);
+        current_move.end_action_indices.emplace_back(m.index_in_expression());
         current_state = after_first_finishing_switch;
     }
-    else{
+    else if(already_considered_moves_starts.count(automaton_state) == 0){
         current_state = after_initial_switch;
         current_move = {automaton_state, nullptr, {}, {}};
     }
 }
 
-void monotonicity_determiner::dispatch(const rbg_parser::keeper_switch&){
+void monotonicity_determiner::dispatch(const rbg_parser::keeper_switch& m){
     if(current_state == after_shift_table or current_state == only_finishing_switch_acceptable or current_state == after_first_finishing_switch){
-        current_move.end_states.emplace_back(automaton_state);
+        current_move.end_action_indices.emplace_back(m.index_in_expression());
         current_state = after_first_finishing_switch;
     }
     else
@@ -87,6 +88,7 @@ std::set<rbg_parser::token> monotonicity_determiner::get_all_offs(void)const{
 void monotonicity_determiner::notify_about_last_alternative(void){
     if(current_state == after_first_finishing_switch){
         monotonics.emplace_back(current_move);
+        already_considered_moves_starts.insert(current_move.start_state);
         current_state = beginning;
     }
 }

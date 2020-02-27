@@ -5,6 +5,7 @@
 #include"graph.hpp"
 #include"transition_data.hpp"
 #include"rules_board_automaton.hpp"
+#include"monotonicity_determiner.hpp"
 #include<cassert>
 
 uint automaton::get_start_state(void){
