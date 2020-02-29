@@ -76,6 +76,10 @@ $(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,benchmark_flatmc_s
 $(eval $(call RUN_SIMULATION,perft,,perft,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,perft_semisplit,perft,$(DEPTH)))
 
+benchmark_old:
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark_flatmc.cpp"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(TIME)
+
 simulate_old:
 	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/simulation.cpp"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(SIMULATIONS)
