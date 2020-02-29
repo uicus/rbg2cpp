@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <optional>
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
@@ -14,25 +15,64 @@ ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 std::vector<reasoner::move> legal_moves;
+constexpr int REAL_MONOTONICITY_SIZE = std::max(1, reasoner::MONOTONIC_CLASSES);
+std::vector<reasoner::move> monotonic_moves[REAL_MONOTONICITY_SIZE];
 
 void count_terminal(const reasoner::game_state &state){
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         goals_avg[i] += state.get_player_score(i);
 }
 
+std::optional<uint> try_to_choose_random_from_monotonics(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
+    std::uniform_int_distribution<uint> distribution(0,monotonic_moves.size()-1);
+    uint chosen_move = distribution(random_generator);
+    if(state.is_legal(monotonic_moves[chosen_move]))
+        return chosen_move;
+    else{
+        monotonic_moves[chosen_move] = monotonic_moves.back();
+        monotonic_moves.pop_back();
+        return std::nullopt;
+    }
+}
+
+std::optional<uint> choose_random_from_monotonics_or_leave_empty(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
+    while(not monotonic_moves.empty()){
+        if(auto potential_result = try_to_choose_random_from_monotonics(monotonic_moves, state))
+            return potential_result;
+    }
+    return std::nullopt;
+}
+
 void random_simulation(){
     reasoner::game_state state = initial_state;
+    for(uint i=0;i<REAL_MONOTONICITY_SIZE;++i)
+        monotonic_moves[i].clear();
     while(true){
-        state.get_all_moves(cache, legal_moves);
-        if(legal_moves.empty()){
-            count_terminal(state);
-            return;
+        auto monotonicity_class = state.get_monotonicity_class();
+        if(monotonicity_class >= 0){
+            if(monotonic_moves[monotonicity_class].empty())
+                state.get_all_moves(cache, monotonic_moves[monotonicity_class]);
+            if(auto chosen_move = choose_random_from_monotonics_or_leave_empty(monotonic_moves[monotonicity_class], state)){
+                states_count++;
+                state.apply_move(monotonic_moves[monotonicity_class][*chosen_move]);
+            }
+            else{
+                count_terminal(state);
+                return;
+            }
         }
         else{
-            states_count++;
-            std::uniform_int_distribution<> distribution(0,legal_moves.size()-1);
-            uint chosen_move = distribution(random_generator);
-            state.apply_move(legal_moves[chosen_move]);
+            state.get_all_moves(cache, legal_moves);
+            if(legal_moves.empty()){
+                count_terminal(state);
+                return;
+            }
+            else{
+                states_count++;
+                std::uniform_int_distribution<> distribution(0,legal_moves.size()-1);
+                uint chosen_move = distribution(random_generator);
+                state.apply_move(legal_moves[chosen_move]);
+            }
         }
         while(state.get_current_player() == KEEPER){
             auto any_move = state.apply_any_move(cache);
