@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <optional>
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
@@ -41,6 +42,64 @@ void count_terminal(const reasoner::game_state state, uint depth){
     }
 }
 
+std::optional<uint> choose_random_from_monotonics_or_leave_empty(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
+    while(not monotonic_moves.empty()){
+        std::uniform_int_distribution<uint> distribution(0,monotonic_moves.size()-1);
+        uint chosen_move = distribution(random_generator);
+        if(state.is_legal(monotonic_moves[chosen_move]))
+            return chosen_move;
+        else{
+            monotonic_moves[chosen_move] = monotonic_moves.back();
+            monotonic_moves.pop_back();
+        }
+    }
+    return std::nullopt;
+}
+
+void random_simulation_with_monotonic_moves(){
+    static std::vector<reasoner::move> monotonic_moves[reasoner::MONOTONIC_CLASSES];
+    for(uint i=0;i<reasoner::MONOTONIC_CLASSES;++i)
+        monotonic_moves[i].clear();
+    reasoner::game_state state = initial_state;
+    uint depth = 0;
+    while(true){
+        auto monotonicity_class = state.get_monotonicity_class();
+        if(monotonicity_class >= 0){
+            if(monotonic_moves[monotonicity_class].empty())
+                state.get_all_moves(cache, monotonic_moves[monotonicity_class]);
+            if(auto chosen_move = choose_random_from_monotonics_or_leave_empty(monotonic_moves[monotonicity_class], state)){
+                states_count++;
+                state.apply_move(monotonic_moves[monotonicity_class][*chosen_move]);
+            }
+            else{
+                count_terminal(state, depth);
+                return;
+            }
+        }
+        else{
+            state.get_all_moves(cache, legal_moves);
+            if(legal_moves.empty()){
+                count_terminal(state, depth);
+                return;
+            }
+            else{
+                depth++;
+                moves_count += legal_moves.size();
+                std::uniform_int_distribution<> distribution(0,legal_moves.size()-1);
+                uint chosen_move = distribution(random_generator);
+                state.apply_move(legal_moves[chosen_move]);
+            }
+        }
+        while(state.get_current_player() == KEEPER){
+            auto any_move = state.apply_any_move(cache);
+            if(not any_move){
+                count_terminal(state, depth);
+                return;
+            }
+        }
+    }
+}
+
 void random_simulation(){
     reasoner::game_state state = initial_state;
     uint depth = 0;
@@ -76,6 +135,7 @@ int main(int argv, char** argc){
         std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
         return 1;
     }
+    std::cout << "Monotonic classes: " << reasoner::MONOTONIC_CLASSES << std::endl;
     initialize_goals_arrays();
     while(initial_state.get_current_player() == KEEPER){
         auto any_move = initial_state.apply_any_move(cache);
@@ -85,8 +145,12 @@ int main(int argv, char** argc){
     ulong simulations_count = std::stoi(argc[1]);
 
     std::chrono::steady_clock::time_point start_time(std::chrono::steady_clock::now());
-    for(ulong i = 0; i < simulations_count; ++i)
-        random_simulation();
+    for(ulong i = 0; i < simulations_count; ++i){
+        if constexpr (reasoner::MONOTONIC_CLASSES)
+            random_simulation_with_monotonic_moves();
+        else
+            random_simulation();
+    }
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
