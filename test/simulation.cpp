@@ -18,7 +18,6 @@ uint depth_min = std::numeric_limits<uint>::max();
 uint depth_max = std::numeric_limits<uint>::min();
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::move> legal_moves;
 
 void initialize_goals_arrays(void){
     for(uint i=0;i<reasoner::NUMBER_OF_PLAYERS;++i){
@@ -57,6 +56,7 @@ std::optional<uint> choose_random_from_monotonics_or_leave_empty(std::vector<rea
 }
 
 void random_simulation_with_monotonic_moves(){
+    static std::vector<reasoner::move> legal_moves;
     static std::vector<reasoner::move> monotonic_moves[reasoner::MONOTONIC_CLASSES];
     for(uint i=0;i<reasoner::MONOTONIC_CLASSES;++i)
         monotonic_moves[i].clear();
@@ -65,8 +65,10 @@ void random_simulation_with_monotonic_moves(){
     while(true){
         auto monotonicity_class = state.get_monotonicity_class();
         if(monotonicity_class >= 0){
-            if(monotonic_moves[monotonicity_class].empty())
+            if(monotonic_moves[monotonicity_class].empty()) {
                 state.get_all_moves(cache, monotonic_moves[monotonicity_class]);
+                moves_count += monotonic_moves[monotonicity_class].size();
+            }
             if(auto chosen_move = choose_random_from_monotonics_or_leave_empty(monotonic_moves[monotonicity_class], state)){
                 states_count++;
                 state.apply_move(monotonic_moves[monotonicity_class][*chosen_move]);
@@ -101,6 +103,7 @@ void random_simulation_with_monotonic_moves(){
 }
 
 void random_simulation(){
+    static std::vector<reasoner::move> legal_moves;
     reasoner::game_state state = initial_state;
     uint depth = 0;
     while(true){
