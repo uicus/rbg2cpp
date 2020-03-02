@@ -20,16 +20,22 @@ void count_terminal(const reasoner::game_state &state){
         goals_avg[i] += state.get_player_score(i);
 }
 
+std::optional<uint> try_to_choose_random_from_monotonics(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
+    std::uniform_int_distribution<uint> distribution(0,monotonic_moves.size()-1);
+    uint chosen_move = distribution(random_generator);
+    if(state.is_legal(monotonic_moves[chosen_move]))
+        return chosen_move;
+    else{
+        monotonic_moves[chosen_move] = monotonic_moves.back();
+        monotonic_moves.pop_back();
+        return std::nullopt;
+    }
+}
+
 std::optional<uint> choose_random_from_monotonics_or_leave_empty(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
     while(not monotonic_moves.empty()){
-        std::uniform_int_distribution<uint> distribution(0,monotonic_moves.size()-1);
-        uint chosen_move = distribution(random_generator);
-        if(state.is_legal(monotonic_moves[chosen_move]))
-            return chosen_move;
-        else{
-            monotonic_moves[chosen_move] = monotonic_moves.back();
-            monotonic_moves.pop_back();
-        }
+        if(auto potential_result = try_to_choose_random_from_monotonics(monotonic_moves, state))
+            return potential_result;
     }
     return std::nullopt;
 }
