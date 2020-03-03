@@ -635,7 +635,7 @@ void game_compiler::generate_monotonic_moves(void){
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("bool is_legal(const move& m)const;");
-    output.add_source_line("bool game_state::is_legal(const move& m)const{");
+    output.add_source_line("bool game_state::is_legal([[maybe_unused]] const move& m)const{");
     if(opts.enabled_safe_monotonicity_methods()){
         output.add_source_line("if(m.mr.size() != 1){");
         output.add_source_line("return false;");
