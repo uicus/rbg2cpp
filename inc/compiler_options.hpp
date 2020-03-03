@@ -12,6 +12,7 @@ class compiler_options{
         bool shift_tables : 1;
         bool vectorless_any_squares : 1;
         bool semi_split_generation : 1;
+        bool safe_monotonicity_methods : 1;
         std::string output_name;
     public:
         compiler_options(void);
@@ -22,6 +23,7 @@ class compiler_options{
         bool enabled_shift_tables(void)const;
         bool enabled_any_square_optimisation(void)const;
         bool enabled_semi_split_generation(void)const;
+        bool enabled_safe_monotonicity_methods(void)const;
         const std::string& output_file(void)const;
 };
 
