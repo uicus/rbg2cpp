@@ -34,10 +34,11 @@ std::optional<uint> choose_random_from_monotonics_or_leave_empty(std::vector<rea
     return std::nullopt;
 }
 
+template<int MONOTONIC_CLASSES>
 void random_simulation_with_monotonic_moves(){
     static std::vector<reasoner::move> legal_moves;
-    static std::vector<reasoner::move> monotonic_moves[reasoner::MONOTONIC_CLASSES];
-    for(uint i=0;i<reasoner::MONOTONIC_CLASSES;++i)
+    static std::vector<reasoner::move> monotonic_moves[MONOTONIC_CLASSES];
+    for(uint i=0;i<MONOTONIC_CLASSES;++i)
         monotonic_moves[i].clear();
     reasoner::game_state state = initial_state;
     while(true){
@@ -126,7 +127,7 @@ int main(int argv, char** argc){
     while(true){
         simulations_count++;
         if constexpr (reasoner::MONOTONIC_CLASSES > 0)
-            random_simulation_with_monotonic_moves();
+            random_simulation_with_monotonic_moves<reasoner::MONOTONIC_CLASSES>();
         else
             random_simulation();
         end_time = std::chrono::steady_clock::now();
