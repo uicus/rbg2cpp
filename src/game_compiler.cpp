@@ -292,7 +292,8 @@ void game_compiler::generate_cache_checks_container(void){
                                  shift_tables,
                                  precomputed_patterns,
                                  board_structure,
-                                 edges_to_id);
+                                 edges_to_id,
+                                 opts.enabled_cache_optimisation());
 }
 
 void game_compiler::generate_iterator_helper_structures(void){

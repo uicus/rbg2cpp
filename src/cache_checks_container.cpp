@@ -9,19 +9,27 @@ cache_checks_container::cache_checks_container(const automaton& main_automaton,
                                                const std::vector<shift_table>& shift_tables,
                                                const std::vector<precomputed_pattern>& precomputed_patterns,
                                                const std::vector<std::vector<uint>>& board_structure,
-                                               const std::map<rbg_parser::token, uint>& edges_to_id)
+                                               const std::map<rbg_parser::token, uint>& edges_to_id,
+                                               bool enable_optimisation)
   : board_size(board_structure.size()){
-    auto main_rba = main_automaton.generate_rules_board_automaton(shift_tables,
-                                                                  precomputed_patterns,
-                                                                  board_structure,
-                                                                  edges_to_id);
-    main_automation_checks = transform_mask_into_cache_info(main_rba.get_cache_checks_need());
-    for(const auto& el: pattern_automata){
-        auto pattern_rba = el.generate_rules_board_automaton(shift_tables,
-                                                             precomputed_patterns,
-                                                             board_structure,
-                                                             edges_to_id);
-        pattern_automata_checks.emplace_back(transform_mask_into_cache_info(pattern_rba.get_cache_checks_need()));
+    if(enable_optimisation){
+        auto main_rba = main_automaton.generate_rules_board_automaton(shift_tables,
+                                                                      precomputed_patterns,
+                                                                      board_structure,
+                                                                      edges_to_id);
+        main_automation_checks = transform_mask_into_cache_info(main_rba.get_cache_checks_need());
+        for(const auto& el: pattern_automata){
+            auto pattern_rba = el.generate_rules_board_automaton(shift_tables,
+                                                                 precomputed_patterns,
+                                                                 board_structure,
+                                                                 edges_to_id);
+            pattern_automata_checks.emplace_back(transform_mask_into_cache_info(pattern_rba.get_cache_checks_need()));
+        }
+    }
+    else{
+        main_automation_checks = transform_mask_into_cache_info(std::vector<bool>(main_automaton.get_size(), true));
+        for(const auto& el: pattern_automata)
+            pattern_automata_checks.emplace_back(transform_mask_into_cache_info(std::vector<bool>(el.get_size(), true)));
     }
 }
 

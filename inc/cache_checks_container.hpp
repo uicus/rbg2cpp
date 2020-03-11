@@ -36,7 +36,8 @@ class cache_checks_container{
                                const std::vector<shift_table>& shift_tables,
                                const std::vector<precomputed_pattern>& precomputed_patterns,
                                const std::vector<std::vector<uint>>& board_structure,
-                               const std::map<rbg_parser::token, uint>& edges_to_id);
+                               const std::map<rbg_parser::token, uint>& edges_to_id,
+                               bool enable_optimisation);
         bool should_cache_be_checked(uint state)const;
         bool is_main_cache_needed(void)const;
         bool should_cache_be_checked_in_pattern(uint state, uint pattern)const;

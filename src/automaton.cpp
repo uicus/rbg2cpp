@@ -8,11 +8,11 @@
 #include"monotonicity_determiner.hpp"
 #include<cassert>
 
-uint automaton::get_start_state(void){
+uint automaton::get_start_state(void)const{
     return start_state;
 }
 
-uint automaton::get_size(void){
+uint automaton::get_size(void)const{
     return local_register.size();
 }
 

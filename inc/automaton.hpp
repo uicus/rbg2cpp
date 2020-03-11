@@ -35,8 +35,8 @@ class automaton{
     public:
         void concat_automaton(automaton&& concatee);
         void starify_automaton(void);
-        uint get_start_state(void);
-        uint get_size(void);
+        uint get_start_state(void)const;
+        uint get_size(void)const;
         void print_transition_functions(
             cpp_container& output,
             const static_transition_data& static_data)const;

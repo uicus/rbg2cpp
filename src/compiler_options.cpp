@@ -10,6 +10,7 @@ shift_tables(true),
 vectorless_any_squares(true),
 semi_split_generation(false),
 safe_monotonicity_methods(false),
+cache_optimisation(true),
 output_name("game"){
 }
 
@@ -20,6 +21,7 @@ shift_tables(true),
 vectorless_any_squares(true),
 semi_split_generation(false),
 safe_monotonicity_methods(false),
+cache_optimisation(true),
 output_name("game"){
     for(uint i=0;i<number_of_args;++i){
         if(args[i][0] != '-')
@@ -44,6 +46,8 @@ output_name("game"){
                 semi_split_generation = true;
             else if(!std::strcmp(args[i], "-fmonotonic-moves-safe"))
                 safe_monotonicity_methods = true;
+            else if(!std::strcmp(args[i], "-fno-cache-opt"))
+                cache_optimisation = false;
             else
                 throw std::invalid_argument("Unrecognized flag");
         }
@@ -71,6 +75,10 @@ bool compiler_options::enabled_semi_split_generation(void)const{
 
 bool compiler_options::enabled_safe_monotonicity_methods(void)const{
     return safe_monotonicity_methods;
+}
+
+bool compiler_options::enabled_cache_optimisation(void)const{
+    return cache_optimisation;
 }
 
 const std::string& compiler_options::output_file(void)const{

@@ -21,6 +21,7 @@ int main(int argc, const char** argv){
         std::cerr<<"\"-fno-anysquare-opt\" - turn off the any square optimization"<<std::endl;
         std::cerr<<"\"-fsemi-split\" - turn on generation of semi split moves getters (may decrease performance of generated code)"<<std::endl;
         std::cerr<<"\"-fmonotonic-moves-safe\" - turn on generation of safety check in game_state::is_legal() function"<<std::endl;
+        std::cerr<<"\"-fno-cache-opt\" - turn off cache optimisation"<<std::endl;
     }
     else{
         rbg_parser::messages_container msg;
