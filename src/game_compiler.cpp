@@ -229,14 +229,6 @@ void game_compiler::generate_game_state_class(void){
     output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("");
-    output.add_header_line("std::vector<move> get_all_moves(resettable_bitarray_stack& cache);");
-    output.add_source_line("std::vector<move> game_state::get_all_moves(resettable_bitarray_stack& cache){");
-    output.add_source_line("std::vector<move> result;");
-    output.add_source_line("result.reserve(100);");
-    output.add_source_line("get_all_moves(cache, result);");
-    output.add_source_line("return result;");
-    output.add_source_line("}");
-    output.add_source_line("");
     generate_main_next_getters();
     generate_reverter();
     generate_monotonic_moves();
