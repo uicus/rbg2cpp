@@ -286,8 +286,10 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         queue_state_to_check_visited(state_index);
     if(should_check_for_visited())
         visit_node(output);
-    if(static_data.kind == inside_pattern and state_at_end.is_dead_end())
+    if(static_data.kind == inside_pattern and state_at_end.is_dead_end()){
+        handle_cell_check(output);
         insert_reverting_sequence_after_success(output);
+    }
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
         handle_cell_check(output);
         if(static_data.kind == all_getter){
