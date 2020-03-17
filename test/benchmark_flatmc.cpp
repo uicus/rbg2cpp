@@ -9,6 +9,9 @@ typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
+inline uint random_choice(const uint bound) {
+    return std::uniform_int_distribution<uint>(0,bound)(random_generator);
+}
 
 ulong states_count = 0;
 ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
@@ -21,8 +24,7 @@ void count_terminal(const reasoner::game_state &state){
 }
 
 std::optional<uint> try_to_choose_random_from_monotonics(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
-    std::uniform_int_distribution<uint> distribution(0,monotonic_moves.size()-1);
-    uint chosen_move = distribution(random_generator);
+    uint chosen_move = random_choice(monotonic_moves.size()-1);
     if(state.is_legal(monotonic_moves[chosen_move]))
         return chosen_move;
     else{
@@ -69,8 +71,7 @@ void random_simulation_with_monotonic_moves(){
             }
             else{
                 states_count++;
-                std::uniform_int_distribution<> distribution(0,legal_moves.size()-1);
-                uint chosen_move = distribution(random_generator);
+                uint chosen_move = random_choice(legal_moves.size()-1);
                 state.apply_move(legal_moves[chosen_move]);
             }
         }
@@ -95,8 +96,7 @@ void random_simulation(){
         }
         else{
             states_count++;
-            std::uniform_int_distribution<> distribution(0,legal_moves.size()-1);
-            uint chosen_move = distribution(random_generator);
+            uint chosen_move = random_choice(legal_moves.size()-1);
             state.apply_move(legal_moves[chosen_move]);
         }
         while(state.get_current_player() == KEEPER){
@@ -145,6 +145,7 @@ int main(int argv, char** argc){
     std::cout << "time: " << ms << " ms" << std::endl;
     std::cout << "number of plays: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " plays/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
+    std::cout << "depth: avg " << static_cast<long double>(states_count)/simulations_count << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << std::endl;
     return 0;
