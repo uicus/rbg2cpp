@@ -9,6 +9,9 @@ constexpr int KEEPER = 0;
 constexpr uint MAX_SEMIDEPTH = 100;
 
 std::mt19937 random_generator(1);
+inline uint random_choice(const uint upper_bound) {
+    return std::uniform_int_distribution<uint>(0,upper_bound-1)(random_generator);
+}
 
 uint semilength;
 ulong states_count = 0, semistates_count = 0;
@@ -23,8 +26,7 @@ void count_terminal(const reasoner::game_state &state){
 }
 
 reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::semimove> &semimoves){
-    std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
-    uint chosen_semimove = distribution(random_generator);
+    uint chosen_semimove = random_choice(semimoves.size());
     reasoner::revert_information ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
     semimoves[chosen_semimove] = semimoves.back();
     semimoves.pop_back();
