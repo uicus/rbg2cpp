@@ -9,8 +9,8 @@ typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
 std::mt19937 random_generator(1);
-inline uint random_choice(const uint bound) {
-    return std::uniform_int_distribution<uint>(0,bound)(random_generator);
+inline uint random_choice(const uint upper_bound) {
+    return std::uniform_int_distribution<uint>(0,upper_bound-1)(random_generator);
 }
 
 ulong states_count = 0;
@@ -24,7 +24,7 @@ void count_terminal(const reasoner::game_state &state){
 }
 
 std::optional<uint> try_to_choose_random_from_monotonics(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
-    uint chosen_move = random_choice(monotonic_moves.size()-1);
+    uint chosen_move = random_choice(monotonic_moves.size());
     if(state.is_legal(monotonic_moves[chosen_move]))
         return chosen_move;
     else{
@@ -71,7 +71,7 @@ void random_simulation_with_monotonic_moves(){
             }
             else{
                 states_count++;
-                uint chosen_move = random_choice(legal_moves.size()-1);
+                uint chosen_move = random_choice(legal_moves.size());
                 state.apply_move(legal_moves[chosen_move]);
             }
         }
@@ -96,7 +96,7 @@ void random_simulation(){
         }
         else{
             states_count++;
-            uint chosen_move = random_choice(legal_moves.size()-1);
+            uint chosen_move = random_choice(legal_moves.size());
             state.apply_move(legal_moves[chosen_move]);
         }
         while(state.get_current_player() == KEEPER){
