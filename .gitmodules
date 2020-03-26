@@ -1,3 +1,6 @@
 [submodule "rbgParser"]
 	path = rbgParser
 	url = https://github.com/uicus/rbgParser.git
+[submodule "rbgGames"]
+	path = rbgGames
+	url = https://github.com/marekesz/rbgGames

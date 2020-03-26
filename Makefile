@@ -10,6 +10,7 @@ DEP_DIR := dep
 TEST_DIR = test
 MAIN_FILE := $(SRC_DIR)/main.cpp
 RBG_PARSER_DIR := rbgParser
+RBG_GAMES_DIR := rbgGames
 PARSER_INC_DIR := $(RBG_PARSER_DIR)/src
 PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
@@ -55,7 +56,7 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 define RUN_SIMULATION
-$(1)_%: $(RBG_PARSER_DIR)/examples/%.rbg
+$(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 	@rm -rf $(TEST_DIR)/reasoner.*
 	@rm -rf $(TEST_DIR)/test
 	@echo "Running $(TARGET)..."
