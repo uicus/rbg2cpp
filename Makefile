@@ -19,10 +19,11 @@ SEMILENGTH := 1
 DEPTH := 3
 TIME := 100
 MEMORY := 2000000
+RANDGEN := 0
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
+COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17 -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 
 COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
 SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto -DSEMILENGTH=$(SEMILENGTH)

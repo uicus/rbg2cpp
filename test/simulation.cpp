@@ -2,16 +2,14 @@
 #include <random>
 #include <chrono>
 #include <optional>
+#include "rbg_random_generator.hpp"
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
 typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 
-std::mt19937 random_generator(1);
-inline uint random_choice(const uint upper_bound) {
-    return std::uniform_int_distribution<uint>(0,upper_bound-1)(random_generator);
-}
+RBGRandomGenerator random_generator(1);
 
 ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 int goals_min[reasoner::NUMBER_OF_PLAYERS] = {};
@@ -45,7 +43,7 @@ void count_terminal(const reasoner::game_state state, uint depth){
 }
 
 std::optional<uint> try_to_choose_random_from_monotonics(std::vector<reasoner::move>& monotonic_moves, const reasoner::game_state& state){
-    uint chosen_move = random_choice(monotonic_moves.size());
+    uint chosen_move = random_generator.uniform_choice(monotonic_moves.size());
     if(state.is_legal(monotonic_moves[chosen_move]))
         return chosen_move;
     else{
@@ -96,7 +94,7 @@ void random_simulation_with_monotonic_moves(){
             else{
                 depth++;
                 moves_count += legal_moves.size();
-                uint chosen_move = random_choice(legal_moves.size());
+                uint chosen_move = random_generator.uniform_choice(legal_moves.size());
                 state.apply_move(legal_moves[chosen_move]);
             }
         }
@@ -123,7 +121,7 @@ void random_simulation(){
         else{
             depth++;
             moves_count += legal_moves.size();
-            uint chosen_move = random_choice(legal_moves.size());
+            uint chosen_move = random_generator.uniform_choice(legal_moves.size());
             state.apply_move(legal_moves[chosen_move]);
         }
         while(state.get_current_player() == KEEPER){
@@ -145,6 +143,7 @@ int main(int argv, char** argc){
         std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
         return 1;
     }
+    std::cout << "Random generator: " << RBG_RANDOM_GENERATOR << std::endl;
     std::cout << "Monotonic classes: " << reasoner::MONOTONIC_CLASSES << std::endl;
     initialize_goals_arrays();
     while(initial_state.get_current_player() == KEEPER){

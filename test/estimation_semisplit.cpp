@@ -1,6 +1,6 @@
 #include <iostream>
-#include <random>
 #include <chrono>
+#include "rbg_random_generator.hpp"
 #include "reasoner.hpp"
 
 typedef unsigned int uint;
@@ -11,7 +11,7 @@ constexpr uint MAX_SEMIDEPTH = 100;
 constexpr uint MAX_SEMILENGTH = 32;
 constexpr uint RANDOM_SEED = 1;
 
-std::mt19937 random_generator;
+RBGRandomGenerator random_generator(1);
 
 uint semilength;
 
@@ -29,7 +29,7 @@ reasoner::game_state initial_state;
 std::vector<reasoner::semimove> legal_semimoves[MAX_SEMIDEPTH];
 
 void initialize(void){
-	random_generator = std::mt19937(RANDOM_SEED);
+	random_generator = RBGRandomGenerator(1);
 	simulations_count = states_count = semistates_count = semimoves_count = semidepth_sum = semimovelength_max = 0;
     semidepth_min = depth_min = std::numeric_limits<uint>::max();
     semidepth_max = depth_max = semimovelength_max = std::numeric_limits<uint>::min();
@@ -64,8 +64,7 @@ void count_semiterminal(const uint semidepth){
 }
 
 reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::semimove> &semimoves){
-    std::uniform_int_distribution<uint> distribution(0,semimoves.size()-1);
-    uint chosen_semimove = distribution(random_generator);
+    uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
     reasoner::revert_information ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
     semimoves[chosen_semimove] = semimoves.back();
     semimoves.pop_back();
@@ -140,6 +139,7 @@ int main(int argv, char** argc){
         std::cout << "Number of simulations unspecified. Exitting..." << std::endl;
         return 1;
     }
+    std::cout << "Random generator: " << RBG_RANDOM_GENERATOR << std::endl;
     while(initial_state.get_current_player() == KEEPER){
         auto any_move = initial_state.apply_any_move(cache);
         if(not any_move)
