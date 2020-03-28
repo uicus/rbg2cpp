@@ -6,29 +6,27 @@
 // Exact reimplementation of the standard Java generator
 #include <cstdint>
 struct RBGRandomGenerator {
-  int64_t seed;
+  uint64_t seed;
 
-  RBGRandomGenerator(const unsigned long _seed): seed(_seed) {}
-  
-  int32_t java_rand31() {
-    seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
-    return static_cast<int32_t>(seed >> (48 - 31));
+  RBGRandomGenerator(const unsigned long _seed): seed((_seed ^ 0x5DEECE66DUL) & ((1UL << 48) - 1)) {}
+
+  uint32_t java_rand31() {
+    seed = (seed * 0x5DEECE66DUL + 0xB) & ((1UL << 48) - 1);
+    return seed >> (48 - 31);
   }
 
-  int32_t java_rand(int32_t bound) {
-    if ((bound & -bound) == bound)
-      return bound * static_cast<int64_t>(java_rand31()) >> 31;
-    int32_t bits, val;
+  unsigned int uniform_choice(uint32_t bound) {
+    // assert(bound > 0 && bound <= (1U << 31));
+    uint32_t boundm1 = bound-1;
+    if ((bound & boundm1) == 0)
+      return (bound * static_cast<uint64_t>(java_rand31())) >> 31;
+    uint32_t bits, val;
     do {
         bits = java_rand31();
         val = bits % bound;
-    } while (bits - val + (bound-1) < 0);
+    } while ((bits-val+boundm1) & (1U << 31));
     return val;
   } 
-
-  unsigned int uniform_choice(const unsigned int upper_bound) {
-      return java_rand(upper_bound);    
-  }
 };
 
 #elif RBG_RANDOM_GENERATOR == 2
