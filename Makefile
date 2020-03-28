@@ -23,10 +23,10 @@ RANDGEN := 0
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17 -DRBG_RANDOM_GENERATOR=$(RANDGEN)
+COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
 
 COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
-SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto -DSEMILENGTH=$(SEMILENGTH)
+SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto -DSEMILENGTH=$(SEMILENGTH) -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
