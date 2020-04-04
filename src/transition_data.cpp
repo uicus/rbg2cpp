@@ -306,6 +306,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         insert_reverting_sequence_after_success(output);
     }
     else{
+        handle_cell_check(output);
         insert_move_size_check(output, state_index);
         finallize(output);
         state_at_end.print_recursive_calls(state_index,output,static_data,*this);
