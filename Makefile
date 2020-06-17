@@ -23,10 +23,12 @@ RANDGEN := 0
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
-COMMON_FLAGS = -Wall -Wextra -Wpedantic -Ofast -march=native -std=c++17
+COMMON_FLAGS = -Wall -Wextra -Wpedantic -std=c++17
 
-COMPILER_FLAGS := $(COMMON_FLAGS) -s $(INCLUDE)
-SIMULATIONS_FLAGS := $(COMMON_FLAGS) -flto -DSEMILENGTH=$(SEMILENGTH) -DRBG_RANDOM_GENERATOR=$(RANDGEN)
+DEBUG_FLAGS := -O0
+RELEASE_FLAGS := -O3 -march=native -flto
+COMPILER_FLAGS := $(COMMON_FLAGS) $(RELEASE_FLAGS) -s $(INCLUDE)
+SIMULATIONS_FLAGS := $(COMMON_FLAGS) -DSEMILENGTH=$(SEMILENGTH) -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
@@ -65,18 +67,27 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(3).cpp"
-	@echo "******** Running $(4)... ********"
-	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(5)
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) $(3) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) $(3) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(4).cpp"
+	@echo "******** Running $(5)... ********"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(6)
 endef
 
-$(eval $(call RUN_SIMULATION,simulate,,simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,simulate_semisplit,-fsemi-split,simulation_semisplit,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,estimate_semisplit,-fsemi-split,estimation_semisplit,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,benchmark,,benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,perft,,perft,perft,$(DEPTH)))
-$(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,simulate_semisplit,-fsemi-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,estimate_semisplit,-fsemi-split,$(RELEASE_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,benchmark,,$(RELEASE_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
+
+$(eval $(call RUN_SIMULATION,debug_simulate,,$(DEBUG_FLAGS),simulation,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,debug_simulate_semisplit,-fsemi-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,debug_estimate_semisplit,-fsemi-split,$(DEBUG_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,debug_benchmark,,$(DEBUG_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,debug_benchmark_semisplit,-fsemi-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,debug_perft_semisplit,-fsemi-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
+
 
 benchmark_old:
 	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark_flatmc.cpp"
