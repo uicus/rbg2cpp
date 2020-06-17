@@ -185,6 +185,11 @@ void game_compiler::generate_state_getters(void){
     output.add_source_line("return current_player;");
     output.add_source_line("}");
     output.add_source_line("");
+    output.add_header_line("int get_current_state_id(void)const;");
+    output.add_source_line("int game_state::get_current_state_id(void)const{");
+    output.add_source_line("return current_state;");
+    output.add_source_line("}");
+    output.add_source_line("");
     output.add_header_line("int get_player_score(int player_id)const;");
     output.add_source_line("int game_state::get_player_score(int player_id)const{");
     output.add_source_line("return variables[player_id-1];");
