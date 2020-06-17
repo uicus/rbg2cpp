@@ -4,12 +4,9 @@
 # ./run_sim.sh [game] [simulations] [random_generator]
 # [game] -- the name of the game, e.g, breakthrough
 # [simulations] -- the number of random simulations
-# [random_generator] -- random generator id:
-#   0 -- default method with std::mt19937
-#   1 -- reimplementation of the Java standard generator
-#   2 -- Lemire's enhanced method
+# [random_generator] -- random generator id (see test/rbg_random_generator.hpp)
 
-if [[ $3 == 1 ]] || [[ $3 == 2 ]]; then
+if (($3 >= 1 && $3 <= 4)); then
 randgen=$3
 else
 randgen=0
