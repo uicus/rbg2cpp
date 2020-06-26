@@ -5,6 +5,8 @@
 #include<map>
 #include<optional>
 
+#include"types.hpp"
+
 class automaton;
 class shift_table;
 class precomputed_pattern;
