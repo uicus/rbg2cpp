@@ -16,7 +16,7 @@ The compiler processes Regular Boardgame file and outputs single C++17 conformin
 
 Sample usage:
 ```
-bin/rbg2cpp -o reasoner rbgParser/examples/connect4.rbg
+bin/rbg2cpp -o reasoner rbgGames/games/breakthrough.rbg
 ```
 
 ### Testing
@@ -24,6 +24,6 @@ The package provides an easy way of testing games through flat MC and perft simu
 
 E.g.:
 ```
-make simulate_connect4
+make simulate_breakthrough
 ```
 compiles game description to C++, compiles it together with basic flat MC test and runs it with default parameters. Time package has to be available to run the tests.
