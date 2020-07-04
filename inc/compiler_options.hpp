@@ -14,6 +14,7 @@ class compiler_options{
         bool semi_split_generation : 1;
         bool safe_monotonicity_methods : 1;
         bool cache_optimisation : 1;
+        bool custom_split_generation : 1;
         std::string output_name;
     public:
         compiler_options(void);
@@ -26,6 +27,7 @@ class compiler_options{
         bool enabled_semi_split_generation(void)const;
         bool enabled_safe_monotonicity_methods(void)const;
         bool enabled_cache_optimisation(void)const;
+        bool enabled_custom_split_generation(void)const;
         const std::string& output_file(void)const;
 };
 

@@ -123,6 +123,12 @@ void automaton_builder::dispatch(const rbg_parser::shift& m){
         current_block.push_back({action,&m,0});
 }
 
+void automaton_builder::dispatch(const rbg_parser::noop&){
+    if(opts.enabled_custom_split_generation()){
+        // TODO (end block if noop-semisplit turned on)
+    }
+}
+
 void automaton_builder::dispatch(const rbg_parser::ons& m){
     end_shift_automaton();
     current_block.push_back({action,&m,0});

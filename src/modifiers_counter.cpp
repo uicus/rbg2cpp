@@ -27,6 +27,9 @@ void modifiers_counter::dispatch(const rbg_parser::star_move& m){
 void modifiers_counter::dispatch(const rbg_parser::shift&){
 }
 
+void modifiers_counter::dispatch(const rbg_parser::noop&){
+}
+
 void modifiers_counter::dispatch(const rbg_parser::ons&){
 }
 

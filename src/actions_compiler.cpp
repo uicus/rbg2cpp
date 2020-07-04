@@ -10,6 +10,7 @@
 #include"switch.hpp"
 #include"arithmetic_comparison.hpp"
 #include"transition_data.hpp"
+#include"compiler_options.hpp"
 
 actions_compiler::actions_compiler(
     cpp_container& output,
@@ -23,6 +24,12 @@ actions_compiler::actions_compiler(
 void actions_compiler::dispatch(const rbg_parser::shift& m){
     output.add_source_line("cell = cell_neighbors[cell]["+std::to_string(static_data.edges_to_id.at(m.get_content()))+"];");
     dynamic_data.queue_cell_check();
+}
+
+void actions_compiler::dispatch(const rbg_parser::noop&){
+    if(static_data.opts.enabled_custom_split_generation()){
+        // TODO (check if semimove should be ended)
+    }
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){

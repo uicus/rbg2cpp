@@ -40,6 +40,7 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::concatenation&)override{assert(false);};
         void dispatch(const rbg_parser::star_move&)override{assert(false);};
         void dispatch(const rbg_parser::shift&)override;
+        void dispatch(const rbg_parser::noop&)override{};
         void dispatch(const rbg_parser::ons& m)override;
         void dispatch(const rbg_parser::off& m)override;
         void dispatch(const rbg_parser::assignment&)override;

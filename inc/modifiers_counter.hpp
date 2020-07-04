@@ -25,6 +25,7 @@ class modifiers_counter : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;
         void dispatch(const rbg_parser::shift&)override;
+        void dispatch(const rbg_parser::noop&)override;
         void dispatch(const rbg_parser::ons&)override;
         void dispatch(const rbg_parser::off& m)override;
         void dispatch(const rbg_parser::assignment& m)override;

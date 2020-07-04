@@ -70,6 +70,7 @@ class automaton_builder : public rbg_parser::abstract_dispatcher{
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;
         void dispatch(const rbg_parser::shift& m)override;
+        void dispatch(const rbg_parser::noop&)override;
         void dispatch(const rbg_parser::ons& m)override;
         void dispatch(const rbg_parser::off& m)override;
         void dispatch(const rbg_parser::assignment& m)override;
