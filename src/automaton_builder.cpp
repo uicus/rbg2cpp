@@ -14,6 +14,7 @@
 #include"sum.hpp"
 #include"compiler_options.hpp"
 #include"graph.hpp"
+#include"noop.hpp"
 
 constexpr uint PATH_SIZE_FOR_SHIFT_TABLE = 2;
 
@@ -123,9 +124,11 @@ void automaton_builder::dispatch(const rbg_parser::shift& m){
         current_block.push_back({action,&m,0});
 }
 
-void automaton_builder::dispatch(const rbg_parser::noop&){
+void automaton_builder::dispatch(const rbg_parser::noop& m){
     if(opts.enabled_custom_split_generation()){
-        // TODO (end block if noop-semisplit turned on)
+        end_shift_automaton();
+        current_block.push_back({action,&m,0});
+        build_automaton_from_actions_so_far();
     }
 }
 
