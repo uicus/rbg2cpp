@@ -110,7 +110,7 @@ void edge::print_transition_function(
         else
             arguments.emplace_back("std::vector<move>& moves");
     }
-    if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation())
+    if(static_data.kind == all_getter and (static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()))
         arguments.emplace_back("unsigned int move_length_limit");
     print_function_signature(output,
                              static_data.return_type,

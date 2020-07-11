@@ -124,11 +124,19 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
 }
 
 void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint state_index)const{
-    if(static_data.kind == all_getter and static_data.opts.enabled_semi_split_generation() and encountered_any_change){
-        output.add_source_line("if(mr.size()>=move_length_limit){");
-        output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
-        insert_reverting_sequence_after_success(output);
-        output.add_source_line("}");
+    if(static_data.kind == all_getter){
+        if(static_data.opts.enabled_semi_split_generation() and encountered_any_change){
+            output.add_source_line("if(mr.size()>=move_length_limit){");
+            output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
+            insert_reverting_sequence_after_success(output);
+            output.add_source_line("}");
+        }
+        else if(static_data.opts.enabled_custom_split_generation()){
+            output.add_source_line("if(move_length_limit==0){");
+            output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
+            insert_reverting_sequence_after_success(output);
+            output.add_source_line("}");
+        }
     }
 }
 
@@ -139,6 +147,12 @@ void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& o
         output.add_source_line("mr.emplace_back("+index+","+cell+");");
         encountered_any_change = true;
     }
+}
+
+void dynamic_transition_data::visit_custom_split_point(cpp_container& output){
+    if(static_data.opts.enabled_custom_split_generation())
+        if(static_data.kind == all_getter)
+            output.add_source_line("--move_length_limit;");
 }
 
 void dynamic_transition_data::print_modifiers_applications_revert(cpp_container& output)const{

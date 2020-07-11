@@ -27,9 +27,7 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::noop&){
-    if(static_data.opts.enabled_custom_split_generation()){
-        // TODO (check if semimove should be ended)
-    }
+    dynamic_data.visit_custom_split_point(output);
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){

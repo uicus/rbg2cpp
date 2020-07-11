@@ -354,7 +354,7 @@ void game_compiler::generate_main_next_getters(void){
         output.add_source_line("cache.reset();");
     output.add_source_line("moves.clear();");
     output.add_source_line("move_representation mr;");
-    game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), opts.enabled_semi_split_generation());
+    game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation());
     output.add_source_line("}");
     output.add_source_line("");
     output.add_header_line("bool apply_any_move(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+");");
