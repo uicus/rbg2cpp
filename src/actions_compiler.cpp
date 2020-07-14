@@ -27,7 +27,7 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::noop&){
-    dynamic_data.visit_custom_split_point(output);
+    dynamic_data.visit_custom_split_point();
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){

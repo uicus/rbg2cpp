@@ -19,7 +19,8 @@ int main(int argc, const char** argv){
         std::cerr<<"\"-Werror\" - treat warnings as errors"<<std::endl;
         std::cerr<<"\"-fno-shift-tables\" - turn off the shift table optimization"<<std::endl;
         std::cerr<<"\"-fno-anysquare-opt\" - turn off the any square optimization"<<std::endl;
-        std::cerr<<"\"-fsemi-split\" - turn on generation of semi split moves getters (may decrease performance of generated code)"<<std::endl;
+        std::cerr<<"\"-fsemi-split\" - turn on generation of semi split moves getters based on modifiers placement (may decrease performance of generated code)"<<std::endl;
+        std::cerr<<"\"-fcustom-split\" - turn on generation of semi split moves getters based on noop ('.') placement (may decrease performance of generated code)"<<std::endl;
         std::cerr<<"\"-fmonotonic-moves-safe\" - turn on generation of safety check in game_state::is_legal() function"<<std::endl;
         std::cerr<<"\"-fno-cache-opt\" - turn off cache optimisation"<<std::endl;
     }
