@@ -56,7 +56,7 @@ output_name("game"){
                 throw std::invalid_argument("Unrecognized flag");
         }
     }
-    if(custom_split_generation and custom_split_generation)
+    if(custom_split_generation and semi_split_generation)
         throw std::invalid_argument("Flags semi-split and custom-split cannot be both turned on");
 }
 

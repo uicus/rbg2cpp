@@ -74,19 +74,23 @@ endef
 
 $(eval $(call RUN_SIMULATION,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,simulate_semisplit,-fsemi-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,simulate_customsplit,-fcustom-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,estimate_semisplit,-fsemi-split,$(RELEASE_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,benchmark,,$(RELEASE_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,benchmark_semisplit,-fsemi-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,perft_customsplit,-fcustom-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 $(eval $(call RUN_SIMULATION,debug_simulate,,$(DEBUG_FLAGS),simulation,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_simulate_semisplit,-fsemi-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,debug_simulate_customsplit,-fcustom-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_estimate_semisplit,-fsemi-split,$(DEBUG_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_benchmark,,$(DEBUG_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,debug_benchmark_semisplit,-fsemi-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,debug_perft_semisplit,-fsemi-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,debug_perft_customsplit,-fcustom-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 
 benchmark_old:

@@ -302,7 +302,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
         handle_cell_check(output);
         if(static_data.kind == all_getter){
-            if(static_data.opts.enabled_semi_split_generation())
+            if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
                 output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
             else
                 output.add_source_line("moves.emplace_back(mr);");
