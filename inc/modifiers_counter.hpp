@@ -21,7 +21,6 @@ class modifiers_counter : public rbg_parser::abstract_dispatcher{
         ~modifiers_counter(void)override=default;
         std::vector<uint> get_result(void);
         void dispatch(const rbg_parser::sum& m)override;
-        void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);};
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;
         void dispatch(const rbg_parser::shift&)override;

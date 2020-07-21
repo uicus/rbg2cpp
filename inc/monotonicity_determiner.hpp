@@ -36,7 +36,6 @@ class monotonicity_determiner : public rbg_parser::abstract_dispatcher{
         monotonicity_determiner& operator=(monotonicity_determiner&&)=delete;
         ~monotonicity_determiner(void)override=default;
         void dispatch(const rbg_parser::sum&)override{assert(false);};
-        void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);};
         void dispatch(const rbg_parser::concatenation&)override{assert(false);};
         void dispatch(const rbg_parser::star_move&)override{assert(false);};
         void dispatch(const rbg_parser::shift&)override;

@@ -29,7 +29,6 @@ class arithmetics_printer : public rbg_parser::abstract_dispatcher{
                             const std::map<rbg_parser::token, uint>& variables_to_id,
                             const std::string& part_of_structure);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
-        void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
         void dispatch(const rbg_parser::shift&)override{assert(false);}

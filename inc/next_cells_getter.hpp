@@ -28,7 +28,6 @@ class next_cells_getter : public rbg_parser::abstract_dispatcher{
                           const std::vector<std::vector<uint>>& board_structure,
                           const std::map<rbg_parser::token, uint>& edges_to_id);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
-        void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
         void dispatch(const rbg_parser::shift& m)override;

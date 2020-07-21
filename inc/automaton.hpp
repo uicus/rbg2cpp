@@ -66,7 +66,6 @@ class automaton{
         void print_is_nodal_function(cpp_container& output)const;
         std::vector<monotonic_move> get_monotonics(const std::vector<shift_table>& shift_tables)const;
         friend automaton sum_of_automatons(std::vector<automaton>&& elements);
-        friend automaton prioritized_sum_of_automatons(std::vector<automaton>&& elements);
         friend automaton concatenation_of_automatons(std::vector<automaton>&& elements);
         friend automaton edge_automaton(const std::vector<label>& label_list);
 };

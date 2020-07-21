@@ -30,7 +30,6 @@ class unchecked_modifiers_compiler : public rbg_parser::abstract_dispatcher{
                                      uint next_state_index,
                                      bool generate_revert=false);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
-        void dispatch(const rbg_parser::prioritized_sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
         void dispatch(const rbg_parser::shift&)override{};
