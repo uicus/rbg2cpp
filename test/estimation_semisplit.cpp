@@ -152,7 +152,7 @@ int main(int argv, char** argc){
 	for (semilength = 1; semilength <= MAX_SEMILENGTH; semilength++){
 		ulong used_time = run_simulations_for_duration(estimation_time_ms);
 		double eff = count_per_sec(simulations_count, used_time);
-		std::cout << semilength << ": plays/sec " << eff;
+		std::cout << semilength << ": playouts/sec " << eff;
 		std::cout << " simulations " << simulations_count << " semimovelength_max " << semimovelength_max;
 		std::cout << " davg " << static_cast<long double>(states_count)/simulations_count << " dmin " << depth_min << " dmax " << depth_max;
         std::cout << " sdavg " << static_cast<long double>(semidepth_sum)/states_count << " sdmin " << semidepth_min << " sdmax " << semidepth_max;
