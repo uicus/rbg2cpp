@@ -44,7 +44,7 @@ output_name("game"){
                 shift_tables = false;
             else if(!std::strcmp(args[i], "-fno-anysquare-opt"))
                 vectorless_any_squares = false;
-            else if(!std::strcmp(args[i], "-fsemi-split"))
+            else if(!std::strcmp(args[i], "-fmod-split"))
                 semi_split_generation = true;
             else if(!std::strcmp(args[i], "-fmonotonic-moves-safe"))
                 safe_monotonicity_methods = true;

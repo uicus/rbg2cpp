@@ -73,25 +73,25 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 endef
 
 $(eval $(call RUN_SIMULATION,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,simulate_modsplit,-fsemi-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,simulate_modsplit,-fmod-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,simulate_customsplit,-fcustom-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,estimate_customsplit,-fcustom-split,$(RELEASE_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,benchmark,,$(RELEASE_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,benchmark_modsplit,-fsemi-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,benchmark_modsplit,-fmod-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,benchmark_customsplit,-fcustom-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_SIMULATION,perft_semisplit,-fsemi-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,perft_semisplit,-fmod-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,perft_customsplit,-fcustom-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 $(eval $(call RUN_SIMULATION,debug_simulate,,$(DEBUG_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,debug_simulate_modsplit,-fsemi-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,debug_simulate_modsplit,-fmod-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_simulate_customsplit,-fcustom-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_estimate_customsplit,-fcustom-split,$(DEBUG_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_benchmark,,$(DEBUG_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,debug_benchmark_semisplit,-fsemi-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_SIMULATION,debug_benchmark_semisplit,-fmod-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,debug_benchmark_customsplit,-fcustom-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_SIMULATION,debug_perft_modsplit,-fsemi-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_SIMULATION,debug_perft_modsplit,-fmod-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,debug_perft_customsplit,-fcustom-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 
