@@ -256,6 +256,7 @@ void game_compiler::generate_game_parameters(void){
     const auto& v = input.get_declarations().get_legal_variables();
     const auto& e = input.get_declarations().get_legal_edges();
     output.add_header_line("constexpr int BOARD_SIZE = "+std::to_string(g.get_size())+";");
+    output.add_header_line("constexpr int AUTOMATON_SIZE = "+std::to_string(game_automaton.get_size())+";");
     output.add_header_line("constexpr int NUMBER_OF_PLAYERS = "+std::to_string(pl.size()+1)+";");
     output.add_header_line("constexpr int NUMBER_OF_PIECES = "+std::to_string(pi.size())+";");
     output.add_header_line("constexpr int NUMBER_OF_VARIABLES = "+std::to_string(pl.size()+v.size())+";");
@@ -545,10 +546,10 @@ void game_compiler::generate_move_class(void){
         output.add_header_line("friend class game_state;");
         output.add_header_line("private:");
         output.add_header_line("move_representation mr;");
-        output.add_header_line("int cell;");
-        output.add_header_line("int state;");
         output.add_header_line("semimove(void)=default;");
         output.add_header_line("public:");
+        output.add_header_line("int cell;");
+        output.add_header_line("int state;");
         output.add_header_line("semimove(const move_representation& mr, int cell, int state);");
         output.add_source_line("semimove::semimove(const move_representation& mr, int cell, int state)");
         output.add_source_line(": mr(mr)");
