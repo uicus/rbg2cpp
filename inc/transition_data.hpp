@@ -99,7 +99,7 @@ class dynamic_transition_data{
         std::string get_current_state(void)const;
         void save_board_change_for_later_revert(cpp_container& output, uint piece_id);
         void save_variable_change_for_later_revert(cpp_container& output, uint variable_id);
-        void insert_move_size_check(cpp_container& output, uint state_index)const;
+        void insert_move_size_check(cpp_container& output, uint state_index);
         void push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell);
         void visit_custom_split_point(void);
         void insert_reverting_sequence_after_fail(cpp_container& output)const;
