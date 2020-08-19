@@ -57,14 +57,6 @@ void count_semiterminal(const uint semidepth){
         semidepth_max = semidepth;
 }
 
-reasoner::revert_information apply_random_semimove_from_given(reasoner::game_state &state, std::vector<reasoner::semimove> &semimoves){
-    uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
-    reasoner::revert_information ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
-    semimoves[chosen_semimove] = semimoves.back();
-    semimoves.pop_back();
-    return ri;
-}
-
 std::vector<reasoner::semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
     std::vector<reasoner::semimove>& semimoves = legal_semimoves[semidepth];
     state.get_all_semimoves(cache, semimoves, SEMILENGTH);
@@ -76,8 +68,9 @@ bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
     std::vector<reasoner::semimove>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     while(not semimoves.empty()){
-        auto ri = apply_random_semimove_from_given(state, semimoves);
         semistates_count++;
+        uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
+        auto ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
         if(state.is_nodal()){
             count_semiterminal(semidepth);
             return true;
@@ -85,6 +78,8 @@ bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
         if(apply_random_move_exhaustive(state, semidepth))
             return true;
         state.revert(ri);
+        semimoves[chosen_semimove] = semimoves.back();
+        semimoves.pop_back();
     }
     return false;
 }
