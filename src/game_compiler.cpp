@@ -544,10 +544,9 @@ void game_compiler::generate_move_class(void){
     if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
         output.add_header_line("class semimove{");
         output.add_header_line("friend class game_state;");
-        output.add_header_line("private:");
+        output.add_header_line("public:");
         output.add_header_line("move_representation mr;");
         output.add_header_line("semimove(void)=default;");
-        output.add_header_line("public:");
         output.add_header_line("int cell;");
         output.add_header_line("int state;");
         output.add_header_line("semimove(const move_representation& mr, int cell, int state);");
