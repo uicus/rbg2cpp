@@ -130,9 +130,9 @@ int main(int argv, char** argc){
     std::chrono::high_resolution_clock::time_point planned_end_time = start_time + simulation_duration;
     while(true){
         simulations_count++;
-        if constexpr (reasoner::MONOTONIC_CLASSES > 0)
-            random_simulation_with_monotonic_moves<reasoner::MONOTONIC_CLASSES>();
-        else
+        //if constexpr (reasoner::MONOTONIC_CLASSES > 0)
+        //    random_simulation_with_monotonic_moves<reasoner::MONOTONIC_CLASSES>();
+        //else
             random_simulation();
         end_time = std::chrono::high_resolution_clock::now();
         if(end_time >= planned_end_time)
