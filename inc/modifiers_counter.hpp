@@ -12,6 +12,7 @@ namespace rbg_parser{
 
 class modifiers_counter : public rbg_parser::abstract_dispatcher{
         std::vector<uint> modifiers_count_to_actions_count = {};
+        std::vector<uint> switches_indices = {};
     public:
         modifiers_counter(void)=default;
         modifiers_counter(const modifiers_counter&)=delete;
@@ -20,6 +21,7 @@ class modifiers_counter : public rbg_parser::abstract_dispatcher{
         modifiers_counter& operator=(modifiers_counter&&)=delete;
         ~modifiers_counter(void)override=default;
         std::vector<uint> get_result(void);
+        std::vector<uint> get_switches_indices(void);
         void dispatch(const rbg_parser::sum& m)override;
         void dispatch(const rbg_parser::concatenation& m)override;
         void dispatch(const rbg_parser::star_move& m)override;

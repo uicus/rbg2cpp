@@ -10,6 +10,10 @@ std::vector<uint> modifiers_counter::get_result(void){
     return std::move(modifiers_count_to_actions_count);
 }
 
+std::vector<uint> modifiers_counter::get_switches_indices(void){
+    return std::move(switches_indices);
+}
+
 void modifiers_counter::dispatch(const rbg_parser::sum& m){
     for(const auto& el: m.get_content())
         el->accept(*this);
@@ -43,10 +47,12 @@ void modifiers_counter::dispatch(const rbg_parser::assignment& m){
 
 void modifiers_counter::dispatch(const rbg_parser::player_switch& m){
     modifiers_count_to_actions_count.emplace_back(m.index_in_expression());
+    switches_indices.emplace_back(m.index_in_expression());
 }
 
 void modifiers_counter::dispatch(const rbg_parser::keeper_switch& m){
     modifiers_count_to_actions_count.emplace_back(m.index_in_expression());
+    switches_indices.emplace_back(m.index_in_expression());
 }
 
 void modifiers_counter::dispatch(const rbg_parser::move_check&){

@@ -623,6 +623,18 @@ void game_compiler::generate_indices_converters(void){
     output.add_source_line("}");
     output.add_source_line("}");
     output.add_source_line("");
+    auto switches_indices = mc.get_switches_indices();
+    output.add_header_line("int is_switch(int action_index);");
+    output.add_source_line("int is_switch(int action_index){");
+    output.add_source_line("switch(action_index){");
+    for(const auto switch_index: switches_indices)
+        output.add_source_line("case "+std::to_string(switch_index)+":");
+    output.add_source_line("return true;");
+    output.add_source_line("default:");
+    output.add_source_line("return false;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
 
 }
 
