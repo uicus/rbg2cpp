@@ -446,16 +446,9 @@ void game_compiler::generate_appliers_lists(void){
     if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
         output.add_header_include("boost/container/static_vector.hpp");
         output.add_header_line("typedef boost::container::static_vector<action_representation, "+std::to_string(straightness+1)+"> move_representation;");
-        if(opts.enabled_semi_split_generation()){
+        if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
             output.add_header_line("typedef boost::container::static_vector<board_revert_information, "+std::to_string(straightness+1)+"> board_revert_representation;");
             output.add_header_line("typedef boost::container::static_vector<variable_revert_information, "+std::to_string(straightness+1)+"> variables_revert_representation;");
-        }
-        else if(opts.enabled_custom_split_generation())
-        {
-            // TODO: use "custom straightness" when it is ready
-            output.add_header_include("boost/container/small_vector.hpp");
-            output.add_header_line("typedef boost::container::small_vector<board_revert_information, "+std::to_string(MAXIMAL_GAME_DEPENDENT_STAIGHTNESS+1)+"> board_revert_representation;");
-            output.add_header_line("typedef boost::container::small_vector<variable_revert_information, "+std::to_string(MAXIMAL_GAME_DEPENDENT_STAIGHTNESS+1)+"> variables_revert_representation;");
         }
     }
     else{
