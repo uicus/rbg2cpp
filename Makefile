@@ -15,7 +15,6 @@ PARSER_INC_DIR := $(RBG_PARSER_DIR)/src
 PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
 SIMULATIONS := 100
-SEMILENGTH := 0
 DEPTH := 3
 TIME := 100
 MEMORY := 2000000
@@ -26,7 +25,7 @@ INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
 COMMON_FLAGS = -Wall -Wextra -Wpedantic -std=c++17
 
 COMPILER_FLAGS := $(COMMON_FLAGS) -O3 -march=native -flto -s $(INCLUDE)
-SIMULATIONS_FLAGS := $(COMMON_FLAGS) -Ofast -march=native -flto -s -DNDEBUG -DSEMILENGTH=$(SEMILENGTH) -DRBG_RANDOM_GENERATOR=$(RANDGEN)
+SIMULATIONS_FLAGS := $(COMMON_FLAGS) -Ofast -march=native -flto -s -DNDEBUG -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
@@ -71,24 +70,18 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 endef
 
 $(eval $(call RUN_SIMULATION,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,simulate_modsplit,-fmod-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,simulate_customsplit,-fcustom-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,verify,,$(RELEASE_FLAGS),verifier,verifier,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,benchmark,,$(RELEASE_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,benchmark_modsplit,-fmod-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,benchmark_customsplit,-fcustom-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_SIMULATION,perft_semisplit,-fmod-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,perft_customsplit,-fcustom-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 $(eval $(call RUN_SIMULATION,debug_simulate,,$(DEBUG_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_SIMULATION,debug_simulate_modsplit,-fmod-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_simulate_customsplit,-fcustom-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,debug_benchmark,,$(DEBUG_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_SIMULATION,debug_benchmark_semisplit,-fmod-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,debug_benchmark_customsplit,-fcustom-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_SIMULATION,debug_perft_modsplit,-fmod-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,debug_perft_customsplit,-fcustom-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 
