@@ -59,7 +59,7 @@ void count_semiterminal(const uint semidepth){
 
 std::vector<reasoner::semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
     std::vector<reasoner::semimove>& semimoves = legal_semimoves[semidepth];
-    state.get_all_semimoves(cache, semimoves, SEMILENGTH);
+    state.get_all_semimoves(cache, semimoves);
     semimoves_count += semimoves.size();
     return semimoves;
 }
@@ -127,7 +127,6 @@ int main(int argv, char** argc){
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout << "semilength: " << SEMILENGTH << std::endl;
     std::cout << "time: " << ms << " ms" << std::endl;
     std::cout << "number of playouts: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " playouts/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;

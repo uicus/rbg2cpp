@@ -64,8 +64,8 @@ void state::print_outgoing_all_transitions(uint from_state, cpp_container& outpu
             arguments.emplace_back("cache");
         arguments.emplace_back("mr");
         arguments.emplace_back("moves");
-        if(semisplit_enabled)
-            arguments.emplace_back("move_length_limit");
+        //if(semisplit_enabled)
+        //    arguments.emplace_back("move_length_limit");
         auto args_string = join_strings_into_parameters(arguments);
         for(uint i=0;i<next_states.size();++i)
             output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+");");
@@ -160,8 +160,8 @@ void state::print_recursive_calls(
         {
             arguments.emplace_back("mr");
             arguments.emplace_back("moves");
-            if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
-                arguments.emplace_back("move_length_limit");
+            //if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
+            //    arguments.emplace_back("move_length_limit");
             auto args_string = join_strings_into_parameters(arguments);
             for(uint i=0;i<next_states.size();++i){
                 output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+");");

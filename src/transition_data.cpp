@@ -128,10 +128,10 @@ void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint
     if(    static_data.kind == all_getter
        and (   (static_data.opts.enabled_semi_split_generation() and encountered_any_change)
             or (static_data.opts.enabled_custom_split_generation() and encountered_custom_split_point))){
-        output.add_source_line("if(mr.size()>=move_length_limit){");
+        //output.add_source_line("if(mr.size()>=move_length_limit){");
         output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
         insert_reverting_sequence_after_success(output);
-        output.add_source_line("}");
+        //output.add_source_line("}");
         encountered_custom_split_point = false;
     }
 }
