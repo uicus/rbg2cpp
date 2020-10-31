@@ -15,7 +15,7 @@ PARSER_INC_DIR := $(RBG_PARSER_DIR)/src
 PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
 SIMULATIONS := 100
-SEMILENGTH := 1
+SEMILENGTH := 0
 DEPTH := 3
 TIME := 100
 MEMORY := 2000000
@@ -25,10 +25,8 @@ C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
 COMMON_FLAGS = -Wall -Wextra -Wpedantic -std=c++17
 
-DEBUG_FLAGS := -O0
-RELEASE_FLAGS := -O3 -march=native -flto
-COMPILER_FLAGS := $(COMMON_FLAGS) $(RELEASE_FLAGS) -s $(INCLUDE)
-SIMULATIONS_FLAGS := $(COMMON_FLAGS) -DSEMILENGTH=$(SEMILENGTH) -DRBG_RANDOM_GENERATOR=$(RANDGEN)
+COMPILER_FLAGS := $(COMMON_FLAGS) -O3 -march=native -flto -s $(INCLUDE)
+SIMULATIONS_FLAGS := $(COMMON_FLAGS) -Ofast -march=native -flto -s -DNDEBUG -DSEMILENGTH=$(SEMILENGTH) -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 DEPFILES := $(patsubst $(SRC_DIR)/%.cpp, $(DEP_DIR)/%.d, $(wildcard $(SRC_DIR)/*.cpp))
@@ -75,6 +73,7 @@ endef
 $(eval $(call RUN_SIMULATION,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,simulate_modsplit,-fmod-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,simulate_customsplit,-fcustom-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_SIMULATION,verify,,$(RELEASE_FLAGS),verifier,verifier,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,estimate_customsplit,-fcustom-split,$(RELEASE_FLAGS),estimation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_SIMULATION,benchmark,,$(RELEASE_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
 $(eval $(call RUN_SIMULATION,benchmark_modsplit,-fmod-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
@@ -94,6 +93,10 @@ $(eval $(call RUN_SIMULATION,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,debug_perft_modsplit,-fmod-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 $(eval $(call RUN_SIMULATION,debug_perft_customsplit,-fcustom-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
+
+benchmark_semisplit_old:
+	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark_flatmc_semisplit.cpp"
+	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(TIME)
 
 benchmark_old:
 	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/benchmark_flatmc.cpp"
