@@ -335,15 +335,6 @@ void game_compiler::generate_iterator_helper_structures(void){
 void game_compiler::generate_main_next_getters(void){
     if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
         output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
-        output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves){");
-        output.add_source_line("std::vector<semimove> semimoves;");
-        output.add_source_line("get_all_semimoves(cache, semimoves, 1000);");
-        output.add_source_line("moves.clear();");
-        output.add_source_line("for(const auto& el: semimoves){");
-        output.add_source_line("moves.emplace_back(el.mr);");
-        output.add_source_line("}");
-        output.add_source_line("}");
-        output.add_source_line("");
         output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<semimove>& moves, unsigned int move_length_limit);");
         output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<semimove>& moves, unsigned int move_length_limit){");
     }
