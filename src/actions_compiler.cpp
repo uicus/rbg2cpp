@@ -27,12 +27,14 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::noop&){
-    dynamic_data.visit_custom_split_point();
+    dynamic_data.visit_custom_split_point(-1);
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
-    dynamic_data.visit_custom_split_point();// Added
-    
+    if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation()) {
+        dynamic_data.visit_custom_split_point(m.index_in_expression());// Added
+        return;
+    }
     dynamic_data.handle_cell_check(output);
     dynamic_data.save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
     dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
@@ -44,13 +46,17 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
 }
 
 void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index){
-    dynamic_data.save_variable_change_for_later_revert(output, variable_id);
-    dynamic_data.push_any_change_on_modifiers_list(output, action_index, "cell");
-    output.add_source_line("variables["+std::to_string(variable_id)+"] = "+rvalue+";");
+    if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation()) {
+        //dynamic_data.push_any_change_on_modifiers_list(output, action_index, "cell");
+    } else {
+        dynamic_data.save_variable_change_for_later_revert(output, variable_id);
+        dynamic_data.push_any_change_on_modifiers_list(output, action_index, "cell");
+        output.add_source_line("variables["+std::to_string(variable_id)+"] = "+rvalue+";");
+    }
 }
 
 void actions_compiler::dispatch(const rbg_parser::assignment& m){
-    dynamic_data.visit_custom_split_point();// Added
+    dynamic_data.visit_custom_split_point(m.index_in_expression());// Added
 
     const auto& left_side = m.get_left_side();
     uint bound = 0;
@@ -104,11 +110,15 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
 
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
+    if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
+        dynamic_data.visit_custom_split_point(m.index_in_expression());
     dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
     dynamic_data.set_next_player(static_data.variables_to_id.at(m.get_player())+1);
 }
 
 void actions_compiler::dispatch(const rbg_parser::keeper_switch& m){
+    if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
+        dynamic_data.visit_custom_split_point(m.index_in_expression());
     dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
     dynamic_data.set_next_player(0);
 }
