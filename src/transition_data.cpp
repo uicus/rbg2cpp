@@ -130,7 +130,9 @@ void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint
        and (   (static_data.opts.enabled_semi_split_generation() and encountered_any_change)
             or (static_data.opts.enabled_custom_split_generation() and encountered_custom_split_point))){
         //output.add_source_line("if(mr.size()>=move_length_limit){");
-        output.add_source_line("moves.emplace_back(cell,"+std::to_string(state_index)+","+std::to_string(split_point_action_index)+");");
+        if (split_point_action_index == -1)
+          output.add_source_line("moves.emplace_back(cell,-"+std::to_string(state_index)+");"); else
+          output.add_source_line("moves.emplace_back(cell,"+std::to_string(split_point_action_index)+");");
         insert_reverting_sequence_after_success(output);
         //output.add_source_line("}");
         encountered_custom_split_point = false;
@@ -311,7 +313,9 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         handle_cell_check(output);
         if(static_data.kind == all_getter){
             if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) {
-                output.add_source_line("moves.emplace_back(cell,"+std::to_string(state_index)+","+std::to_string(split_point_action_index)+");");
+                if (split_point_action_index == -1)
+                    output.add_source_line("moves.emplace_back(cell,-"+std::to_string(state_index)+");"); else
+                    output.add_source_line("moves.emplace_back(cell,"+std::to_string(split_point_action_index)+");");
             } else
                 output.add_source_line("moves.emplace_back(mr);");
         }

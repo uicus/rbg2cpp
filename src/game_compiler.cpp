@@ -212,8 +212,6 @@ void game_compiler::generate_game_state_class(void){
         output.add_source_line("ri.previous_state = current_state;");
         output.add_source_line("action_representation el(m.index, m.cell);");
         output.add_source_line("apply_action_with_revert(el, ri);");
-        output.add_source_line("current_cell = m.cell;");
-        output.add_source_line("current_state = m.state;");
         output.add_source_line("return ri;");
         output.add_source_line("}");
         output.add_source_line("");
@@ -221,8 +219,6 @@ void game_compiler::generate_game_state_class(void){
         output.add_source_line("void game_state::apply_semimove(const semimove& m){");
         output.add_source_line("action_representation el(m.index, m.cell);");
         output.add_source_line("apply_action(el);");
-        output.add_source_line("current_cell = m.cell;");
-        output.add_source_line("current_state = m.state;");
         output.add_source_line("}");
     }
     output.add_header_line("void apply_move(const move& m);");
@@ -493,6 +489,7 @@ void game_compiler::generate_actions_applier(void){
         output.add_source_line("switch(action.index){");
         game_automaton.print_indices_to_actions_correspondence(output,static_data,true);
         output.add_source_line("default:");
+        output.add_source_line("current_state = -action.index;");// Added
         output.add_source_line("break;");
         output.add_source_line("}");
         output.add_source_line("}");
@@ -529,17 +526,15 @@ void game_compiler::generate_move_class(void){
         output.add_header_line("public:");
         output.add_header_line("semimove(void)=default;");
         output.add_header_line("int cell;");
-        output.add_header_line("int state;");
         output.add_header_line("int index;");
-        output.add_header_line("semimove(int cell, int state, int index);");
-        output.add_source_line("semimove::semimove(int cell, int state, int index)");
+        output.add_header_line("semimove(int cell,int index);");
+        output.add_source_line("semimove::semimove(int cell,int index)");
         output.add_source_line(": cell(cell)");
-        output.add_source_line(", state(state)");
         output.add_source_line(", index(index){");
         output.add_source_line("}");
         output.add_header_line("bool operator==(const semimove& rhs) const;");
         output.add_source_line("bool semimove::operator==(const semimove& rhs) const{");
-        output.add_source_line("return cell == rhs.cell and state == rhs.state and index == rhs.index;");
+        output.add_source_line("return cell == rhs.cell and index == rhs.index;");
         output.add_source_line("}");
         output.add_header_line("};");
     }
