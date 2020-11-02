@@ -220,7 +220,7 @@ void game_compiler::generate_game_state_class(void){
         output.add_header_line("void apply_semimove(const semimove& m);");
         output.add_source_line("void game_state::apply_semimove(const semimove& m){");
         output.add_source_line("action_representation el(m.index, m.cell);");
-        output.add_source_line("apply_action(el);}");
+        output.add_source_line("apply_action(el);");
         output.add_source_line("current_cell = m.cell;");
         output.add_source_line("current_state = m.state;");
         output.add_source_line("}");
