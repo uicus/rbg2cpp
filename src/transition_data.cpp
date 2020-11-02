@@ -84,6 +84,7 @@ should_check_cell_correctness(false),
 pending_modifier(false),
 has_saved_cache_level(false),
 encountered_custom_split_point(false),
+custom_split_point_action(-1),
 next_player(-1),
 from_state(std::to_string(from_state)),
 last_state_to_check(-1),
@@ -145,10 +146,12 @@ void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& o
     }
 }
 
-void dynamic_transition_data::visit_custom_split_point(void){
+void dynamic_transition_data::visit_custom_split_point(int action_index){
     if(static_data.opts.enabled_custom_split_generation())
-        if(static_data.kind == all_getter)
+        if(static_data.kind == all_getter) {
             encountered_custom_split_point = true;
+            custom_split_point_action = action_index;
+        }
 }
 
 void dynamic_transition_data::print_modifiers_applications_revert(cpp_container& output)const{
@@ -303,9 +306,10 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
         handle_cell_check(output);
         if(static_data.kind == all_getter){
-            if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
+            if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) {
+                output.add_source_line("// Co to jest?");
                 output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
-            else
+            } else
                 output.add_source_line("moves.emplace_back(mr);");
         }
         else{

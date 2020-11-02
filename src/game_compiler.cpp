@@ -200,6 +200,7 @@ void game_compiler::generate_state_getters(void){
 }
 
 void game_compiler::generate_game_state_class(void){
+    output.add_header_include("iostream");// Added
     output.add_header_line("class game_state{");
     output.add_header_line("public:");
     generate_state_getters();
@@ -207,6 +208,11 @@ void game_compiler::generate_game_state_class(void){
         output.add_header_line("revert_information apply_semimove_with_revert(const semimove& m);");
         output.add_source_line("revert_information game_state::apply_semimove_with_revert(const semimove& m){");
         output.add_source_line("revert_information ri;");
+        
+        // Information check
+        output.add_source_line(R"(if(m.mr.size() != 1) {std::cerr << "wrong assumption " << m.mr.size() << "\n";})");
+        output.add_source_line(R"(if(m.mr[0].cell != m.cell) {std::cerr << "wrong assumption cell " << m.mr[0].cell << " != " << m.cell << "\n";})");
+        
         output.add_source_line("ri.previous_cell = current_cell;");
         output.add_source_line("ri.previous_player = current_player;");
         output.add_source_line("ri.previous_state = current_state;");

@@ -27,10 +27,12 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::noop&){
-    dynamic_data.visit_custom_split_point();
+    dynamic_data.visit_custom_split_point(-1);
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
+    dynamic_data.visit_custom_split_point(m.index_in_expression());// Added
+    
     dynamic_data.handle_cell_check(output);
     dynamic_data.save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
     dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
@@ -74,6 +76,8 @@ void actions_compiler::print_variable_assignment(uint variable_id, const std::st
 }
 
 void actions_compiler::dispatch(const rbg_parser::assignment& m){
+    dynamic_data.visit_custom_split_point(m.index_in_expression());// Added
+
     const auto& left_side = m.get_left_side();
     uint bound = 0;
     if(static_data.decl.get_legal_variables().count(left_side))
@@ -82,6 +86,7 @@ void actions_compiler::dispatch(const rbg_parser::assignment& m){
         bound = static_data.decl.get_player_bound(left_side);
     arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id, "");
     m.get_right_side()->accept(right_side_printer);
+    output.add_source_line("// Potential assignment value check");// Added
     if(right_side_printer.can_be_precomputed()){
         if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound))
             dynamic_data.insert_reverting_sequence_after_fail(output);
