@@ -207,22 +207,11 @@ void game_compiler::generate_game_state_class(void){
         output.add_header_line("revert_information apply_semimove_with_revert(const semimove& m);");
         output.add_source_line("revert_information game_state::apply_semimove_with_revert(const semimove& m){");
         output.add_source_line("revert_information ri;");
-        
-        // Assumptions check
-        output.add_header_include("iostream");
-        output.add_source_line(R"(if(m.mr.size() > 0) {)");
-        output.add_source_line(R"(if(m.mr.size() != 1) {std::cerr << "wrong assumption " << m.mr.size() << "\n";})");
-        output.add_source_line(R"(if(m.mr[0].cell != m.cell) {std::cerr << "wrong assumption cell " << m.mr[0].cell << " != " << m.cell << "\n";})");
-        output.add_source_line(R"(if(m.mr[0].index != m.index) {std::cerr << "wrong assumption index " << m.mr[0].index << " != " << m.index << "\n";})");
-        output.add_source_line(R"(} else)");
-        output.add_source_line(R"(if(m.index != -1) {std::cerr << "wrong assumption index " << m.index << " != -1\n";})");
-        
         output.add_source_line("ri.previous_cell = current_cell;");
         output.add_source_line("ri.previous_player = current_player;");
         output.add_source_line("ri.previous_state = current_state;");
-        output.add_source_line("for(const auto& el: m.mr){");
+        output.add_source_line("action_representation el(m.index, m.cell);");
         output.add_source_line("apply_action_with_revert(el, ri);");
-        output.add_source_line("}");
         output.add_source_line("current_cell = m.cell;");
         output.add_source_line("current_state = m.state;");
         output.add_source_line("return ri;");
@@ -230,9 +219,8 @@ void game_compiler::generate_game_state_class(void){
         output.add_source_line("");
         output.add_header_line("void apply_semimove(const semimove& m);");
         output.add_source_line("void game_state::apply_semimove(const semimove& m){");
-        output.add_source_line("for(const auto& el: m.mr){");
-        output.add_source_line("apply_action(el);");
-        output.add_source_line("}");
+        output.add_source_line("action_representation el(m.index, m.cell);");
+        output.add_source_line("apply_action(el);}");
         output.add_source_line("current_cell = m.cell;");
         output.add_source_line("current_state = m.state;");
         output.add_source_line("}");
@@ -344,7 +332,7 @@ void game_compiler::generate_iterator_helper_structures(void){
 
 void game_compiler::generate_main_next_getters(void){
     if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
-        output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
+        //output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
         output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<semimove>& moves);");
         output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<semimove>& moves){");
     }
@@ -355,7 +343,7 @@ void game_compiler::generate_main_next_getters(void){
     if(ccc.is_main_cache_needed())
         output.add_source_line("cache.reset();");
     output.add_source_line("moves.clear();");
-    output.add_source_line("move_representation mr;");
+    //output.add_source_line("move_representation mr;");
     game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation());
     output.add_source_line("}");
     output.add_source_line("");
@@ -539,25 +527,19 @@ void game_compiler::generate_move_class(void){
         output.add_header_line("class semimove{");
         output.add_header_line("friend class game_state;");
         output.add_header_line("public:");
-        output.add_header_line("move_representation mr;");
         output.add_header_line("semimove(void)=default;");
         output.add_header_line("int cell;");
         output.add_header_line("int state;");
         output.add_header_line("int index;");
-        output.add_header_line("semimove(const move_representation& mr, int cell, int state, int index);");
-        output.add_source_line("semimove::semimove(const move_representation& mr, int cell, int state, int index)");
-        output.add_source_line(": mr(mr)");
-        output.add_source_line(", cell(cell)");
+        output.add_header_line("semimove(int cell, int state, int index);");
+        output.add_source_line("semimove::semimove(int cell, int state, int index)");
+        output.add_source_line(": cell(cell)");
         output.add_source_line(", state(state)");
         output.add_source_line(", index(index){");
         output.add_source_line("}");
-        output.add_header_line("const move_representation& get_actions(void)const;");
-        output.add_source_line("const move_representation& semimove::get_actions(void)const{");
-        output.add_source_line("return mr;");
-        output.add_source_line("}");
         output.add_header_line("bool operator==(const semimove& rhs) const;");
         output.add_source_line("bool semimove::operator==(const semimove& rhs) const{");
-        output.add_source_line("return cell == rhs.cell and state == rhs.state and mr == rhs.mr;");
+        output.add_source_line("return cell == rhs.cell and state == rhs.state and index == rhs.index;");
         output.add_source_line("}");
         output.add_header_line("};");
     }

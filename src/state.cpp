@@ -62,7 +62,8 @@ void state::print_outgoing_all_transitions(uint from_state, cpp_container& outpu
         std::vector<std::string> arguments = {"current_cell"};
         if(cache_used)
             arguments.emplace_back("cache");
-        arguments.emplace_back("mr");
+        if (not semisplit_enabled)
+            arguments.emplace_back("mr");
         arguments.emplace_back("moves");
         //if(semisplit_enabled)
         //    arguments.emplace_back("move_length_limit");
@@ -158,7 +159,8 @@ void state::print_recursive_calls(
     switch(static_data.kind){
         case all_getter:
         {
-            arguments.emplace_back("mr");
+            if(not static_data.opts.enabled_custom_split_generation())
+                arguments.emplace_back("mr");
             arguments.emplace_back("moves");
             //if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
             //    arguments.emplace_back("move_length_limit");

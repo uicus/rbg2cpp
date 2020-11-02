@@ -104,11 +104,12 @@ void edge::print_transition_function(
     if(static_data.ccc.is_any_cache_needed())
         arguments.emplace_back("resettable_bitarray_stack& cache");
     if(static_data.kind == all_getter){
-        arguments.emplace_back("move_representation& mr");
         if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
             arguments.emplace_back("std::vector<semimove>& moves");
-        else
+        else {
+            arguments.emplace_back("move_representation& mr");
             arguments.emplace_back("std::vector<move>& moves");
+        }
     }
     //if(static_data.kind == all_getter and (static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()))
     //    arguments.emplace_back("unsigned int move_length_limit");
