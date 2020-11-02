@@ -200,7 +200,6 @@ void game_compiler::generate_state_getters(void){
 }
 
 void game_compiler::generate_game_state_class(void){
-    output.add_header_include("iostream");// Added
     output.add_header_line("class game_state{");
     output.add_header_line("public:");
     generate_state_getters();
@@ -209,9 +208,14 @@ void game_compiler::generate_game_state_class(void){
         output.add_source_line("revert_information game_state::apply_semimove_with_revert(const semimove& m){");
         output.add_source_line("revert_information ri;");
         
-        // Information check
+        // Assumptions check
+        output.add_header_include("iostream");
+        output.add_source_line(R"(if(m.mr.size() > 0) {)");
         output.add_source_line(R"(if(m.mr.size() != 1) {std::cerr << "wrong assumption " << m.mr.size() << "\n";})");
         output.add_source_line(R"(if(m.mr[0].cell != m.cell) {std::cerr << "wrong assumption cell " << m.mr[0].cell << " != " << m.cell << "\n";})");
+        output.add_source_line(R"(if(m.mr[0].index != m.index) {std::cerr << "wrong assumption index " << m.mr[0].index << " != " << m.index << "\n";})");
+        output.add_source_line(R"(} else)");
+        output.add_source_line(R"(if(m.index != -1) {std::cerr << "wrong assumption index " << m.index << " != -1\n";})");
         
         output.add_source_line("ri.previous_cell = current_cell;");
         output.add_source_line("ri.previous_player = current_player;");
@@ -539,11 +543,13 @@ void game_compiler::generate_move_class(void){
         output.add_header_line("semimove(void)=default;");
         output.add_header_line("int cell;");
         output.add_header_line("int state;");
-        output.add_header_line("semimove(const move_representation& mr, int cell, int state);");
-        output.add_source_line("semimove::semimove(const move_representation& mr, int cell, int state)");
+        output.add_header_line("int index;");
+        output.add_header_line("semimove(const move_representation& mr, int cell, int state, int index);");
+        output.add_source_line("semimove::semimove(const move_representation& mr, int cell, int state, int index)");
         output.add_source_line(": mr(mr)");
         output.add_source_line(", cell(cell)");
-        output.add_source_line(", state(state){");
+        output.add_source_line(", state(state)");
+        output.add_source_line(", index(index){");
         output.add_source_line("}");
         output.add_header_line("const move_representation& get_actions(void)const;");
         output.add_source_line("const move_representation& semimove::get_actions(void)const{");

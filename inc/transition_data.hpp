@@ -82,7 +82,7 @@ class dynamic_transition_data{
         bool pending_modifier;
         bool has_saved_cache_level;
         bool encountered_custom_split_point;
-        int custom_split_point_action;
+        std::string split_point_action_index;
         int next_player;
         std::string from_state;
         int last_state_to_check;
@@ -102,7 +102,7 @@ class dynamic_transition_data{
         void save_variable_change_for_later_revert(cpp_container& output, uint variable_id);
         void insert_move_size_check(cpp_container& output, uint state_index);
         void push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell);
-        void visit_custom_split_point(int action_index);
+        void visit_custom_split_point();
         void insert_reverting_sequence_after_fail(cpp_container& output)const;
         void insert_reverting_sequence_after_success(cpp_container& output)const;
         void handle_waiting_modifier(cpp_container& output);

@@ -27,11 +27,11 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::noop&){
-    dynamic_data.visit_custom_split_point(-1);
+    dynamic_data.visit_custom_split_point();
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
-    dynamic_data.visit_custom_split_point(m.index_in_expression());// Added
+    dynamic_data.visit_custom_split_point();// Added
     
     dynamic_data.handle_cell_check(output);
     dynamic_data.save_board_change_for_later_revert(output,static_data.pieces_to_id.at(m.get_piece()));
@@ -41,6 +41,39 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
         output.add_source_line("++pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
     }
     output.add_source_line("pieces[cell] = "+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+";");
+}
+
+void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index){
+    dynamic_data.save_variable_change_for_later_revert(output, variable_id);
+    dynamic_data.push_any_change_on_modifiers_list(output, action_index, "cell");
+    output.add_source_line("variables["+std::to_string(variable_id)+"] = "+rvalue+";");
+}
+
+void actions_compiler::dispatch(const rbg_parser::assignment& m){
+    dynamic_data.visit_custom_split_point();// Added
+
+    const auto& left_side = m.get_left_side();
+    uint bound = 0;
+    if(static_data.decl.get_legal_variables().count(left_side))
+        bound = static_data.decl.get_variable_bound(left_side);
+    else
+        bound = static_data.decl.get_player_bound(left_side);
+    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id, "");
+    m.get_right_side()->accept(right_side_printer);
+    output.add_source_line("// Potential assignment value check");// Added
+    if(right_side_printer.can_be_precomputed()){
+        if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound))
+            dynamic_data.insert_reverting_sequence_after_fail(output);
+        else
+            print_variable_assignment(static_data.variables_to_id.at(left_side),std::to_string(right_side_printer.precomputed_value()),std::to_string(m.index_in_expression()));
+    }
+    else{
+        std::string final_result = right_side_printer.get_final_result();
+        output.add_source_line("if("+final_result+" > bounds["+std::to_string(static_data.variables_to_id.at(left_side))+"] or "+final_result+" <0){");
+        dynamic_data.insert_reverting_sequence_after_fail(output);
+        output.add_source_line("}");
+        print_variable_assignment(static_data.variables_to_id.at(left_side),final_result, std::to_string(m.index_in_expression()));
+    }
 }
 
 void actions_compiler::dispatch(const rbg_parser::ons& m){
@@ -69,38 +102,6 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
     }
 }
 
-void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index){
-    dynamic_data.save_variable_change_for_later_revert(output, variable_id);
-    dynamic_data.push_any_change_on_modifiers_list(output, action_index, "cell");
-    output.add_source_line("variables["+std::to_string(variable_id)+"] = "+rvalue+";");
-}
-
-void actions_compiler::dispatch(const rbg_parser::assignment& m){
-    dynamic_data.visit_custom_split_point(m.index_in_expression());// Added
-
-    const auto& left_side = m.get_left_side();
-    uint bound = 0;
-    if(static_data.decl.get_legal_variables().count(left_side))
-        bound = static_data.decl.get_variable_bound(left_side);
-    else
-        bound = static_data.decl.get_player_bound(left_side);
-    arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id, "");
-    m.get_right_side()->accept(right_side_printer);
-    output.add_source_line("// Potential assignment value check");// Added
-    if(right_side_printer.can_be_precomputed()){
-        if(right_side_printer.precomputed_value() < 0 or right_side_printer.precomputed_value() > int(bound))
-            dynamic_data.insert_reverting_sequence_after_fail(output);
-        else
-            print_variable_assignment(static_data.variables_to_id.at(left_side),std::to_string(right_side_printer.precomputed_value()),std::to_string(m.index_in_expression()));
-    }
-    else{
-        std::string final_result = right_side_printer.get_final_result();
-        output.add_source_line("if("+final_result+" > bounds["+std::to_string(static_data.variables_to_id.at(left_side))+"] or "+final_result+" <0){");
-        dynamic_data.insert_reverting_sequence_after_fail(output);
-        output.add_source_line("}");
-        print_variable_assignment(static_data.variables_to_id.at(left_side),final_result, std::to_string(m.index_in_expression()));
-    }
-}
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
     dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");

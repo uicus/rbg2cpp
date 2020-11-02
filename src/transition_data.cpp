@@ -84,7 +84,7 @@ should_check_cell_correctness(false),
 pending_modifier(false),
 has_saved_cache_level(false),
 encountered_custom_split_point(false),
-custom_split_point_action(-1),
+split_point_action_index("-1"),
 next_player(-1),
 from_state(std::to_string(from_state)),
 last_state_to_check(-1),
@@ -130,7 +130,7 @@ void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint
        and (   (static_data.opts.enabled_semi_split_generation() and encountered_any_change)
             or (static_data.opts.enabled_custom_split_generation() and encountered_custom_split_point))){
         //output.add_source_line("if(mr.size()>=move_length_limit){");
-        output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
+        output.add_source_line("moves.emplace_back(mr,cell,"+std::to_string(state_index)+","+split_point_action_index+");");
         insert_reverting_sequence_after_success(output);
         //output.add_source_line("}");
         encountered_custom_split_point = false;
@@ -142,15 +142,16 @@ void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& o
         if(not encountered_any_change)
             output.add_source_line("const auto previous_changes_list = mr.size();");
         output.add_source_line("mr.emplace_back("+index+","+cell+");");
+        if(static_data.opts.enabled_custom_split_generation())
+            split_point_action_index = index;
         encountered_any_change = true;
     }
 }
 
-void dynamic_transition_data::visit_custom_split_point(int action_index){
+void dynamic_transition_data::visit_custom_split_point(){
     if(static_data.opts.enabled_custom_split_generation())
         if(static_data.kind == all_getter) {
             encountered_custom_split_point = true;
-            custom_split_point_action = action_index;
         }
 }
 
@@ -307,8 +308,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         handle_cell_check(output);
         if(static_data.kind == all_getter){
             if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) {
-                output.add_source_line("// Co to jest?");
-                output.add_source_line("moves.emplace_back(mr, cell, "+std::to_string(state_index)+");");
+                output.add_source_line("moves.emplace_back(mr,cell,"+std::to_string(state_index)+","+split_point_action_index+");");
             } else
                 output.add_source_line("moves.emplace_back(mr);");
         }
