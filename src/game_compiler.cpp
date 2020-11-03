@@ -339,7 +339,8 @@ void game_compiler::generate_main_next_getters(void){
     if(ccc.is_main_cache_needed())
         output.add_source_line("cache.reset();");
     output.add_source_line("moves.clear();");
-    //output.add_source_line("move_representation mr;");
+    if (!opts.enabled_custom_split_generation())
+        output.add_source_line("move_representation mr;");
     game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation());
     output.add_source_line("}");
     output.add_source_line("");
@@ -441,8 +442,8 @@ void game_compiler::generate_appliers_lists(void){
         output.add_header_include("boost/container/static_vector.hpp");
         output.add_header_line("typedef boost::container::static_vector<action_representation, "+std::to_string(straightness+1)+"> move_representation;");
         if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
-            output.add_header_line("typedef boost::container::static_vector<board_revert_information, "+std::to_string(straightness+1)+"> board_revert_representation;");
-            output.add_header_line("typedef boost::container::static_vector<variable_revert_information, "+std::to_string(straightness+1)+"> variables_revert_representation;");
+            output.add_header_line("typedef boost::container::static_vector<board_revert_information, 1> board_revert_representation;");
+            output.add_header_line("typedef boost::container::static_vector<variable_revert_information, 1> variables_revert_representation;");
         }
     }
     else{
