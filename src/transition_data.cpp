@@ -131,8 +131,8 @@ void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint
             or (static_data.opts.enabled_custom_split_generation() and encountered_custom_split_point))){
         //output.add_source_line("if(mr.size()>=move_length_limit){");
         if (split_point_action_index == -1)
-          output.add_source_line("moves.emplace_back(cell,-"+std::to_string(state_index)+");"); else
-          output.add_source_line("moves.emplace_back(cell,"+std::to_string(split_point_action_index)+");");
+            output.add_source_line("moves.emplace_back(-"+std::to_string(state_index)+",cell);"); else
+            output.add_source_line("moves.emplace_back("+std::to_string(split_point_action_index)+",cell);");
         insert_reverting_sequence_after_success(output);
         //output.add_source_line("}");
         encountered_custom_split_point = false;
@@ -141,9 +141,7 @@ void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint
 
 void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell){
     if(static_data.kind == all_getter){
-        if(static_data.opts.enabled_custom_split_generation()) {
-            //split_point_action_index = std::stoi(index);
-        } else {
+        if(!static_data.opts.enabled_custom_split_generation()) {
             if(not encountered_any_change)
                 output.add_source_line("const auto previous_changes_list = mr.size();");
             output.add_source_line("mr.emplace_back("+index+","+cell+");");
@@ -314,8 +312,8 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
         if(static_data.kind == all_getter){
             if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) {
                 if (split_point_action_index == -1)
-                    output.add_source_line("moves.emplace_back(cell,-"+std::to_string(state_index)+");"); else
-                    output.add_source_line("moves.emplace_back(cell,"+std::to_string(split_point_action_index)+");");
+                    output.add_source_line("moves.emplace_back(-"+std::to_string(state_index)+",cell);"); else
+                    output.add_source_line("moves.emplace_back("+std::to_string(split_point_action_index)+",cell);");
             } else
                 output.add_source_line("moves.emplace_back(mr);");
         }
