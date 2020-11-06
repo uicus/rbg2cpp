@@ -44,13 +44,11 @@ output_name("game"){
                 shift_tables = false;
             else if(!std::strcmp(args[i], "-fno-anysquare-opt"))
                 vectorless_any_squares = false;
-            else if(!std::strcmp(args[i], "-fmod-split"))
-                semi_split_generation = true;
             else if(!std::strcmp(args[i], "-fmonotonic-moves-safe"))
                 safe_monotonicity_methods = true;
             else if(!std::strcmp(args[i], "-fno-cache-opt"))
                 cache_optimisation = false;
-            else if(!std::strcmp(args[i], "-fcustom-split"))
+            else if(!std::strcmp(args[i], "-fsemisplit"))
                 custom_split_generation = true;
             else
                 throw std::invalid_argument("Unrecognized flag");

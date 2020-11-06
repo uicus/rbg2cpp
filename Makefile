@@ -83,19 +83,19 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 endef
 
 $(eval $(call RUN_TEST,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_TEST,simulate_customsplit,-fcustom-split,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_TEST,simulate_semisplit,-fsemisplit,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_TEST,verify,,$(RELEASE_FLAGS),verifier,verifier,$(SIMULATIONS)))
 $(eval $(call RUN_TEST,benchmark,,$(RELEASE_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_TEST,benchmark_customsplit,-fcustom-split,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_TEST,benchmark_semisplit,-fsemisplit,$(RELEASE_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_TEST,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_TEST,perft_customsplit,-fcustom-split,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_TEST,perft_semisplit,-fsemisplit,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 $(eval $(call RUN_DEBUG_TEST,debug_simulate,,$(DEBUG_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_DEBUG_TEST,debug_simulate_customsplit,-fcustom-split,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_DEBUG_TEST,debug_simulate_semisplit,-fsemisplit,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_DEBUG_TEST,debug_benchmark,,$(DEBUG_FLAGS),benchmark_flatmc,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_DEBUG_TEST,debug_benchmark_customsplit,-fcustom-split,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_DEBUG_TEST,debug_benchmark_semisplit,-fsemisplit,$(DEBUG_FLAGS),benchmark_flatmc_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_DEBUG_TEST,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_DEBUG_TEST,debug_perft_customsplit,-fcustom-split,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_DEBUG_TEST,debug_perft_semisplit,-fsemisplit,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 
 benchmark_semisplit_old:
