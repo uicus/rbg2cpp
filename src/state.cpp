@@ -187,9 +187,11 @@ void state::print_recursive_calls(
 void state::print_indices_to_actions_correspondence(
     cpp_container& output,
     const static_transition_data& static_data,
-    bool generate_revert)const{
+    bool revert_mode,
+    bool generate_revert,
+    bool last_application)const{
     for(const auto& el: next_states)
-        el.print_indices_to_actions_correspondence(output, static_data, generate_revert);
+        el.print_indices_to_actions_correspondence(output, static_data, revert_mode, generate_revert, last_application);
 }
 
 void state::add_state_to_board_automaton(

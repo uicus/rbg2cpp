@@ -10,11 +10,15 @@
 unchecked_modifiers_compiler::unchecked_modifiers_compiler(cpp_container& output,
                                                            const static_transition_data& static_data,
                                                            uint next_state_index,
-                                                           bool generate_revert)
+                                                           bool revert_mode,
+                                                           bool generate_revert,
+                                                           bool last_application)
   : output(output),
     static_data(static_data),
     next_state_index(next_state_index),
-    generate_revert(generate_revert){}
+    revert_mode(revert_mode),
+    generate_revert(generate_revert),
+    last_application(last_application) {}
 
 void unchecked_modifiers_compiler::dispatch(const rbg_parser::off& m){
     output.add_source_line("case "+std::to_string(m.index_in_expression())+":");
@@ -25,7 +29,7 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::off& m){
         output.add_source_line("++pieces_count["+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+"];");
     }
     output.add_source_line("pieces[action.cell] = "+std::to_string(static_data.pieces_to_id.at(m.get_piece()))+";");
-    if (static_data.opts.enabled_custom_split_generation()) {// Added
+    if (last_application) {// Added
         output.add_source_line("current_cell = action.cell;");
         output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
     }
@@ -47,7 +51,7 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::assignment& m){
         std::string final_result = right_side_printer.get_final_result();
         output.add_source_line("variables["+left_variable_name+"] = "+final_result+";");
     }
-    if (static_data.opts.enabled_custom_split_generation()) {// Added
+    if (last_application) {// Added
         output.add_source_line("current_cell = action.cell;");
         output.add_source_line("current_state = "+std::to_string(next_state_index)+";");
     }

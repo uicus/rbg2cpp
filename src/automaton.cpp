@@ -162,9 +162,11 @@ void automaton::print_recursive_calls_for_pattern_in_start_state(
 void automaton::print_indices_to_actions_correspondence(
     cpp_container& output,
     const static_transition_data& static_data,
-    bool generate_revert)const{
+    bool revert_mode,
+    bool generate_revert,
+    bool last_application)const{
     for(const auto& el: local_register)
-        el.print_indices_to_actions_correspondence(output, static_data, generate_revert);
+        el.print_indices_to_actions_correspondence(output, static_data, revert_mode, generate_revert, last_application);
 }
 
 rules_board_automaton automaton::generate_rules_board_automaton(

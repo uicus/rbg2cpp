@@ -218,9 +218,16 @@ void game_compiler::generate_game_state_class(void){
     }*/
     output.add_header_line("void apply_move(const move& m);");
     output.add_source_line("void game_state::apply_move(const move& m){");
-    output.add_source_line("for(const auto& el: m.mr){");
-    output.add_source_line("apply_action(el);");
-    output.add_source_line("}");
+    if (opts.enabled_custom_split_generation()) {
+        output.add_source_line("for(auto it=m.mr.cbegin(); it!=m.mr.cend()-1; it++){");
+        output.add_source_line("fast_apply_action(*it);");
+        output.add_source_line("}");
+        output.add_source_line("apply_action(m.mr.back());");
+    } else {
+        output.add_source_line("for(const auto el: m.mr){");
+        output.add_source_line("fast_apply_action(el);");
+        output.add_source_line("}");
+    }
     output.add_source_line("}");
     output.add_source_line("");
     generate_main_next_getters();
@@ -454,11 +461,11 @@ void game_compiler::generate_appliers_lists(void){
 void game_compiler::generate_revert_info_structure(void){
     if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
         output.add_header_line("class revert_information{");
-        output.add_header_line("int previous_cell = 1;");
-        output.add_header_line("int previous_player = 0;");
-        output.add_header_line("int previous_state = "+std::to_string(game_automaton.get_start_state())+";");
-        output.add_header_line("board_revert_representation brr = {};");
-        output.add_header_line("variables_revert_representation vrr = {};");
+        output.add_header_line("int previous_cell;");
+        output.add_header_line("int previous_player;");
+        output.add_header_line("int previous_state;");// = "+std::to_string(game_automaton.get_start_state())+";");
+        output.add_header_line("board_revert_representation brr;");
+        output.add_header_line("variables_revert_representation vrr;");
         output.add_header_line("friend class game_state;");
         output.add_header_line("};");
         output.add_header_line("");
@@ -480,30 +487,37 @@ void game_compiler::generate_actions_applier(void){
         "",
         all_getter);
     if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
-        output.add_header_line("revert_information apply_action_with_revert(const action_representation& action);");
-        output.add_source_line("revert_information game_state::apply_action_with_revert(const action_representation& action){");
+        output.add_header_line("revert_information apply_action_with_revert(const action_representation action);");
+        output.add_source_line("revert_information game_state::apply_action_with_revert(const action_representation action){");
         output.add_source_line("revert_information ri;");
         output.add_source_line("ri.previous_cell = current_cell;");
         output.add_source_line("ri.previous_player = current_player;");
         output.add_source_line("ri.previous_state = current_state;");
         output.add_source_line("switch(action.index){");
-        game_automaton.print_indices_to_actions_correspondence(output,static_data,true);
+        game_automaton.print_indices_to_actions_correspondence(output,static_data,false,true,true);
         output.add_source_line("default:");
-        if (static_data.opts.enabled_custom_split_generation())// Added
-            output.add_source_line("current_state = -action.index;");
+        output.add_source_line("current_state = -action.index;");
         output.add_source_line("break;");
         output.add_source_line("}");
         output.add_source_line("return ri;");
         output.add_source_line("}");
         output.add_source_line("");
-    }
-    output.add_header_line("void apply_action(const action_representation& action);");
-    output.add_source_line("void game_state::apply_action(const action_representation& action){");
-    output.add_source_line("switch(action.index){");
-    game_automaton.print_indices_to_actions_correspondence(output,static_data);
-    output.add_source_line("default:");
-    if (static_data.opts.enabled_custom_split_generation())// Added
+        output.add_header_line("void apply_action(const action_representation action);");
+        output.add_source_line("void game_state::apply_action(const action_representation action){");
+        output.add_source_line("switch(action.index){");
+        game_automaton.print_indices_to_actions_correspondence(output,static_data,false,false,true);
+        output.add_source_line("default:");
         output.add_source_line("current_state = -action.index;");
+        output.add_source_line("break;");
+        output.add_source_line("}");
+        output.add_source_line("}");
+        output.add_source_line("");
+    }
+    output.add_header_line("void fast_apply_action(const action_representation action);");
+    output.add_source_line("void game_state::fast_apply_action(const action_representation action){");
+    output.add_source_line("switch(action.index){");
+    game_automaton.print_indices_to_actions_correspondence(output,static_data,false,false,false);
+    output.add_source_line("default:");
     output.add_source_line("break;");
     output.add_source_line("}");
     output.add_source_line("}");

@@ -17,7 +17,9 @@ class unchecked_modifiers_compiler : public rbg_parser::abstract_dispatcher{
         cpp_container& output;
         const static_transition_data& static_data;
         uint next_state_index;
+        bool revert_mode;
         bool generate_revert;
+        bool last_application;
     public:
         unchecked_modifiers_compiler(void)=delete;
         unchecked_modifiers_compiler(const unchecked_modifiers_compiler&)=delete;
@@ -28,7 +30,9 @@ class unchecked_modifiers_compiler : public rbg_parser::abstract_dispatcher{
         unchecked_modifiers_compiler(cpp_container& output,
                                      const static_transition_data& static_data,
                                      uint next_state_index,
-                                     bool generate_revert=false);
+                                     bool revert_mode,
+                                     bool generate_revert,
+                                     bool last_application);
         void dispatch(const rbg_parser::sum&)override{assert(false);}
         void dispatch(const rbg_parser::concatenation&)override{assert(false);}
         void dispatch(const rbg_parser::star_move&)override{assert(false);}
