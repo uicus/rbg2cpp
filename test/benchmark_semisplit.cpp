@@ -28,7 +28,7 @@ std::vector<reasoner::action_representation>& fill_semimoves_table(reasoner::gam
     return semimoves;
 }
 
-bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
+bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth=0){
     std::vector<reasoner::action_representation>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     while(not semimoves.empty()){
@@ -46,11 +46,45 @@ bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
     return false;
 }
 
+std::vector<reasoner::move> moves;
+reasoner::move mv;
+
+void get_all_moves_from_semimoves(reasoner::game_state &state, uint semidepth) {
+    std::vector<reasoner::action_representation>& semimoves = fill_semimoves_table(state, semidepth);
+    semidepth++;
+    while(not semimoves.empty()){
+        semistates_count++;
+        uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
+        //if (semimoves[chosen_semimove].index > 0)
+            mv.mr.emplace_back(semimoves[chosen_semimove]);
+        auto ri = state.apply_action_with_revert(semimoves[chosen_semimove]);
+        if(state.is_nodal()) {
+            moves.push_back(mv);
+        } else {
+            get_all_moves_from_semimoves(state, semidepth);
+        }
+        state.revert(ri);
+        //if (semimoves[chosen_semimove].index > 0)
+            mv.mr.pop_back();
+        semimoves[chosen_semimove] = semimoves.back();
+        semimoves.pop_back();
+    }
+}
+
+bool apply_random_move_exhaustive_joint(reasoner::game_state &state) {
+    //static std::vector<reasoner::move> moves;
+    moves.clear();
+    get_all_moves_from_semimoves(state, 0);
+    if (moves.size() == 0) return false;
+    uint choice = random_generator.uniform_choice(moves.size());
+    state.apply_move(moves[choice]);
+    return true;
+}
 
 void random_simulation(){
     reasoner::game_state state = initial_state;
     while(true){
-        if(not apply_random_move_exhaustive(state, 0)){
+        if(not apply_random_move_exhaustive(state)){
             count_terminal(state);
             return;
         }
