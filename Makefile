@@ -14,16 +14,17 @@ RBG_GAMES_DIR := rbgGames
 PARSER_INC_DIR := $(RBG_PARSER_DIR)/src
 PARSER_BIN_DIR := $(RBG_PARSER_DIR)/bin
 
-SIMULATIONS := 100
+SIMULATIONS := 1000
 DEPTH := 3
-TIME := 100
-MEMORY := 2000000
+TIME := 1000
+MEMORY := 2097152
 RANDGEN := 0
 
 C := g++
 INCLUDE := -I$(INC_DIR) -I$(PARSER_INC_DIR)
 COMMON_FLAGS = -Wall -Wextra -Wpedantic -std=c++17
 COMPILER_FLAGS := $(COMMON_FLAGS) -O3 -march=native -flto -s $(INCLUDE)
+
 DEBUG_FLAGS := $(COMMON_FLAGS) -O0 -g -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 RELEASE_FLAGS := $(COMMON_FLAGS) -Ofast -march=native -flto -s -DNDEBUG -DRBG_RANDOM_GENERATOR=$(RANDGEN)
 
@@ -84,7 +85,6 @@ endef
 
 $(eval $(call RUN_TEST,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_TEST,simulate_semisplit,-fsemisplit,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_TEST,verify,,$(RELEASE_FLAGS),verifier,verifier,$(SIMULATIONS)))
 $(eval $(call RUN_TEST,benchmark,,$(RELEASE_FLAGS),benchmark,benchmark flat MC,$(TIME)))
 $(eval $(call RUN_TEST,benchmark_semisplit,-fsemisplit,$(RELEASE_FLAGS),benchmark_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_TEST,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
