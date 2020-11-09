@@ -24,8 +24,14 @@ enum kind_of_transition{
     inside_pattern,
 };
 
+enum semisplit_mode{
+    semisplit_off,
+    semisplit_actions,
+};
+
 struct static_transition_data{
     const compiler_options& opts;
+    const semisplit_mode semisplit;
     const std::map<rbg_parser::token, uint>& pieces_to_id;
     const std::map<rbg_parser::token, uint>& edges_to_id;
     const std::map<rbg_parser::token, uint>& variables_to_id;
@@ -48,6 +54,7 @@ struct static_transition_data{
     uint pattern_index = 0;
     static_transition_data(
         const compiler_options& opts,
+        const semisplit_mode& semisplit,
         const std::map<rbg_parser::token, uint>& pieces_to_id,
         const std::map<rbg_parser::token, uint>& edges_to_id,
         const std::map<rbg_parser::token, uint>& variables_to_id,

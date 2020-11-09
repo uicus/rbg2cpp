@@ -38,7 +38,8 @@ void state::print_transition_functions(
     cpp_container& output,
     const static_transition_data& static_data,
     const std::vector<state>& local_register)const{
-    if(next_states.size()>1 or outgoing_edges_needed or ((static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) and static_data.kind == all_getter))
+    //if(next_states.size()>1 or outgoing_edges_needed or ((static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) and static_data.kind == all_getter))
+    if(next_states.size()>1 or outgoing_edges_needed or (static_data.semisplit == semisplit_mode::semisplit_actions and static_data.kind == all_getter))
         for(const auto& el: next_states){
             dynamic_transition_data dynamic_data(static_data,from_state);
             el.print_transition_function(output, static_data, dynamic_data, local_register);
@@ -159,7 +160,7 @@ void state::print_recursive_calls(
     switch(static_data.kind){
         case all_getter:
         {
-            if(not static_data.opts.enabled_custom_split_generation())
+            if(static_data.semisplit == semisplit_mode::semisplit_off)
                 arguments.emplace_back("mr");
             arguments.emplace_back("moves");
             //if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())

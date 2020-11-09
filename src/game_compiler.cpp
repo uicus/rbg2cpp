@@ -295,6 +295,7 @@ void game_compiler::generate_iterator_helper_structures(void){
 }
 
 void game_compiler::generate_main_next_getters(void){
+    /*
     if(opts.enabled_semi_split_generation() or opts.enabled_custom_split_generation()){
         //output.add_header_line("void get_all_moves(resettable_bitarray_stack& cache, std::vector<move>& moves);");
         output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<action_representation>& moves);");
@@ -319,6 +320,39 @@ void game_compiler::generate_main_next_getters(void){
     game_automaton.print_any_appliers_table(output, "apply_any_move", ccc.is_any_cache_needed());
     output.add_source_line("}");
     output.add_source_line("");
+    */
+    
+    // apply_any_move (always)
+    output.add_header_line("bool apply_any_move(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+");");
+    output.add_source_line("bool game_state::apply_any_move(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+"){");
+    if(ccc.is_main_cache_needed())
+        output.add_source_line("cache.reset();");
+    game_automaton.print_any_appliers_table(output, "apply_any_move", ccc.is_any_cache_needed());
+    output.add_source_line("}");
+    output.add_source_line("");
+
+    // Semisplit actions
+    if(opts.enabled_custom_split_generation()){
+        output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<action_representation>& moves);");
+        output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<action_representation>& moves){");
+        if(ccc.is_main_cache_needed())
+            output.add_source_line("cache.reset();");
+        output.add_source_line("moves.clear();");
+        game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), true);
+        output.add_source_line("}");
+        output.add_source_line("");
+    } else {
+    // Full moves
+    output.add_header_line("void get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves);");
+    output.add_source_line("void game_state::get_all_moves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves){");
+    if(ccc.is_main_cache_needed())
+        output.add_source_line("cache.reset();");
+    output.add_source_line("moves.clear();");
+    output.add_source_line("move_representation mr;");
+    game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), false);
+    output.add_source_line("}");
+    output.add_source_line("");
+    }
 }
 
 void game_compiler::generate_pattern_evaluator(uint pattern_index){
@@ -328,6 +362,7 @@ void game_compiler::generate_pattern_evaluator(uint pattern_index){
         output.add_source_line("cache.pattern_reset"+std::to_string(pattern_index)+"();");
     static_transition_data static_data(
         opts,
+        semisplit_mode::semisplit_off,
         pieces_to_id,
         edges_to_id,
         variables_to_id,
@@ -356,6 +391,7 @@ void game_compiler::generate_states_iterator(void){
         output,
         static_transition_data(
             opts,
+            semisplit_mode::semisplit_off,
             pieces_to_id,
             edges_to_id,
             variables_to_id,
@@ -367,27 +403,48 @@ void game_compiler::generate_states_iterator(void){
             injective_board,
             "apply_any_move_",
             any_getter));
-    game_automaton.print_transition_functions(
-        output,
-        static_transition_data(
-            opts,
-            pieces_to_id,
-            edges_to_id,
-            variables_to_id,
-            input.get_declarations(),
-            shift_tables,
-            precomputed_patterns,
-            ccc,
-            uses_pieces_in_arithmetics,
-            injective_board,
-            "get_all_moves_",
-            all_getter));
+    if (opts.enabled_custom_split_generation()) {
+        game_automaton.print_transition_functions(
+            output,
+            static_transition_data(
+                opts,
+                semisplit_mode::semisplit_actions,
+                pieces_to_id,
+                edges_to_id,
+                variables_to_id,
+                input.get_declarations(),
+                shift_tables,
+                precomputed_patterns,
+                ccc,
+                uses_pieces_in_arithmetics,
+                injective_board,
+                "get_all_moves_",
+                all_getter));
+    } else {
+        game_automaton.print_transition_functions(
+            output,
+            static_transition_data(
+                opts,
+                semisplit_mode::semisplit_off,
+                pieces_to_id,
+                edges_to_id,
+                variables_to_id,
+                input.get_declarations(),
+                shift_tables,
+                precomputed_patterns,
+                ccc,
+                uses_pieces_in_arithmetics,
+                injective_board,
+                "get_all_moves_",
+                all_getter));
+    }
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("");
         pattern_automata[i].print_transition_functions(
             output,
             static_transition_data(
                 opts,
+                semisplit_mode::semisplit_off,
                 pieces_to_id,
                 edges_to_id,
                 variables_to_id,
@@ -432,6 +489,7 @@ void game_compiler::generate_revert_info_structure(void){
 void game_compiler::generate_actions_applier(void){
     static_transition_data static_data(
         opts,
+        semisplit_mode::semisplit_off,
         pieces_to_id,
         edges_to_id,
         variables_to_id,
@@ -506,6 +564,7 @@ void game_compiler::generate_reverter(void){
     if (!opts.enabled_custom_split_generation()) return;
     static_transition_data static_data(
     opts,
+    semisplit_mode::semisplit_off,
     pieces_to_id,
     edges_to_id,
     variables_to_id,
@@ -597,6 +656,7 @@ void game_compiler::generate_monotonic_moves(void){
     output.add_source_line("switch(current_state){");
     static_transition_data static_data(
         opts,
+        semisplit_mode::semisplit_off,
         pieces_to_id,
         edges_to_id,
         variables_to_id,
