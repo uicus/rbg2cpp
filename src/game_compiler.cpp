@@ -512,6 +512,7 @@ void game_compiler::generate_actions_applier(void){
         game_automaton.print_indices_to_actions_correspondence(output,static_data,false,true,true);
         output.add_source_line("default:");
         output.add_source_line("current_state = -action.index;");
+        output.add_source_line("current_cell = action.cell;");
         output.add_source_line("break;");
         output.add_source_line("}");
         output.add_source_line("return ri;");
@@ -523,6 +524,7 @@ void game_compiler::generate_actions_applier(void){
         game_automaton.print_indices_to_actions_correspondence(output,static_data,false,false,true);
         output.add_source_line("default:");
         output.add_source_line("current_state = -action.index;");
+        output.add_source_line("current_cell = action.cell;");
         output.add_source_line("break;");
         output.add_source_line("}");
         output.add_source_line("}");
