@@ -104,7 +104,7 @@ void edge::print_transition_function(
     if(static_data.ccc.is_any_cache_needed())
         arguments.emplace_back("resettable_bitarray_stack& cache");
     if(static_data.kind == all_getter){
-        if(static_data.semisplit == semisplit_mode::semisplit_actions)
+        if(static_data.semisplit == mode::semisplit_actions)
             arguments.emplace_back("std::vector<action_representation>& moves");
         else {
             arguments.emplace_back("move_representation& mr");

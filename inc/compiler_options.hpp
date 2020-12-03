@@ -11,10 +11,11 @@ class compiler_options{
         bool warnings_as_errors : 1;
         bool shift_tables : 1;
         bool vectorless_any_squares : 1;
-        bool semi_split_generation : 1;
         bool safe_monotonicity_methods : 1;
         bool cache_optimisation : 1;
-        bool custom_split_generation : 1;
+        bool generate_moves_getter : 1;
+        bool generate_actions_getter : 1;
+        bool generate_dotsplit_getter : 1;
         std::string output_name;
     public:
         compiler_options(void);
@@ -24,10 +25,12 @@ class compiler_options{
         bool escalating_warnings(void)const;
         bool enabled_shift_tables(void)const;
         bool enabled_any_square_optimisation(void)const;
-        bool enabled_semi_split_generation(void)const;
         bool enabled_safe_monotonicity_methods(void)const;
         bool enabled_cache_optimisation(void)const;
-        bool enabled_custom_split_generation(void)const;
+        bool enabled_moves_getter(void)const;
+        bool enabled_actions_getter(void)const;
+        bool enabled_dotsplit_getter(void)const;
+        bool enabled_semisplit(void)const;
         const std::string& output_file(void)const;
 };
 

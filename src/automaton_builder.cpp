@@ -125,7 +125,7 @@ void automaton_builder::dispatch(const rbg_parser::shift& m){
 }
 
 void automaton_builder::dispatch(const rbg_parser::noop& m){
-    if(opts.enabled_custom_split_generation()){
+    if(opts.enabled_semisplit()){
         end_shift_automaton();
         current_block.push_back({action,&m,0});
         build_automaton_from_actions_so_far();
@@ -140,7 +140,7 @@ void automaton_builder::dispatch(const rbg_parser::ons& m){
 void automaton_builder::dispatch(const rbg_parser::off& m){
     end_shift_automaton();
     current_block.push_back({action,&m,0});
-    if(opts.enabled_custom_split_generation()){// Added
+    if(opts.enabled_semisplit()){
         build_automaton_from_actions_so_far();
     }
 }
@@ -148,7 +148,7 @@ void automaton_builder::dispatch(const rbg_parser::off& m){
 void automaton_builder::dispatch(const rbg_parser::assignment& m){
     end_shift_automaton();
     current_block.push_back({action,&m,0});
-    if(opts.enabled_custom_split_generation()){// Added
+    if(opts.enabled_semisplit()){
         build_automaton_from_actions_so_far();
     }
 }

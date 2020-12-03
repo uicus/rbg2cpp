@@ -11,7 +11,7 @@
 
 static_transition_data::static_transition_data(
     const compiler_options& opts,
-    const semisplit_mode& semisplit,
+    const mode& semisplit,
     const std::map<rbg_parser::token, uint>& pieces_to_id,
     const std::map<rbg_parser::token, uint>& edges_to_id,
     const std::map<rbg_parser::token, uint>& variables_to_id,
@@ -129,7 +129,7 @@ void dynamic_transition_data::revert_variable_change(cpp_container& output, uint
 
 void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint state_index){
     if(    static_data.kind == all_getter
-       and (static_data.semisplit == semisplit_mode::semisplit_actions and encountered_custom_split_point)){
+       and (static_data.semisplit == mode::semisplit_actions and encountered_custom_split_point)){
         if (split_point_action_index == -1)
             output.add_source_line("moves.emplace_back(-"+std::to_string(state_index)+",cell);"); else
             output.add_source_line("moves.emplace_back("+std::to_string(split_point_action_index)+",cell);");
@@ -140,7 +140,7 @@ void dynamic_transition_data::insert_move_size_check(cpp_container& output, uint
 
 void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& output, const std::string& index, const std::string& cell){
     if(static_data.kind == all_getter){
-        if(static_data.semisplit == semisplit_mode::semisplit_off) {
+        if(static_data.semisplit == mode::semisplit_off) {
             if(not encountered_any_change)
                 output.add_source_line("const auto previous_changes_list = mr.size();");
             output.add_source_line("mr.emplace_back("+index+","+cell+");");
@@ -150,7 +150,7 @@ void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& o
 }
 
 void dynamic_transition_data::visit_custom_split_point(int action_index){
-    if(static_data.semisplit == semisplit_mode::semisplit_actions)
+    if(static_data.semisplit == mode::semisplit_actions)
         if(static_data.kind == all_getter) {
             encountered_custom_split_point = true;
             split_point_action_index = action_index;
@@ -175,7 +175,7 @@ void dynamic_transition_data::print_cache_level_revert(cpp_container& output)con
 }
 
 void dynamic_transition_data::print_modifiers_list_revert(cpp_container& output)const{
-    if(static_data.kind != inside_pattern && static_data.semisplit == semisplit_mode::semisplit_off)
+    if(static_data.kind != inside_pattern && static_data.semisplit == mode::semisplit_off)
         if(encountered_any_change)
             output.add_source_line("mr.resize(previous_changes_list);");
 }
@@ -309,7 +309,7 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
     else if(static_data.kind != inside_pattern and is_ready_to_report()){
         handle_cell_check(output);
         if(static_data.kind == all_getter){
-            if(static_data.semisplit == semisplit_mode::semisplit_actions) {
+            if(static_data.semisplit == mode::semisplit_actions) {
                 if (split_point_action_index == -1)
                     output.add_source_line("moves.emplace_back(-"+std::to_string(state_index)+",cell);"); else
                     output.add_source_line("moves.emplace_back("+std::to_string(split_point_action_index)+",cell);");
