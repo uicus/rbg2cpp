@@ -24,7 +24,7 @@ void count_terminal(const reasoner::game_state &state){
 
 std::vector<reasoner::action_representation>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
     std::vector<reasoner::action_representation>& semimoves = legal_semimoves[semidepth];
-    state.get_all_semimoves(cache, semimoves);
+    state.get_all_actions(cache, semimoves);
     return semimoves;
 }
 
