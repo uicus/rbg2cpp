@@ -65,7 +65,7 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) $(3) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) $(3) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(4).cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(3) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(3) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(4).cpp"
 	@echo "******** Running $(5)... ********"
 	@ulimit -Sv $(MEMORY) && taskset -c 0 time -v $(TEST_DIR)/test $(6)
 endef
@@ -78,7 +78,7 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 	@mv reasoner.hpp $(TEST_DIR)/
 	@mv reasoner.cpp $(TEST_DIR)/
 	@echo "Running $(C)..."
-	@taskset -c 0 time -v -p sh -c "$(C) $(SIMULATIONS_FLAGS) $(3) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(SIMULATIONS_FLAGS) $(3) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(4).cpp"
+	@taskset -c 0 time -v -p sh -c "$(C) $(3) -c -o $(TEST_DIR)/reasoner.o $(TEST_DIR)/reasoner.cpp; $(C) $(3) -o $(TEST_DIR)/test $(TEST_DIR)/reasoner.o $(TEST_DIR)/$(4).cpp"
 	@echo "******** Running $(5)... ********"
 	@ulimit -Sv $(MEMORY) && valgrind $(TEST_DIR)/test $(6)
 endef
