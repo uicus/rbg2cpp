@@ -50,10 +50,17 @@ output_name("game"){
                 safe_monotonicity_methods = true;
             else if(!std::strcmp(args[i], "-fno-cache-opt"))
                 cache_optimisation = false;
-            else if(!std::strcmp(args[i], "-fsemisplit"))
-                generate_actions_getter = true;
+            else if(!std::strcmp(args[i], "-getters")) {
+                ++i;
+                if (i >= number_of_args)
+                    throw std::invalid_argument("Flag \"-getters\" should be succeeded by a string of getters ids");
+                std::string arg(args[i]);
+                generate_moves_getter = (arg.find('m') != std::string::npos);
+                generate_actions_getter = (arg.find('a') != std::string::npos);
+                generate_dotsplit_getter = (arg.find('s') != std::string::npos);
+            }
             else
-                throw std::invalid_argument("Unrecognized flag");
+                throw std::invalid_argument("Unrecognized flag: "+std::string(args[i]));
         }
     }
 }

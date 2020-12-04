@@ -34,7 +34,7 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth, uint semidept
         else{
             if(state.is_nodal())
                 ++states_count;
-            state.get_all_semimoves(cache, legal_semimoves[semidepth]);
+            state.get_all_actions(cache, legal_semimoves[semidepth]);
             for(const auto& el: legal_semimoves[semidepth]){
                 auto was_nodal = state.is_nodal();
                 auto reverter = state.apply_action_with_revert(el);

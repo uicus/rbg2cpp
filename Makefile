@@ -84,18 +84,18 @@ $(1)_%: $(RBG_GAMES_DIR)/games/%.rbg
 endef
 
 $(eval $(call RUN_TEST,simulate,,$(RELEASE_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_TEST,simulate_semisplit,-fsemisplit,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_TEST,simulate_semisplit,-getters a,$(RELEASE_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_TEST,benchmark,,$(RELEASE_FLAGS),benchmark,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_TEST,benchmark_semisplit,-fsemisplit,$(RELEASE_FLAGS),benchmark_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_TEST,benchmark_semisplit,-getters a,$(RELEASE_FLAGS),benchmark_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_TEST,perft,,$(RELEASE_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_TEST,perft_semisplit,-fsemisplit,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_TEST,perft_semisplit,-getters a,$(RELEASE_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 $(eval $(call RUN_DEBUG_TEST,debug_simulate,,$(DEBUG_FLAGS),simulation,simulation,$(SIMULATIONS)))
-$(eval $(call RUN_DEBUG_TEST,debug_simulate_semisplit,-fsemisplit,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
+$(eval $(call RUN_DEBUG_TEST,debug_simulate_semisplit,-getters a,$(DEBUG_FLAGS),simulation_semisplit,simulation,$(SIMULATIONS)))
 $(eval $(call RUN_DEBUG_TEST,debug_benchmark,,$(DEBUG_FLAGS),benchmark,benchmark flat MC,$(TIME)))
-$(eval $(call RUN_DEBUG_TEST,debug_benchmark_semisplit,-fsemisplit,$(DEBUG_FLAGS),benchmark_semisplit,benchmark semisplit flat MC,$(TIME)))
+$(eval $(call RUN_DEBUG_TEST,debug_benchmark_semisplit,-getters a,$(DEBUG_FLAGS),benchmark_semisplit,benchmark semisplit flat MC,$(TIME)))
 $(eval $(call RUN_DEBUG_TEST,debug_perft,,$(DEBUG_FLAGS),perft,perft,$(DEPTH)))
-$(eval $(call RUN_DEBUG_TEST,debug_perft_semisplit,-fsemisplit,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
+$(eval $(call RUN_DEBUG_TEST,debug_perft_semisplit,-getters a,$(DEBUG_FLAGS),perft_semisplit,perft,$(DEPTH)))
 
 
 benchmark_semisplit_old:
