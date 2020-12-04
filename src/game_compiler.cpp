@@ -570,7 +570,7 @@ void game_compiler::generate_indices_converters(void){
     input.get_moves()->accept(mc);
     auto modifiers_count_to_actions_count = mc.get_result();
     output.add_header_line("constexpr int NUMBER_OF_MODIFIERS = "+std::to_string(modifiers_count_to_actions_count.size())+";");
-    output.add_header_line("int action_to_modifier_index(int action_index);");
+    /*output.add_header_line("int action_to_modifier_index(int action_index);");
     output.add_source_line("int action_to_modifier_index(int action_index){");
     output.add_source_line("switch(action_index){");
     for(uint i=0;i<modifiers_count_to_actions_count.size();++i){
@@ -593,7 +593,7 @@ void game_compiler::generate_indices_converters(void){
     output.add_source_line("return -1;");
     output.add_source_line("}");
     output.add_source_line("}");
-    output.add_source_line("");
+    output.add_source_line("");*/
     auto switches_indices = mc.get_switches_indices();
     output.add_header_line("int is_switch(int action_index);");
     output.add_source_line("int is_switch(int action_index){");
