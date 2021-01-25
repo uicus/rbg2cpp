@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#define private public
 #include "rbg_random_generator.hpp"
 #include "reasoner.hpp"
 
@@ -8,6 +9,12 @@ typedef unsigned long ulong;
 constexpr int KEEPER = 0;
 constexpr uint MAX_SEMIDEPTH = 100;
 
+#if SEMISPLIT_ACTIONS != 0
+    using semimove = reasoner::action_representation;
+#else
+    using semimove = reasoner::move;
+#endif
+
 RBGRandomGenerator random_generator(1);
 
 uint semilength;
@@ -15,67 +22,39 @@ ulong states_count = 0, semistates_count = 0;
 ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::action_representation> legal_semimoves[MAX_SEMIDEPTH];
+std::vector<semimove> legal_semimoves[MAX_SEMIDEPTH];
 
 void count_terminal(const reasoner::game_state &state){
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         goals_avg[i] += state.get_player_score(i);
 }
 
-std::vector<reasoner::action_representation>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::action_representation>& semimoves = legal_semimoves[semidepth];
-    state.get_all_actions(cache, semimoves);
+std::vector<semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
+    std::vector<semimove>& semimoves = legal_semimoves[semidepth];
+    #if SEMISPLIT_ACTIONS != 0
+        state.get_all_actions(cache, semimoves);
+    #else
+        state.get_all_semimoves(cache, semimoves);
+    #endif
     return semimoves;
 }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth=0){
-    std::vector<reasoner::action_representation>& semimoves = fill_semimoves_table(state, semidepth);
+    std::vector<semimove>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     while(not semimoves.empty()){
         semistates_count++;
         uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
-        auto ri = state.apply_action_with_revert(semimoves[chosen_semimove]);
+        auto rev = state.apply_with_revert(semimoves[chosen_semimove]);
         if(state.is_nodal())
             return true;
         if(apply_random_move_exhaustive(state, semidepth))
             return true;
-        state.revert(ri);
+        state.revert(rev);
         semimoves[chosen_semimove] = semimoves.back();
         semimoves.pop_back();
     }
     return false;
-}
-
-std::vector<reasoner::move> moves;
-reasoner::move mv;
-
-void get_all_moves_from_semimoves(reasoner::game_state &state, uint semidepth) {
-    std::vector<reasoner::action_representation>& semimoves = fill_semimoves_table(state, semidepth);
-    semidepth++;
-    while(not semimoves.empty()){
-        semistates_count++;
-        uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
-        if (semimoves[chosen_semimove].index > 0)
-            mv.mr.emplace_back(semimoves[chosen_semimove]);
-        auto ri = state.apply_action_with_revert(semimoves[chosen_semimove]);
-        if(state.is_nodal())
-            moves.push_back(mv); else
-            get_all_moves_from_semimoves(state, semidepth);
-        state.revert(ri);
-        if (semimoves[chosen_semimove].index > 0)
-            mv.mr.pop_back();
-        semimoves[chosen_semimove] = semimoves.back();
-        semimoves.pop_back();
-    }
-}
-
-bool apply_random_move_exhaustive_joint(reasoner::game_state &state) {
-    moves.clear();
-    get_all_moves_from_semimoves(state, 0);
-    if (moves.size() == 0) return false;
-    uint choice = random_generator.uniform_choice(moves.size());
-    state.apply_move(moves[choice]);
-    return true;
 }
 
 void random_simulation(){

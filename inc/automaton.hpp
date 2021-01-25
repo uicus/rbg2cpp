@@ -41,7 +41,7 @@ class automaton{
             cpp_container& output,
             const static_transition_data& static_data)const;
         void print_any_appliers_table(cpp_container& output, const std::string& functions_prefix, bool cache_used)const;
-        void print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const;
+        void print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used, mode semisplit_mode)const;
         void mark_end_as_keeper_move_start(void);
         void mark_end_as_player_move_start(void);
         void mark_end_as_outgoing_usable(void);

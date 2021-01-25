@@ -203,18 +203,25 @@ void game_compiler::generate_game_state_class(void){
     output.add_header_line("class game_state{");
     output.add_header_line("public:");
     generate_state_getters();
+    output.add_header_line("void apply(const move& m){apply_move(m);}");
     output.add_header_line("void apply_move(const move& m);");
     output.add_source_line("void game_state::apply_move(const move& m){");
-    if (opts.enabled_semisplit()) {
-        output.add_source_line("for(auto it=m.mr.cbegin(); it!=m.mr.cend()-1; it++){");
-        output.add_source_line("fast_apply_action(*it);");
-        output.add_source_line("}");
-        output.add_source_line("apply_action(m.mr.back());");
-    } else {
-        output.add_source_line("for(const auto el: m.mr){");
-        output.add_source_line("fast_apply_action(el);");
-        output.add_source_line("}");
-    }
+    output.add_source_line("for(auto it=m.mr.cbegin(); it!=m.mr.cend()-1; it++){");
+    output.add_source_line("fast_apply_action(*it);");
+    output.add_source_line("}");
+    output.add_source_line("apply_action(m.mr.back());");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("move_reverter apply_with_revert(const move& m){return apply_move_with_revert(m);}");
+    output.add_header_line("move_reverter apply_move_with_revert(const move& m);");
+    output.add_source_line("move_reverter game_state::apply_move_with_revert(const move& m){");
+    output.add_source_line("move_reverter moverev;");
+    output.add_source_line("moverev.previous_state = current_state;");
+    output.add_source_line("for(auto it=m.mr.cbegin(); it!=m.mr.cend()-1; it++){");
+    output.add_source_line("moverev.modrevs.push_back(fast_apply_action_with_revert(*it));");
+    output.add_source_line("}");
+    output.add_source_line("moverev.modrevs.push_back(apply_action_with_revert(m.mr.back()).modrev);");
+    output.add_source_line("return moverev;");
     output.add_source_line("}");
     output.add_source_line("");
     generate_main_next_getters();
@@ -311,7 +318,7 @@ void game_compiler::generate_main_next_getters(void){
             output.add_source_line("cache.reset();");
         output.add_source_line("moves.clear();");
         output.add_source_line("move_representation mr;");
-        game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), false);
+        game_automaton.print_all_getters_table(output, "get_all_moves", ccc.is_any_cache_needed(), mode::semisplit_off);
         output.add_source_line("}");
         output.add_source_line("");
     }
@@ -321,11 +328,21 @@ void game_compiler::generate_main_next_getters(void){
         if(ccc.is_main_cache_needed())
             output.add_source_line("cache.reset();");
         output.add_source_line("moves.clear();");
-        game_automaton.print_all_getters_table(output, "get_all_actions", ccc.is_any_cache_needed(), true);
+        game_automaton.print_all_getters_table(output, "get_all_actions", ccc.is_any_cache_needed(), mode::semisplit_actions);
         output.add_source_line("}");
         output.add_source_line("");
-    };
-    // TODO dotsplit
+    }
+    if(opts.enabled_dotsplit_getter()){// get_all_semimoves
+        output.add_header_line("void get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves);");
+        output.add_source_line("void game_state::get_all_semimoves(resettable_bitarray_stack&"+std::string(ccc.is_any_cache_needed()?" cache":"")+", std::vector<move>& moves){");
+        if(ccc.is_main_cache_needed())
+            output.add_source_line("cache.reset();");
+        output.add_source_line("moves.clear();");
+        output.add_source_line("move_representation mr;");
+        game_automaton.print_all_getters_table(output, "get_all_semimoves", ccc.is_any_cache_needed(), mode::semisplit_dotsplit);
+        output.add_source_line("}");
+        output.add_source_line("");
+    }
 }
 
 void game_compiler::generate_pattern_evaluator(uint pattern_index){
@@ -412,6 +429,24 @@ void game_compiler::generate_states_iterator(void){
                 "get_all_actions_",
                 all_getter));
     }
+    if (opts.enabled_dotsplit_getter()) {
+        game_automaton.print_transition_functions(
+            output,
+            static_transition_data(
+                opts,
+                mode::semisplit_dotsplit,
+                pieces_to_id,
+                edges_to_id,
+                variables_to_id,
+                input.get_declarations(),
+                shift_tables,
+                precomputed_patterns,
+                ccc,
+                uses_pieces_in_arithmetics,
+                injective_board,
+                "get_all_semimoves_",
+                all_getter));
+    }
     for(uint i=0;i<pattern_automata.size();++i){
         output.add_header_line("");
         pattern_automata[i].print_transition_functions(
@@ -439,25 +474,39 @@ void game_compiler::generate_appliers_lists(void){
     int straightness = input.get_moves()->compute_k_straightness().final_result();
     if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
         output.add_header_include("boost/container/static_vector.hpp");
-        output.add_header_line("typedef boost::container::static_vector<action_representation, "+std::to_string(straightness+1)+"> move_representation;");
+        output.add_header_line("using move_representation = boost::container::static_vector<action_representation, "+std::to_string(straightness+1)+">;");
     }
     else{
         output.add_header_include("boost/container/small_vector.hpp");
-        output.add_header_line("typedef boost::container::small_vector<action_representation, "+std::to_string(MAXIMAL_GAME_DEPENDENT_STAIGHTNESS+1)+"> move_representation;");
+        output.add_header_line("using move_representation = boost::container::small_vector<action_representation, "+std::to_string(MAXIMAL_GAME_DEPENDENT_STAIGHTNESS+1)+">;");
     }
 }
 
 void game_compiler::generate_revert_info_structure(void){
-    if(opts.enabled_semisplit()){
-        output.add_header_line("class revert_information{");
-        output.add_header_line("int previous_cell;");
-        output.add_header_line("int previous_state;");
-        output.add_header_line("int action_index;");
-        output.add_header_line("int previous_value;");
-        output.add_header_line("friend class game_state;");
-        output.add_header_line("};");
-        output.add_header_line("");
+    output.add_header_line("struct mod_reverter{");
+    output.add_header_line("int action_index;");
+    output.add_header_line("int previous_value;");
+    output.add_header_line("int previous_cell;");
+    output.add_header_line("friend class game_state;");
+    output.add_header_line("};");
+    output.add_header_line("");
+    output.add_header_line("struct action_reverter{");
+    output.add_header_line("int previous_state;");
+    output.add_header_line("mod_reverter modrev;");
+    output.add_header_line("friend class game_state;");
+    output.add_header_line("};");
+    output.add_header_line("");
+    output.add_header_line("struct move_reverter{");
+    output.add_header_line("int previous_state;");
+    int straightness = input.get_moves()->compute_k_straightness().final_result();
+    if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
+        output.add_header_line("boost::container::static_vector<mod_reverter, "+std::to_string(straightness+1)+"> modrevs;");
+    } else {
+        output.add_header_line("boost::container::small_vector<mod_reverter, "+std::to_string(straightness+1)+"> modrevs;");
     }
+    output.add_header_line("friend class game_state;");
+    output.add_header_line("};");
+    output.add_header_line("");
 }
 
 void game_compiler::generate_actions_applier(void){
@@ -475,35 +524,19 @@ void game_compiler::generate_actions_applier(void){
         injective_board,
         "",
         all_getter);
-    if(opts.enabled_semisplit()){
-        output.add_header_line("revert_information apply_action_with_revert(const action_representation action);");
-        output.add_source_line("revert_information game_state::apply_action_with_revert(const action_representation action){");
-        output.add_source_line("revert_information ri;");
-        output.add_source_line("ri.previous_cell = current_cell;");
-        output.add_source_line("ri.previous_state = current_state;");
-        output.add_source_line("ri.action_index = action.index;");
-        output.add_source_line("switch(action.index){");
-        game_automaton.print_indices_to_actions_correspondence(output,static_data,false,true,true);
-        output.add_source_line("default:");
-        output.add_source_line("current_state = -action.index;");
-        output.add_source_line("current_cell = action.cell;");
-        output.add_source_line("break;");
-        output.add_source_line("}");
-        output.add_source_line("return ri;");
-        output.add_source_line("}");
-        output.add_source_line("");
-        output.add_header_line("void apply_action(const action_representation action);");
-        output.add_source_line("void game_state::apply_action(const action_representation action){");
-        output.add_source_line("switch(action.index){");
-        game_automaton.print_indices_to_actions_correspondence(output,static_data,false,false,true);
-        output.add_source_line("default:");
-        output.add_source_line("current_state = -action.index;");
-        output.add_source_line("current_cell = action.cell;");
-        output.add_source_line("break;");
-        output.add_source_line("}");
-        output.add_source_line("}");
-        output.add_source_line("");
-    }
+    output.add_header_line("void apply(const action_representation action){apply_action(action);}");
+    output.add_header_line("void apply_action(const action_representation action);");
+    output.add_source_line("void game_state::apply_action(const action_representation action){");
+    output.add_source_line("switch(action.index){");
+    game_automaton.print_indices_to_actions_correspondence(output,static_data,false,false,true);
+    output.add_source_line("default:");
+    output.add_source_line("current_state = -action.index;");
+    output.add_source_line("current_cell = action.cell;");
+    output.add_source_line("break;");
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_source_line("");
     output.add_header_line("void fast_apply_action(const action_representation action);");
     output.add_source_line("void game_state::fast_apply_action(const action_representation action){");
     output.add_source_line("switch(action.index){");
@@ -511,6 +544,79 @@ void game_compiler::generate_actions_applier(void){
     output.add_source_line("default:");
     output.add_source_line("break;");
     output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("action_reverter apply_with_revert(const action_representation action){return apply_action_with_revert(action);}");
+    output.add_header_line("action_reverter apply_action_with_revert(const action_representation action);");
+    output.add_source_line("action_reverter game_state::apply_action_with_revert(const action_representation action){");
+    output.add_source_line("action_reverter acrev;");
+    output.add_source_line("acrev.previous_state = current_state;");
+    output.add_source_line("mod_reverter &modrev = acrev.modrev;");
+    output.add_source_line("modrev.previous_cell = current_cell;");
+    output.add_source_line("modrev.action_index = action.index;");
+    output.add_source_line("switch(action.index){");
+    game_automaton.print_indices_to_actions_correspondence(output,static_data,false,true,true);
+    output.add_source_line("default:");
+    output.add_source_line("current_state = -action.index;");
+    output.add_source_line("current_cell = action.cell;");
+    output.add_source_line("break;");
+    output.add_source_line("}");
+    output.add_source_line("return acrev;");
+    output.add_source_line("}");
+    output.add_header_line("mod_reverter fast_apply_action_with_revert(const action_representation action);");
+    output.add_source_line("mod_reverter game_state::fast_apply_action_with_revert(const action_representation action){");
+    output.add_source_line("mod_reverter modrev;");
+    output.add_source_line("modrev.previous_cell = current_cell;");
+    output.add_source_line("modrev.action_index = action.index;");
+    output.add_source_line("switch(action.index){");
+    game_automaton.print_indices_to_actions_correspondence(output,static_data,false,true,false);
+    output.add_source_line("default:");
+    output.add_source_line("break;");
+    output.add_source_line("}");
+    output.add_source_line("return modrev;");
+    output.add_source_line("}");
+    output.add_source_line("");
+}
+
+void game_compiler::generate_reverter(void){
+    static_transition_data static_data(
+    opts,
+    mode::semisplit_off,
+    pieces_to_id,
+    edges_to_id,
+    variables_to_id,
+    input.get_declarations(),
+    shift_tables,
+    precomputed_patterns,
+    ccc,
+    uses_pieces_in_arithmetics,
+    injective_board,
+    "",
+    all_getter);
+    output.add_header_line("void revert(const mod_reverter modrev);");
+    output.add_source_line("void game_state::revert(const mod_reverter modrev){");
+    output.add_source_line("switch(modrev.action_index){");
+    game_automaton.print_indices_to_actions_correspondence(output,static_data,true,false,false);
+    output.add_source_line("default:");
+    output.add_source_line("current_cell = modrev.previous_cell;");    
+    output.add_source_line("}");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("void revert(const action_reverter& actionrev){revert_action(actionrev);}");
+    output.add_header_line("void revert_action(const action_reverter& actionrev);");
+    output.add_source_line("void game_state::revert_action(const action_reverter& actionrev){");
+    output.add_source_line("revert(actionrev.modrev);");
+    output.add_source_line("current_state = actionrev.previous_state;");
+    output.add_source_line("}");
+    output.add_source_line("");
+    output.add_header_line("void revert(const move_reverter& moverev){revert_move(moverev);}");
+    output.add_header_line("void revert_move(const move_reverter& moverev);");
+    output.add_source_line("void game_state::revert_move(const move_reverter& moverev){");
+    output.add_source_line("for(auto it=moverev.modrevs.cend(); it!=moverev.modrevs.cbegin();){");
+    output.add_source_line("it--;");
+    output.add_source_line("revert(*it);");
+    output.add_source_line("}");
+    output.add_source_line("current_state = moverev.previous_state;");
     output.add_source_line("}");
     output.add_source_line("");
 }
@@ -534,35 +640,6 @@ void game_compiler::generate_move_class(void){
 void game_compiler::print_all_shift_tables(void){
     for(uint i=0;i<shift_tables.size();++i)
         shift_tables[i].print_array(output,i);
-}
-
-void game_compiler::generate_reverter(void){
-    if (!opts.enabled_semisplit()) return;
-    static_transition_data static_data(
-    opts,
-    mode::semisplit_off,
-    pieces_to_id,
-    edges_to_id,
-    variables_to_id,
-    input.get_declarations(),
-    shift_tables,
-    precomputed_patterns,
-    ccc,
-    uses_pieces_in_arithmetics,
-    injective_board,
-    "",
-    all_getter);
-    output.add_header_line("void revert(const revert_information& ri);");
-    output.add_source_line("void game_state::revert(const revert_information& ri){");
-    output.add_source_line("switch(ri.action_index){");
-    game_automaton.print_indices_to_actions_correspondence(output,static_data,true,false,false);
-    output.add_source_line("default:");
-    output.add_source_line("break;");
-    output.add_source_line("}");
-    output.add_source_line("current_cell = ri.previous_cell;");
-    output.add_source_line("current_state = ri.previous_state;");
-    output.add_source_line("}");
-    output.add_source_line("");
 }
 
 void game_compiler::generate_indices_converters(void){
