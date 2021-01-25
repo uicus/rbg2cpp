@@ -252,6 +252,9 @@ void game_compiler::generate_game_parameters(void){
     output.add_header_line("constexpr int NUMBER_OF_VARIABLES = "+std::to_string(pl.size()+v.size())+";");
     output.add_header_line("constexpr int BOARD_DEGREE = "+std::to_string(e.size())+";");
     output.add_header_line("constexpr int MONOTONIC_CLASSES = "+std::to_string(monotonic_moves.size())+";");
+    int move_straightness = input.get_moves()->compute_k_straightness().final_result();// TODO
+    if (move_straightness > 0) move_straightness++;
+    output.add_header_line("constexpr int MOVE_STRAIGHTNESS = "+std::to_string(move_straightness)+";");
     output.add_header_line("");
 }
 
@@ -474,7 +477,7 @@ void game_compiler::generate_appliers_lists(void){
     int straightness = input.get_moves()->compute_k_straightness().final_result();
     if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
         output.add_header_include("boost/container/static_vector.hpp");
-        output.add_header_line("using move_representation = boost::container::static_vector<action_representation, "+std::to_string(straightness+1)+">;");
+        output.add_header_line("using move_representation = boost::container::static_vector<action_representation, MOVE_STRAIGHTNESS>;");
     }
     else{
         output.add_header_include("boost/container/small_vector.hpp");
@@ -500,7 +503,7 @@ void game_compiler::generate_revert_info_structure(void){
     output.add_header_line("int previous_state;");
     int straightness = input.get_moves()->compute_k_straightness().final_result();
     if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
-        output.add_header_line("boost::container::static_vector<mod_reverter, "+std::to_string(straightness+1)+"> modrevs;");
+        output.add_header_line("boost::container::static_vector<mod_reverter, MOVE_STRAIGHTNESS> modrevs;");
     } else {
         output.add_header_line("boost::container::small_vector<mod_reverter, "+std::to_string(straightness+1)+"> modrevs;");
     }
@@ -647,30 +650,6 @@ void game_compiler::generate_indices_converters(void){
     input.get_moves()->accept(mc);
     auto modifiers_count_to_actions_count = mc.get_result();
     output.add_header_line("constexpr int NUMBER_OF_MODIFIERS = "+std::to_string(modifiers_count_to_actions_count.size())+";");
-    /*output.add_header_line("int action_to_modifier_index(int action_index);");
-    output.add_source_line("int action_to_modifier_index(int action_index){");
-    output.add_source_line("switch(action_index){");
-    for(uint i=0;i<modifiers_count_to_actions_count.size();++i){
-        output.add_source_line("case "+std::to_string(modifiers_count_to_actions_count[i])+":");
-        output.add_source_line("return "+std::to_string(i)+";");
-    }
-    output.add_source_line("default:");
-    output.add_source_line("return -1;");
-    output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("");
-    output.add_header_line("int modifier_to_action_index(int modifier_index);");
-    output.add_source_line("int modifier_to_action_index(int modifier_index){");
-    output.add_source_line("switch(modifier_index){");
-    for(uint i=0;i<modifiers_count_to_actions_count.size();++i){
-        output.add_source_line("case "+std::to_string(i)+":");
-        output.add_source_line("return "+std::to_string(modifiers_count_to_actions_count[i])+";");
-    }
-    output.add_source_line("default:");
-    output.add_source_line("return -1;");
-    output.add_source_line("}");
-    output.add_source_line("}");
-    output.add_source_line("");*/
     auto switches_indices = mc.get_switches_indices();
     output.add_header_line("int is_switch(int action_index);");
     output.add_source_line("int is_switch(int action_index){");

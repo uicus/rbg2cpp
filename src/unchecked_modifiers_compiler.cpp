@@ -31,7 +31,6 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::off& m){
         output.add_source_line("current_cell = modrev.previous_cell;");
     } else {
         if(generate_revert) {
-            //output.add_source_line("ar.brr.emplace_back(pieces[action.cell], action.cell);");
             output.add_source_line("modrev.previous_value = pieces[action.cell];");
         }
         if(static_data.uses_pieces_in_arithmetics){
@@ -54,7 +53,6 @@ void unchecked_modifiers_compiler::dispatch(const rbg_parser::assignment& m){
         output.add_source_line("current_cell = modrev.previous_cell;");
     } else {
         if(generate_revert) {
-            //output.add_source_line("ri.vrr.emplace_back(variables["+left_variable_name+"], "+left_variable_name+");");
             output.add_source_line("modrev.previous_value = variables["+left_variable_name+"];");
         }
         arithmetics_printer right_side_printer(static_data.pieces_to_id, static_data.variables_to_id,"");
