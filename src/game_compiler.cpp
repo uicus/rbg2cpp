@@ -252,8 +252,8 @@ void game_compiler::generate_game_parameters(void){
     output.add_header_line("constexpr int NUMBER_OF_VARIABLES = "+std::to_string(pl.size()+v.size())+";");
     output.add_header_line("constexpr int BOARD_DEGREE = "+std::to_string(e.size())+";");
     output.add_header_line("constexpr int MONOTONIC_CLASSES = "+std::to_string(monotonic_moves.size())+";");
-    int move_straightness = input.get_moves()->compute_k_straightness().final_result();// TODO
-    if (move_straightness > 0) move_straightness++;
+    int move_straightness = input.get_moves()->compute_k_straightness(rbg_parser::StraightnessType::APP_STRAIGHTNESS).final_result(rbg_parser::StraightnessType::APP_STRAIGHTNESS);
+    if (move_straightness >= 0) move_straightness++;
     output.add_header_line("constexpr int MOVE_STRAIGHTNESS = "+std::to_string(move_straightness)+";");
     output.add_header_line("");
 }
@@ -474,7 +474,7 @@ void game_compiler::generate_states_iterator(void){
 }
 
 void game_compiler::generate_appliers_lists(void){
-    int straightness = input.get_moves()->compute_k_straightness().final_result();
+    int straightness = input.get_moves()->compute_k_straightness(rbg_parser::StraightnessType::APP_STRAIGHTNESS).final_result(rbg_parser::StraightnessType::APP_STRAIGHTNESS);
     if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
         output.add_header_include("boost/container/static_vector.hpp");
         output.add_header_line("using move_representation = boost::container::static_vector<action_representation, MOVE_STRAIGHTNESS>;");
@@ -501,7 +501,7 @@ void game_compiler::generate_revert_info_structure(void){
     output.add_header_line("");
     output.add_header_line("struct move_reverter{");
     output.add_header_line("int previous_state;");
-    int straightness = input.get_moves()->compute_k_straightness().final_result();
+    int straightness = input.get_moves()->compute_k_straightness(rbg_parser::StraightnessType::APP_STRAIGHTNESS).final_result(rbg_parser::StraightnessType::APP_STRAIGHTNESS);
     if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
         output.add_header_line("boost::container::static_vector<mod_reverter, MOVE_STRAIGHTNESS> modrevs;");
     } else {
