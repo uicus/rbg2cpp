@@ -475,7 +475,7 @@ void game_compiler::generate_states_iterator(void){
 
 void game_compiler::generate_appliers_lists(void){
     int straightness = input.get_moves()->compute_k_straightness(rbg_parser::StraightnessType::APP_STRAIGHTNESS).final_result(rbg_parser::StraightnessType::APP_STRAIGHTNESS);
-    if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
+    if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>=0){
         output.add_header_include("boost/container/static_vector.hpp");
         output.add_header_line("using move_representation = boost::container::static_vector<action_representation, MOVE_STRAIGHTNESS>;");
     }
@@ -502,10 +502,10 @@ void game_compiler::generate_revert_info_structure(void){
     output.add_header_line("struct move_reverter{");
     output.add_header_line("int previous_state;");
     int straightness = input.get_moves()->compute_k_straightness(rbg_parser::StraightnessType::APP_STRAIGHTNESS).final_result(rbg_parser::StraightnessType::APP_STRAIGHTNESS);
-    if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>0){
+    if(straightness<MAXIMAL_GAME_DEPENDENT_STAIGHTNESS and straightness>=0){
         output.add_header_line("boost::container::static_vector<mod_reverter, MOVE_STRAIGHTNESS> modrevs;");
     } else {
-        output.add_header_line("boost::container::small_vector<mod_reverter, "+std::to_string(straightness+1)+"> modrevs;");
+        output.add_header_line("boost::container::small_vector<mod_reverter, " + std::to_string(MAXIMAL_GAME_DEPENDENT_STAIGHTNESS+1) + "> modrevs;");
     }
     output.add_header_line("friend class game_state;");
     output.add_header_line("};");
