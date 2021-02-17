@@ -38,7 +38,8 @@ void state::print_transition_functions(
     cpp_container& output,
     const static_transition_data& static_data,
     const std::vector<state>& local_register)const{
-    if(next_states.size()>1 or outgoing_edges_needed or ((static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) and static_data.kind == all_getter))
+    //if(next_states.size()>1 or outgoing_edges_needed or ((static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()) and static_data.kind == all_getter))
+    if(next_states.size()>1 or outgoing_edges_needed or ((static_data.semisplit == mode::semisplit_actions or static_data.semisplit == mode::semisplit_dotsplit) and static_data.kind == all_getter))
         for(const auto& el: next_states){
             dynamic_transition_data dynamic_data(static_data,from_state);
             el.print_transition_function(output, static_data, dynamic_data, local_register);
@@ -55,17 +56,18 @@ std::string join_strings_into_parameters(const std::vector<std::string>& argumen
 }
 }
 
-void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const{
+void state::print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used, mode semisplit_mode)const{
     std::string resulting_line = "{";
-    if(next_states.size()>1 or outgoing_edges_needed or semisplit_enabled){
+    if(next_states.size()>1 or outgoing_edges_needed or semisplit_mode != mode::semisplit_off){
         output.add_source_line("case "+std::to_string(from_state)+":");
         std::vector<std::string> arguments = {"current_cell"};
         if(cache_used)
             arguments.emplace_back("cache");
-        arguments.emplace_back("mr");
+        if (semisplit_mode == mode::semisplit_off || semisplit_mode == mode::semisplit_dotsplit)
+            arguments.emplace_back("mr");
         arguments.emplace_back("moves");
-        if(semisplit_enabled)
-            arguments.emplace_back("move_length_limit");
+        //if(semisplit_enabled)
+        //    arguments.emplace_back("move_length_limit");
         auto args_string = join_strings_into_parameters(arguments);
         for(uint i=0;i<next_states.size();++i)
             output.add_source_line(functions_prefix+"_"+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+");");
@@ -158,10 +160,11 @@ void state::print_recursive_calls(
     switch(static_data.kind){
         case all_getter:
         {
-            arguments.emplace_back("mr");
+            if(static_data.semisplit == mode::semisplit_off || static_data.semisplit == mode::semisplit_dotsplit)
+                arguments.emplace_back("mr");
             arguments.emplace_back("moves");
-            if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
-                arguments.emplace_back("move_length_limit");
+            //if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
+            //    arguments.emplace_back("move_length_limit");
             auto args_string = join_strings_into_parameters(arguments);
             for(uint i=0;i<next_states.size();++i){
                 output.add_source_line(static_data.name_prefix+std::to_string(from_state)+"_"+std::to_string(next_states[i].get_endpoint())+"("+args_string+");");
@@ -185,9 +188,11 @@ void state::print_recursive_calls(
 void state::print_indices_to_actions_correspondence(
     cpp_container& output,
     const static_transition_data& static_data,
-    bool generate_revert)const{
+    bool revert_mode,
+    bool generate_revert,
+    bool last_application)const{
     for(const auto& el: next_states)
-        el.print_indices_to_actions_correspondence(output, static_data, generate_revert);
+        el.print_indices_to_actions_correspondence(output, static_data, revert_mode, generate_revert, last_application);
 }
 
 void state::add_state_to_board_automaton(

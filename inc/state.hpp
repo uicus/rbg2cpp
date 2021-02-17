@@ -7,6 +7,7 @@
 
 #include"types.hpp"
 #include"edge.hpp"
+#include"transition_data.hpp"
 
 class cpp_container;
 class compiler_options;
@@ -43,7 +44,7 @@ class state{
             const static_transition_data& static_data,
             const std::vector<state>& local_register)const;
         void print_outgoing_any_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used)const;
-        void print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const;
+        void print_outgoing_all_transitions(uint from_state, cpp_container& output, const std::string& functions_prefix, bool cache_used, mode semisplit_mode)const;
         void notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const;
         void mark_as_keeper_move_beginning(void);
         void mark_as_player_move_beginning(void);
@@ -68,7 +69,9 @@ class state{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data,
-            bool generate_revert=false)const;
+            bool revert_mode,
+            bool generate_revert,
+            bool last_application)const;
         void print_final_action_effects(cpp_container& output)const;
         void add_state_to_board_automaton(
             uint own_number,

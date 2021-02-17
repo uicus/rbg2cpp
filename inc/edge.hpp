@@ -66,7 +66,9 @@ class edge{
         void print_indices_to_actions_correspondence(
             cpp_container& output,
             const static_transition_data& static_data,
-            bool generate_revert=false)const;
+            bool revert_mode,
+            bool generate_revert,
+            bool last_application)const;
         void print_final_action_effects(cpp_container& output)const;
         std::tuple<bool, std::vector<uint>> build_next_cells_edges(
                 uint starting_cell,

@@ -25,7 +25,7 @@ uint depth_max = std::numeric_limits<uint>::min();
 
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
-std::vector<reasoner::semimove> legal_semimoves[MAX_SEMIDEPTH];
+std::vector<reasoner::action_representation> legal_semimoves[MAX_SEMIDEPTH];
 
 void initialize_goals_arrays(void){
     for(uint i=0;i<reasoner::NUMBER_OF_PLAYERS;++i){
@@ -57,20 +57,20 @@ void count_semiterminal(const uint semidepth){
         semidepth_max = semidepth;
 }
 
-std::vector<reasoner::semimove>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::semimove>& semimoves = legal_semimoves[semidepth];
-    state.get_all_semimoves(cache, semimoves, SEMILENGTH);
+std::vector<reasoner::action_representation>& fill_semimoves_table(reasoner::game_state &state, uint semidepth){
+    std::vector<reasoner::action_representation>& semimoves = legal_semimoves[semidepth];
+    state.get_all_actions(cache, semimoves);
     semimoves_count += semimoves.size();
     return semimoves;
 }
 
 bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
-    std::vector<reasoner::semimove>& semimoves = fill_semimoves_table(state, semidepth);
+    std::vector<reasoner::action_representation>& semimoves = fill_semimoves_table(state, semidepth);
     semidepth++;
     while(not semimoves.empty()){
         semistates_count++;
         uint chosen_semimove = random_generator.uniform_choice(semimoves.size());
-        auto ri = state.apply_semimove_with_revert(semimoves[chosen_semimove]);
+        auto ri = state.apply_action_with_revert(semimoves[chosen_semimove]);
         if(state.is_nodal()){
             count_semiterminal(semidepth);
             return true;
@@ -127,7 +127,6 @@ int main(int argv, char** argc){
     std::chrono::steady_clock::time_point end_time(std::chrono::steady_clock::now());
 
     ulong ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count();
-    std::cout << "semilength: " << SEMILENGTH << std::endl;
     std::cout << "time: " << ms << " ms" << std::endl;
     std::cout << "number of playouts: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " playouts/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;

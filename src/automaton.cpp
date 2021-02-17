@@ -73,10 +73,10 @@ void automaton::print_transition_functions(
         local_register[i].print_transition_functions(i,output,static_data,local_register);
 }
 
-void automaton::print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used, bool semisplit_enabled)const{
+void automaton::print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used, mode semisplit_mode)const{
     output.add_source_line("switch(current_state){");
     for(uint i=0;i<local_register.size();++i)
-        local_register[i].print_outgoing_all_transitions(i,output,functions_prefix,cache_used,semisplit_enabled);
+        local_register[i].print_outgoing_all_transitions(i,output,functions_prefix,cache_used,semisplit_mode);
     output.add_source_line("default:");
     output.add_source_line("break;");
     output.add_source_line("}");
@@ -162,9 +162,11 @@ void automaton::print_recursive_calls_for_pattern_in_start_state(
 void automaton::print_indices_to_actions_correspondence(
     cpp_container& output,
     const static_transition_data& static_data,
-    bool generate_revert)const{
+    bool revert_mode,
+    bool generate_revert,
+    bool last_application)const{
     for(const auto& el: local_register)
-        el.print_indices_to_actions_correspondence(output, static_data, generate_revert);
+        el.print_indices_to_actions_correspondence(output, static_data, revert_mode, generate_revert, last_application);
 }
 
 rules_board_automaton automaton::generate_rules_board_automaton(

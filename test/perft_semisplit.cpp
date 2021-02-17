@@ -10,7 +10,7 @@ constexpr int MAX_SEMIDEPTH = 100;
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 ulong states_count, leaves_count;
-std::vector<reasoner::semimove> legal_semimoves[MAX_SEMIDEPTH];
+std::vector<reasoner::action_representation> legal_semimoves[MAX_SEMIDEPTH];
 
 void perft_state_at_depth(reasoner::game_state& state, uint depth, uint semidepth){
     if(depth == 0 and state.is_nodal() and state.get_current_player() != KEEPER){
@@ -34,10 +34,10 @@ void perft_state_at_depth(reasoner::game_state& state, uint depth, uint semidept
         else{
             if(state.is_nodal())
                 ++states_count;
-            state.get_all_semimoves(cache, legal_semimoves[semidepth], SEMILENGTH);
+            state.get_all_actions(cache, legal_semimoves[semidepth]);
             for(const auto& el: legal_semimoves[semidepth]){
                 auto was_nodal = state.is_nodal();
-                auto reverter = state.apply_semimove_with_revert(el);
+                auto reverter = state.apply_action_with_revert(el);
                 if(was_nodal)
                     perft_state_at_depth(state,depth-1,semidepth+1);
                 else

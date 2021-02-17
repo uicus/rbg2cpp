@@ -104,14 +104,13 @@ void edge::print_transition_function(
     if(static_data.ccc.is_any_cache_needed())
         arguments.emplace_back("resettable_bitarray_stack& cache");
     if(static_data.kind == all_getter){
-        arguments.emplace_back("move_representation& mr");
-        if(static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation())
-            arguments.emplace_back("std::vector<semimove>& moves");
-        else
+        if(static_data.semisplit == mode::semisplit_actions)
+            arguments.emplace_back("std::vector<action_representation>& moves");
+        else {
+            arguments.emplace_back("move_representation& mr");
             arguments.emplace_back("std::vector<move>& moves");
+        }
     }
-    if(static_data.kind == all_getter and (static_data.opts.enabled_semi_split_generation() or static_data.opts.enabled_custom_split_generation()))
-        arguments.emplace_back("unsigned int move_length_limit");
     print_function_signature(output,
                              static_data.return_type,
                              static_data.name_prefix+dynamic_data.get_start_state()+"_"+std::to_string(local_register_endpoint_index),
@@ -179,8 +178,10 @@ bool edge::is_shift_table_with_multiple_choices(const std::vector<shift_table>& 
 void edge::print_indices_to_actions_correspondence(
     cpp_container& output,
     const static_transition_data& static_data,
-    bool generate_revert)const{
-    unchecked_modifiers_compiler umc(output,static_data,local_register_endpoint_index, generate_revert);
+    bool revert_mode,
+    bool generate_revert,
+    bool last_application)const{
+    unchecked_modifiers_compiler umc(output,static_data,local_register_endpoint_index, revert_mode, generate_revert, last_application);
     for(const auto& el: label_list)
         switch(el.k){
             case action:
