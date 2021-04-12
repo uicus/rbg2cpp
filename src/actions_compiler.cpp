@@ -27,7 +27,9 @@ void actions_compiler::dispatch(const rbg_parser::shift& m){
 }
 
 void actions_compiler::dispatch(const rbg_parser::noop&){
-    dynamic_data.visit_custom_split_point(-1);
+    if (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit) {
+        dynamic_data.visit_custom_split_point(-1);
+    }
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
@@ -111,17 +113,17 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
     //if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
-    if (static_data.kind == all_getter && (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit))
+    //if (static_data.kind == all_getter && (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit))
         dynamic_data.visit_custom_split_point(m.index_in_expression());
-    dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
+    //dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
     dynamic_data.set_next_player(static_data.variables_to_id.at(m.get_player())+1);
 }
 
 void actions_compiler::dispatch(const rbg_parser::keeper_switch& m){
     //if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
-    if (static_data.kind == all_getter && (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit))
+    //if (static_data.kind == all_getter && (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit))
         dynamic_data.visit_custom_split_point(m.index_in_expression());
-    dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
+    //dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
     dynamic_data.set_next_player(0);
 }
 

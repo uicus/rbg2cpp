@@ -158,11 +158,10 @@ void dynamic_transition_data::push_any_change_on_modifiers_list(cpp_container& o
 }
 
 void dynamic_transition_data::visit_custom_split_point(int action_index){
-    if(static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit)
-        if(static_data.kind == all_getter) {
-            encountered_custom_split_point = true;
-            split_point_action_index = action_index;
-        }
+    if(static_data.kind == all_getter) {
+        encountered_custom_split_point = true;
+        split_point_action_index = action_index;
+    }
 }
 
 void dynamic_transition_data::print_modifiers_applications_revert(cpp_container& output)const{
@@ -326,11 +325,12 @@ void dynamic_transition_data::handle_standard_transition_end(cpp_container& outp
             case mode::semisplit_dotsplit:
                 output.add_source_line("moves.emplace_back(mr);");
                 if (split_point_action_index == -1)
-                    output.add_source_line("moves.back().mr.emplace_back(-"+std::to_string(state_index)+",cell);");// else
-                    //output.add_source_line("moves.back().mr.emplace_back("+std::to_string(split_point_action_index)+",cell);");
+                    output.add_source_line("moves.back().mr.emplace_back(-"+std::to_string(state_index)+",cell);"); else
+                    output.add_source_line("moves.back().mr.emplace_back("+std::to_string(split_point_action_index)+",cell);");
                 break;
             default:
                 output.add_source_line("moves.emplace_back(mr);");
+                output.add_source_line("moves.back().mr.emplace_back("+std::to_string(split_point_action_index)+",cell);");
                 break;
             }
         }
