@@ -108,6 +108,14 @@ void state::mark_as_player_move_beginning(void){
     state_user = player_start;
 }
 
+void state::mark_as_split_point(void){
+    state_user = split_point;
+}
+
+void state::mark_as_mod_split_point(void){
+    state_user = mod_split_point;
+}
+
 void state::mark_as_doubly_reachable(void){
     doubly_reachable = true;
 }

@@ -25,15 +25,17 @@ namespace rbg_parser{
 enum state_user_type{
     none,
     player_start,
-    keeper_start
+    keeper_start,
+    split_point,
+    mod_split_point
 };
 
 class state{
         std::vector<edge> next_states;
         bool outgoing_edges_needed;
         bool doubly_reachable;
-        state_user_type state_user = none;
     public:
+        state_user_type state_user = none;
         void inform_about_being_appended(uint shift_value);
         void inform_about_state_deletion(uint deleted_index);
         void absorb(state&& rhs);
@@ -48,6 +50,8 @@ class state{
         void notify_endpoints_about_being_reachable(std::vector<uint>& reachability, const std::vector<shift_table>& shift_tables)const;
         void mark_as_keeper_move_beginning(void);
         void mark_as_player_move_beginning(void);
+        void mark_as_split_point(void);
+        void mark_as_mod_split_point(void);
         void mark_as_doubly_reachable(void);
         bool can_be_checked_for_visit(void)const;
         void mark_explicitly_as_transition_start(void);

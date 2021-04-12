@@ -91,6 +91,16 @@ void automaton::print_any_appliers_table(cpp_container& output, const std::strin
     output.add_source_line("}");
 }
 
+void automaton::mark_end_as_split_point(void){
+    mark_end_as_outgoing_usable();
+    local_register[accept_state].mark_as_split_point();
+}
+
+void automaton::mark_end_as_mod_split_point(void){
+    mark_end_as_outgoing_usable();
+    local_register[accept_state].mark_as_mod_split_point();
+}
+
 void automaton::mark_end_as_keeper_move_start(void){
     mark_end_as_outgoing_usable();
     local_register[accept_state].mark_as_keeper_move_beginning();

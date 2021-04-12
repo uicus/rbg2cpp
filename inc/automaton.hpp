@@ -44,6 +44,8 @@ class automaton{
         void print_all_getters_table(cpp_container& output, const std::string& functions_prefix, bool cache_used, mode semisplit_mode)const;
         void mark_end_as_keeper_move_start(void);
         void mark_end_as_player_move_start(void);
+        void mark_end_as_split_point(void);
+        void mark_end_as_mod_split_point(void);
         void mark_end_as_outgoing_usable(void);
         void mark_start_as_rules_beginning(void);
         void mark_states_as_double_reachable(const std::vector<shift_table>& shift_tables);
