@@ -33,7 +33,6 @@ void actions_compiler::dispatch(const rbg_parser::noop&){
 }
 
 void actions_compiler::dispatch(const rbg_parser::off& m){
-    //if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation()) {// Added
     if (static_data.semisplit == mode::semisplit_actions) {
         dynamic_data.visit_custom_split_point(m.index_in_expression());
         return;
@@ -49,7 +48,6 @@ void actions_compiler::dispatch(const rbg_parser::off& m){
 }
 
 void actions_compiler::print_variable_assignment(uint variable_id, const std::string& rvalue, const std::string& action_index){
-    //if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
     if (static_data.semisplit == mode::semisplit_actions)
         return;
     dynamic_data.save_variable_change_for_later_revert(output, variable_id);
@@ -112,18 +110,12 @@ void actions_compiler::dispatch(const rbg_parser::ons& m){
 
 
 void actions_compiler::dispatch(const rbg_parser::player_switch& m){
-    //if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
-    //if (static_data.kind == all_getter && (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit))
-        dynamic_data.visit_custom_split_point(m.index_in_expression());
-    //dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
+    dynamic_data.visit_custom_split_point(m.index_in_expression());
     dynamic_data.set_next_player(static_data.variables_to_id.at(m.get_player())+1);
 }
 
 void actions_compiler::dispatch(const rbg_parser::keeper_switch& m){
-    //if (static_data.kind == all_getter && static_data.opts.enabled_custom_split_generation())
-    //if (static_data.kind == all_getter && (static_data.semisplit == mode::semisplit_actions || static_data.semisplit == mode::semisplit_dotsplit))
-        dynamic_data.visit_custom_split_point(m.index_in_expression());
-    //dynamic_data.push_any_change_on_modifiers_list(output, std::to_string(m.index_in_expression()), "cell");
+    dynamic_data.visit_custom_split_point(m.index_in_expression());
     dynamic_data.set_next_player(0);
 }
 
@@ -160,7 +152,7 @@ void actions_compiler::dispatch(const rbg_parser::arithmetic_comparison& m){
             dynamic_data.insert_reverting_sequence_after_fail(output);
     }
     else{
-        std::string operation_character = "";
+        std::string operation_character;
         switch(m.get_kind_of_comparison()){
             case rbg_parser::eq:
                 operation_character = "!=";

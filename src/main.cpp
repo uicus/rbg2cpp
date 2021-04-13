@@ -19,9 +19,9 @@ int main(int argc, const char** argv){
         std::cerr<<"\"-Werror\" - treat warnings as errors"<<std::endl;
         std::cerr<<"\"-fno-shift-tables\" - turn off the shift table optimization"<<std::endl;
         std::cerr<<"\"-fno-anysquare-opt\" - turn off the any square optimization"<<std::endl;
-        std::cerr<<"\"-fsemisplit\" - turn on generation of semimoves getters based on noop ('.') placement; possible getters are 'm', 'a', 's'."<<std::endl;
+        std::cerr<<"\"-fgetters\" - turn on generation of semimoves getters based on noop ('.') placement; possible getters are combinations of 'm', 'a', 's'."<<std::endl;
         std::cerr<<"\"-fmonotonic-moves-safe\" - turn on generation of safety check in game_state::is_legal() function"<<std::endl;
-        std::cerr<<"\"-fno-cache-opt\" - turn off cache optimisation"<<std::endl;
+        std::cerr<<"\"-fno-cache-opt\" - turn off cache optimization"<<std::endl;
     }
     else{
         rbg_parser::messages_container msg;
