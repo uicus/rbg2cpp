@@ -18,7 +18,7 @@ ulong states_count = 0, moves_count = 0;
 uint depth_min = std::numeric_limits<uint>::max();
 uint depth_max = std::numeric_limits<uint>::min();
 uint moves_min = std::numeric_limits<uint>::max();
-uint moves_max = std::numeric_limits<uint>::max();
+uint moves_max = std::numeric_limits<uint>::min();
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 
