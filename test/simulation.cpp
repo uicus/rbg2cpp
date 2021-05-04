@@ -17,6 +17,8 @@ int goals_max[reasoner::NUMBER_OF_PLAYERS] = {};
 ulong states_count = 0, moves_count = 0;
 uint depth_min = std::numeric_limits<uint>::max();
 uint depth_max = std::numeric_limits<uint>::min();
+uint moves_min = std::numeric_limits<uint>::max();
+uint moves_max = std::numeric_limits<uint>::max();
 reasoner::resettable_bitarray_stack cache;
 reasoner::game_state initial_state;
 
@@ -78,6 +80,8 @@ void random_simulation_with_monotonic_moves(){
             }
             if(auto chosen_move = choose_random_from_monotonics_or_leave_empty(monotonic_moves[monotonicity_class], state)){
                 depth++;
+                if (monotonic_moves[monotonicity_class].size() > moves_max) moves_max = monotonic_moves[monotonicity_class].size();
+                if (monotonic_moves[monotonicity_class].size() < moves_min) moves_min = monotonic_moves[monotonicity_class].size();
                 state.apply_move(monotonic_moves[monotonicity_class][*chosen_move]);
             }
             else{
@@ -121,6 +125,8 @@ void random_simulation(){
         else{
             depth++;
             moves_count += legal_moves.size();
+            if (legal_moves.size() > moves_max) moves_max = legal_moves.size();
+            if (legal_moves.size() < moves_min) moves_min = legal_moves.size();
             uint chosen_move = random_generator.uniform_choice(legal_moves.size());
             state.apply_move(legal_moves[chosen_move]);
         }
@@ -167,6 +173,7 @@ int main(int argv, char** argc){
     std::cout << "number of playouts: " << simulations_count << " (" << std::fixed << count_per_sec(simulations_count, ms) << " playouts/sec)" << std::endl;
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     std::cout << "number of moves: " << moves_count << " (" << std::fixed << count_per_sec(moves_count, ms) << " moves/sec)" << std::endl;
+    std::cout << "branching factor: avg " << static_cast<long double>(moves_count)/states_count << " min " << moves_min << " max " << moves_max << std::endl;
     std::cout << "depth: avg " << static_cast<long double>(states_count)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << " min " << goals_min[i] << " max " << goals_max[i] << std::endl;
