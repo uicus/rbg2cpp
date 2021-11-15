@@ -66,7 +66,7 @@ void game_compiler::generate_pieces_decoder(void){
 void game_compiler::generate_variables_decoder(void){
     output.add_header_include("string");
     const auto& v = input.get_declarations().get_legal_variables();
-    const auto& p = input.get_declarations().get_legal_players();
+    const auto& p = input.get_declarations().get_legal_players_ordered();
     output.add_source_line("static const std::string variables_names["+std::to_string(p.size()+v.size())+"] = {");
     uint current_id = 0;
     for(const auto& el: p){
