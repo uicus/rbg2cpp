@@ -1,6 +1,8 @@
 # rbg2cpp
 Regular Boardgames to C++ compiler
 
+This is a part of the Regular Boardgames General Game Playing system. See the official repository: <https://github.com/marekesz/rbg>.
+
 ### Usage
 Simply clone the parser:
 ```
