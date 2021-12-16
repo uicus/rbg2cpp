@@ -15,7 +15,7 @@ ulong goals_avg[reasoner::NUMBER_OF_PLAYERS] = {};
 int goals_min[reasoner::NUMBER_OF_PLAYERS] = {};
 int goals_max[reasoner::NUMBER_OF_PLAYERS] = {};
 
-ulong states_count = 0, semistates_count = 0, semimoves_count = 0;
+ulong states_count = 0, semistates_count = 0, dead_semistates_count = 0, semimoves_count = 0;
 ulong semidepth_sum = 0;
 uint semidepth_min = std::numeric_limits<uint>::max();
 uint semidepth_max = std::numeric_limits<uint>::min();
@@ -78,6 +78,7 @@ bool apply_random_move_exhaustive(reasoner::game_state &state, uint semidepth){
         if(apply_random_move_exhaustive(state, semidepth))
             return true;
         state.revert(ri);
+        dead_semistates_count++;
         semimoves[chosen_semimove] = semimoves.back();
         semimoves.pop_back();
     }
@@ -132,7 +133,10 @@ int main(int argv, char** argc){
     std::cout << "number of states: " << states_count << " (" << std::fixed << count_per_sec(states_count, ms) << " states/sec)" << std::endl;
     std::cout << "number of semistates: " << semistates_count << " (" << std::fixed << count_per_sec(semistates_count, ms) << " semistates/sec)" << std::endl;
     std::cout << "number of semimoves: " << semimoves_count << " (" << std::fixed << count_per_sec(semimoves_count, ms) << " semimoves/sec)" << std::endl;
+    std::cout << "branching factor (semimoves): avg " << static_cast<long double>(semimoves_count)/semistates_count << std::endl;
     std::cout << "depth: avg " << static_cast<long double>(states_count)/simulations_count << " min " << depth_min << " max " << depth_max << std::endl;
+    std::cout << "depth (semimoves): avg " << static_cast<long double>(semistates_count)/simulations_count << std::endl;
+    std::cout << "depth (semimoves, no dead): avg " << static_cast<long double>(semistates_count-dead_semistates_count)/simulations_count << std::endl;
     std::cout << "semidepth: avg " << static_cast<long double>(semidepth_sum)/states_count << " min " << semidepth_min << " max " << semidepth_max << std::endl;
     for(uint i=1;i<reasoner::NUMBER_OF_PLAYERS;++i)
         std::cout << "goal of player " << i << ": avg " << static_cast<long double>(goals_avg[i])/simulations_count << " min " << goals_min[i] << " max " << goals_max[i] << std::endl;
