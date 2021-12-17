@@ -22,8 +22,16 @@ bin/rbg2cpp -o reasoner rbgGames/games/breakthrough.rbg
 ```
 
 ### Testing
-The package provides an easy way of testing games through flat MC and perft simulations. They can be run with proper ```make``` target.
+The package provides an easy way of testing games through flat MC and perft simulations through the provided scripts.
+The ```log``` directory should be created first.
 
+Then, e.g.:
+```
+./run_benchmark.sh breakthrough 10000 0
+```
+runs the (orthodox) flat MC benchmark for breakthrough over 10 seconds using the default (0) random generator.
+
+Tests can be run directly with a proper ```make``` target.
 E.g.:
 ```
 make simulate_breakthrough
